@@ -4,6 +4,16 @@
  */
 package library_hub;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
+import java.time.LocalDate;
+
 /**
  *
  * @author RACHELL
@@ -17,7 +27,72 @@ public class borrow_management extends javax.swing.JFrame {
      */
     public borrow_management() {
         initComponents();
+        updateJTable();
     }
+    private void clearFields() {
+        txtFullName.setText("");
+        txtAcq.setText("");
+        cmbCourse.setSelectedIndex(0);
+        cmbYear.setSelectedIndex(0);
+        
+    }
+    
+    private Connection getConnection() throws SQLException {
+    
+    String url = "jdbc:mysql://localhost:3306/libraryhub";
+    String dbUser = "root";
+    String dbPass = "";
+    return DriverManager.getConnection(url, dbUser,dbPass );
+    }   
+    
+    private boolean checkAcquisitionExists(String acqNo) {
+    boolean exists = false;
+    String checkQuery = "SELECT COUNT(*) FROM borrow_records WHERE acquisition_no = ?";
+    
+    try (Connection con = getConnection();
+         PreparedStatement pst = con.prepareStatement(checkQuery)) {
+        
+        pst.setString(1, acqNo);
+        ResultSet rs = pst.executeQuery();
+        
+        if (rs.next()) {
+            // if count > 0, it means it's already there
+            exists = rs.getInt(1) > 0;
+        }
+    } catch (SQLException ex) {
+        System.err.println("Validation Error: " + ex.getMessage());
+    }
+    return exists;
+}
+    
+    public void updateJTable() {
+    // Make sure your table variable name is jTable2
+    DefaultTableModel model = (DefaultTableModel) jTable2.getModel();
+    model.setRowCount(0); // Clear the table first
+
+    try {
+        Connection con = getConnection();
+        Statement st = con.createStatement();
+        ResultSet rs = st.executeQuery("SELECT * FROM borrow_records"); // 'books' is your table name
+
+        while (rs.next()) {
+            // Add rows based on your database columns
+            model.addRow(new Object[]{
+                rs.getString("borrower_id"),
+                rs.getString("full_name"),
+                rs.getString("course"),
+                rs.getString("year_level"),
+                rs.getString("book_acq_no"),
+                rs.getString("borrow_date"),
+                rs.getString("due_date") // Add this line!
+            });
+        }
+      
+      
+    } catch (Exception e) {
+        JOptionPane.showMessageDialog(null, "Error loading data: " + e.getMessage());
+    }
+}
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -29,20 +104,19 @@ public class borrow_management extends javax.swing.JFrame {
     private void initComponents() {
 
         jPanel4 = new javax.swing.JPanel();
-        jLabel2 = new javax.swing.JLabel();
+        lblFullName = new javax.swing.JLabel();
         txtFullName = new javax.swing.JTextField();
-        jLabel3 = new javax.swing.JLabel();
-        jLabel4 = new javax.swing.JLabel();
-        jLabel5 = new javax.swing.JLabel();
-        jLabel6 = new javax.swing.JLabel();
-        jComboBox1 = new javax.swing.JComboBox<>();
-        addBtn = new javax.swing.JButton();
-        editBtn = new javax.swing.JButton();
+        lblAcq = new javax.swing.JLabel();
+        lblCourse = new javax.swing.JLabel();
+        lblYear = new javax.swing.JLabel();
+        lblBorrow_Date = new javax.swing.JLabel();
         deleteBtn = new javax.swing.JButton();
         cancelBtn = new javax.swing.JButton();
-        jComboBox2 = new javax.swing.JComboBox<>();
-        jComboBox3 = new javax.swing.JComboBox<>();
-        jComboBox4 = new javax.swing.JComboBox<>();
+        cmbYear = new javax.swing.JComboBox<>();
+        cmbCourse = new javax.swing.JComboBox<>();
+        txtAcq = new javax.swing.JTextField();
+        addBtn = new javax.swing.JButton();
+        editBtn = new javax.swing.JButton();
         jPanel3 = new javax.swing.JPanel();
         jLabel8 = new javax.swing.JLabel();
         jButton5 = new javax.swing.JButton();
@@ -58,34 +132,25 @@ public class borrow_management extends javax.swing.JFrame {
         jPanel4.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 5));
         jPanel4.setForeground(new java.awt.Color(255, 102, 0));
 
-        jLabel2.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-        jLabel2.setForeground(new java.awt.Color(255, 255, 255));
-        jLabel2.setText("FULL NAME");
+        lblFullName.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        lblFullName.setForeground(new java.awt.Color(255, 255, 255));
+        lblFullName.setText("FULL NAME");
 
-        jLabel3.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-        jLabel3.setForeground(new java.awt.Color(255, 255, 255));
-        jLabel3.setText("TYPE");
+        lblAcq.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        lblAcq.setForeground(new java.awt.Color(255, 255, 255));
+        lblAcq.setText("Acquisition No.");
 
-        jLabel4.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-        jLabel4.setForeground(new java.awt.Color(255, 255, 255));
-        jLabel4.setText("COURSE");
+        lblCourse.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        lblCourse.setForeground(new java.awt.Color(255, 255, 255));
+        lblCourse.setText("COURSE");
 
-        jLabel5.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-        jLabel5.setForeground(new java.awt.Color(255, 255, 255));
-        jLabel5.setText("YEAR");
+        lblYear.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        lblYear.setForeground(new java.awt.Color(255, 255, 255));
+        lblYear.setText("YEAR");
 
-        jLabel6.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-        jLabel6.setForeground(new java.awt.Color(255, 255, 255));
-        jLabel6.setText("STATUS");
-
-        jComboBox1.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Admin", "Librarian" }));
-        jComboBox1.addActionListener(this::jComboBox1ActionPerformed);
-
-        addBtn.setText("ADD");
-        addBtn.addActionListener(this::addBtnActionPerformed);
-
-        editBtn.setText("EDIT");
-        editBtn.addActionListener(this::editBtnActionPerformed);
+        lblBorrow_Date.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        lblBorrow_Date.setForeground(new java.awt.Color(255, 255, 255));
+        lblBorrow_Date.setText("Borrow Date");
 
         deleteBtn.setText("DELETE");
         deleteBtn.addActionListener(this::deleteBtnActionPerformed);
@@ -93,14 +158,17 @@ public class borrow_management extends javax.swing.JFrame {
         cancelBtn.setText("CANCEL");
         cancelBtn.addActionListener(this::cancelBtnActionPerformed);
 
-        jComboBox2.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Admin", "Librarian" }));
-        jComboBox2.addActionListener(this::jComboBox2ActionPerformed);
+        cmbYear.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "~Select Year~", "1", "2", "3", "4" }));
+        cmbYear.addActionListener(this::cmbYearActionPerformed);
 
-        jComboBox3.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Admin", "Librarian" }));
-        jComboBox3.addActionListener(this::jComboBox3ActionPerformed);
+        cmbCourse.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "~Select Course~", "BSIT", "BSCS", "BSCE", " " }));
+        cmbCourse.addActionListener(this::cmbCourseActionPerformed);
 
-        jComboBox4.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Admin", "Librarian" }));
-        jComboBox4.addActionListener(this::jComboBox4ActionPerformed);
+        addBtn.setText("ADD");
+        addBtn.addActionListener(this::addBtnActionPerformed);
+
+        editBtn.setText("EDIT");
+        editBtn.addActionListener(this::editBtnActionPerformed);
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
@@ -108,60 +176,57 @@ public class borrow_management extends javax.swing.JFrame {
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addGap(35, 35, 35)
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(txtFullName, javax.swing.GroupLayout.PREFERRED_SIZE, 197, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, 197, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jComboBox2, javax.swing.GroupLayout.PREFERRED_SIZE, 197, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jComboBox3, javax.swing.GroupLayout.PREFERRED_SIZE, 197, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(jPanel4Layout.createSequentialGroup()
-                        .addGap(14, 14, 14)
-                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(deleteBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(addBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .addGap(18, 18, 18)
-                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(cancelBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(editBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                    .addComponent(jComboBox4, javax.swing.GroupLayout.PREFERRED_SIZE, 197, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(39, Short.MAX_VALUE))
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(txtAcq)
+                    .addComponent(lblFullName, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(txtFullName)
+                    .addComponent(lblAcq, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lblCourse, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lblYear, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lblBorrow_Date, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(cmbYear, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(cmbCourse, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
+                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(addBtn)
+                            .addComponent(deleteBtn))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(cancelBtn)
+                            .addComponent(editBtn))
+                        .addGap(7, 7, 7)))
+                .addContainerGap(37, Short.MAX_VALUE))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel4Layout.createSequentialGroup()
-                .addGap(65, 65, 65)
-                .addComponent(jLabel2)
+                .addGap(11, 11, 11)
+                .addComponent(lblFullName)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(txtFullName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(lblAcq)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jLabel3)
+                .addComponent(txtAcq, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jComboBox4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(lblCourse)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jLabel4)
+                .addComponent(cmbCourse, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jComboBox3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(lblYear)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jLabel5)
+                .addComponent(cmbYear, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jComboBox2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jLabel6)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
+                .addComponent(lblBorrow_Date)
+                .addGap(89, 89, 89)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(addBtn)
                     .addComponent(editBtn))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGap(38, 38, 38)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(deleteBtn)
                     .addComponent(cancelBtn))
-                .addContainerGap(52, Short.MAX_VALUE))
+                .addContainerGap(172, Short.MAX_VALUE))
         );
 
         jPanel3.setBackground(new java.awt.Color(51, 102, 0));
@@ -203,28 +268,28 @@ public class borrow_management extends javax.swing.JFrame {
 
         jTable2.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null}
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null}
             },
             new String [] {
-                "FULL NAME", "TYPE", "COURSE", "YEAR", "STATUS"
+                "ID", "Full Name", "Course", "School Year", "Acquisition No.", "Borrow Date", "Due Date"
             }
         ));
         jTable2.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -250,15 +315,14 @@ public class borrow_management extends javax.swing.JFrame {
         txtSearchUsernameLayout.setHorizontalGroup(
             txtSearchUsernameLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(txtSearchUsernameLayout.createSequentialGroup()
-                .addGap(24, 24, 24)
-                .addGroup(txtSearchUsernameLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(txtSearchUsernameLayout.createSequentialGroup()
-                        .addGap(8, 8, 8)
-                        .addComponent(jLabel7)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextField3, javax.swing.GroupLayout.PREFERRED_SIZE, 146, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(24, Short.MAX_VALUE))
+                .addGap(32, 32, 32)
+                .addComponent(jLabel7)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jTextField3, javax.swing.GroupLayout.PREFERRED_SIZE, 146, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(221, Short.MAX_VALUE))
+            .addGroup(txtSearchUsernameLayout.createSequentialGroup()
+                .addComponent(jScrollPane2)
+                .addContainerGap())
         );
         txtSearchUsernameLayout.setVerticalGroup(
             txtSearchUsernameLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -268,7 +332,7 @@ public class borrow_management extends javax.swing.JFrame {
                     .addComponent(jTextField3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel7))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 131, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 203, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -296,12 +360,50 @@ public class borrow_management extends javax.swing.JFrame {
         setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jComboBox1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBox1ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jComboBox1ActionPerformed
-
     private void addBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addBtnActionPerformed
+    String query = "INSERT INTO borrow_records (full_name, course, year_level, book_acq_no, borrow_date, due_date) VALUES (?, ?, ?, ?, ?, ?)";
+    LocalDate today = LocalDate.now();
+    LocalDate tomorrow = today.plusDays(1);
+
+    String borrowDate = today.toString();    // Becomes "2026-04-09"
+    String dueDate = tomorrow.toString();    // Becomes "2026-04-10"
+    
+    String acqNo = txtAcq.getText().trim();
+    
+    // 1. Basic Validation: Make sure it's not empty
+    if (acqNo.isEmpty()) {
+        JOptionPane.showMessageDialog(this, "Acquisition Number is required!");
+        return;
+    }
+
+    // 2. The Check: Does this ID already exist?
+    if (checkAcquisitionExists(acqNo)) {
+        JOptionPane.showMessageDialog(this, "Error: Acquisition No. " + acqNo + " already exists in the system!", "Duplicate Entry", JOptionPane.ERROR_MESSAGE);
+        return; // STOP HERE! Don't run the insert.
+    }
+    if(cmbCourse.getSelectedIndex() == 0 || cmbYear.getSelectedIndex() == 0) {
+    JOptionPane.showMessageDialog(this, "Please select a valid Course and Year!");
+    return;
+}
+    try (Connection con = getConnection(); 
+         PreparedStatement pst = con.prepareStatement(query)) {
         
+        pst.setString(1, txtFullName.getText());
+        pst.setString(2, cmbCourse.getSelectedItem().toString());
+        pst.setString(3, cmbYear.getSelectedItem().toString());
+        pst.setString(4, txtAcq.getText());
+        pst.setString(5, borrowDate);
+        pst.setString(6, dueDate);
+        
+
+        pst.executeUpdate();
+        JOptionPane.showMessageDialog(null, "Saved! Due date is: " + dueDate);
+        
+        updateJTable(); // Refresh UI
+        clearFields();
+    } catch (SQLException ex) {
+        JOptionPane.showMessageDialog(this, "Add Failed: " + ex.getMessage());
+    }
     }//GEN-LAST:event_addBtnActionPerformed
 
     private void editBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_editBtnActionPerformed
@@ -334,17 +436,13 @@ public class borrow_management extends javax.swing.JFrame {
         
     }//GEN-LAST:event_jTextField3KeyReleased
 
-    private void jComboBox2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBox2ActionPerformed
+    private void cmbYearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbYearActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_jComboBox2ActionPerformed
+    }//GEN-LAST:event_cmbYearActionPerformed
 
-    private void jComboBox3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBox3ActionPerformed
+    private void cmbCourseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbCourseActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_jComboBox3ActionPerformed
-
-    private void jComboBox4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBox4ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jComboBox4ActionPerformed
+    }//GEN-LAST:event_cmbCourseActionPerformed
 
     /**
      * @param args the command line arguments
@@ -374,18 +472,11 @@ public class borrow_management extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton addBtn;
     private javax.swing.JButton cancelBtn;
+    private javax.swing.JComboBox<String> cmbCourse;
+    private javax.swing.JComboBox<String> cmbYear;
     private javax.swing.JButton deleteBtn;
     private javax.swing.JButton editBtn;
     private javax.swing.JButton jButton5;
-    private javax.swing.JComboBox<String> jComboBox1;
-    private javax.swing.JComboBox<String> jComboBox2;
-    private javax.swing.JComboBox<String> jComboBox3;
-    private javax.swing.JComboBox<String> jComboBox4;
-    private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel3;
-    private javax.swing.JLabel jLabel4;
-    private javax.swing.JLabel jLabel5;
-    private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
     private javax.swing.JPanel jPanel3;
@@ -393,6 +484,12 @@ public class borrow_management extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JTable jTable2;
     private javax.swing.JTextField jTextField3;
+    private javax.swing.JLabel lblAcq;
+    private javax.swing.JLabel lblBorrow_Date;
+    private javax.swing.JLabel lblCourse;
+    private javax.swing.JLabel lblFullName;
+    private javax.swing.JLabel lblYear;
+    private javax.swing.JTextField txtAcq;
     private javax.swing.JTextField txtFullName;
     private javax.swing.JPanel txtSearchUsername;
     // End of variables declaration//GEN-END:variables
