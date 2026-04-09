@@ -37,6 +37,27 @@ public class book_management extends javax.swing.JFrame {
         cmbCategory.setSelectedIndex(0);
         cmbStatus.setSelectedIndex(0);
     }
+    
+    private boolean checkAcquisitionExists(String acqNo) {
+    boolean exists = false;
+    String checkQuery = "SELECT COUNT(*) FROM books WHERE acquisition_no = ?";
+    
+    try (Connection con = getConnection();
+         PreparedStatement pst = con.prepareStatement(checkQuery)) {
+        
+        pst.setString(1, acqNo);
+        ResultSet rs = pst.executeQuery();
+        
+        if (rs.next()) {
+            // if count > 0, it means it's already there
+            exists = rs.getInt(1) > 0;
+        }
+    } catch (SQLException ex) {
+        System.err.println("Validation Error: " + ex.getMessage());
+    }
+    return exists;
+}
+    
     private String formatDate(String input) {
     String digits = input.replaceAll("[^0-9]", ""); // Strip everything but numbers
 
@@ -509,10 +530,24 @@ public class book_management extends javax.swing.JFrame {
                                    
     String query = "INSERT INTO books (acquisition_no, title, author, date_published, category, status) VALUES (?, ?, ?, ?, ?, ?)";
     
+    
+    String acqNo = txtAcq.getText().trim();
+
+    // 1. Basic Validation: Make sure it's not empty
+    if (acqNo.isEmpty()) {
+        JOptionPane.showMessageDialog(this, "Acquisition Number is required!");
+        return;
+    }
+
+    // 2. The Check: Does this ID already exist?
+    if (checkAcquisitionExists(acqNo)) {
+        JOptionPane.showMessageDialog(this, "Error: Acquisition No. " + acqNo + " already exists in the system!", "Duplicate Entry", JOptionPane.ERROR_MESSAGE);
+        return; // STOP HERE! Don't run the insert.
+    }
     try (Connection con = getConnection(); 
          PreparedStatement pst = con.prepareStatement(query)) {
         
-        pst.setString(1, txtAcq.getText());
+        pst.setString(1, acqNo);
         pst.setString(2, txtTitle.getText());
         pst.setString(3, txtAuthor.getText()); // Put Author here!
         pst.setString(4, formatDate(txtDate.getText())); // Put Formatted Date here!
@@ -531,7 +566,15 @@ public class book_management extends javax.swing.JFrame {
 
     private void editBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_editBtnActionPerformed
      String query = "UPDATE books SET title=?, author=?, date_published=?, category=?, status=? WHERE acquisition_no=?";
-     
+     // Compare the current Text Field value to the value already in the Table
+    int selectedRow = jTable2.getSelectedRow();
+    boolean isSame = txtTitle.getText().equals(jTable2.getValueAt(selectedRow, 1).toString()) &&
+    txtAuthor.getText().equals(jTable2.getValueAt(selectedRow, 2).toString()) &&
+    txtDate.getText().equals(jTable2.getValueAt(selectedRow, 3).toString());
+    if (isSame) {
+        JOptionPane.showMessageDialog(this, "No changes detected.");
+        return; // This STOPS the method so the code below never runs
+    }   
     try (Connection con = getConnection(); 
          PreparedStatement pst = con.prepareStatement(query)) {
         
@@ -543,16 +586,10 @@ public class book_management extends javax.swing.JFrame {
         pst.setString(6, txtAcq.getText());
 
         int updated = pst.executeUpdate();
-        int selectedRow = jTable2.getSelectedRow();
-        // Compare the current Text Field value to the value already in the Table
-        boolean isSame = txtTitle.getText().equals(jTable2.getValueAt(selectedRow, 1).toString()) &&
-        txtAuthor.getText().equals(jTable2.getValueAt(selectedRow, 2).toString()) &&
-        txtDate.getText().equals(jTable2.getValueAt(selectedRow, 3).toString());
+        
+        
 
-        if (isSame) {
-        JOptionPane.showMessageDialog(this, "No changes detected.");
-        return; // This STOPS the method so the code below never runs
-    }   
+        
         
         if (updated > 0) {
             JOptionPane.showMessageDialog(this, "Update Successful");
@@ -564,7 +601,7 @@ public class book_management extends javax.swing.JFrame {
         
     } catch (SQLException ex) {
         JOptionPane.showMessageDialog(this, "Update Failed: " + ex.getMessage());
-    }
+        }
     }//GEN-LAST:event_editBtnActionPerformed
 
     private void deleteBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteBtnActionPerformed
