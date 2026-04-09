@@ -28,7 +28,7 @@
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="0" max="-2" attributes="0">
                   <Component id="txtSearchUsername" max="32767" attributes="0"/>
-                  <Component id="jPanel3" pref="506" max="32767" attributes="0"/>
+                  <Component id="jPanel3" pref="510" max="32767" attributes="0"/>
               </Group>
               <EmptySpace max="32767" attributes="0"/>
           </Group>

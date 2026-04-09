@@ -498,7 +498,7 @@ public class frontpage extends javax.swing.JFrame {
     if (response == javax.swing.JOptionPane.YES_OPTION) {
         
         this.dispose(); 
-        login1 w = new login1();
+        librarianOradministrator w = new librarianOradministrator();
         w.setVisible(true); 
     }
     // If they click "NO", the dialog just closes and nothing else happens.

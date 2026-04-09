@@ -569,34 +569,34 @@ public class book_management extends javax.swing.JFrame {
 
     private void deleteBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteBtnActionPerformed
        DefaultTableModel model = (DefaultTableModel) jTable2.getModel();
-int selectedRow = jTable2.getSelectedRow();
+        int selectedRow = jTable2.getSelectedRow();
 
-if(selectedRow >= 0) {
-    // Get the ID from the selected row so we know WHİCH one to kill in MySQL
-    String acqNo = model.getValueAt(selectedRow, 0).toString(); 
+        if(selectedRow >= 0) {
+            // Get the ID from the selected row so we know WHİCH one to kill in MySQL
+            String acqNo = model.getValueAt(selectedRow, 0).toString(); 
 
-    int confirm = JOptionPane.showConfirmDialog(this, "Are you sure?", "Warning", JOptionPane.YES_NO_OPTION);
-    
-    if(confirm == JOptionPane.YES_OPTION) {
-        // --- STEP 1: Delete from Database ---
-        try (Connection con = getConnection(); 
-             PreparedStatement pst = con.prepareStatement("DELETE FROM books WHERE acquisition_no=?")) {
-            
-            pst.setString(1, acqNo);
-            pst.executeUpdate(); 
-            
-            // --- STEP 2: Update UI ---
-            updateJTable(); 
-            updateTotal();
-            clearFields();
-            
-            JOptionPane.showMessageDialog(this, "Deleted from Database!");
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Database Error: " + ex.getMessage());
-        }
-    }
-} else {
-    JOptionPane.showMessageDialog(this, "Please select a row to delete!");
+            int confirm = JOptionPane.showConfirmDialog(this, "Are you sure?", "Warning", JOptionPane.YES_NO_OPTION);
+
+            if(confirm == JOptionPane.YES_OPTION) {
+                // --- STEP 1: Delete from Database ---
+                try (Connection con = getConnection(); 
+                     PreparedStatement pst = con.prepareStatement("DELETE FROM books WHERE acquisition_no=?")) {
+
+                    pst.setString(1, acqNo);
+                    pst.executeUpdate(); 
+
+                    // --- STEP 2: Update UI ---
+                    updateJTable(); 
+                    updateTotal();
+                    clearFields();
+
+                    JOptionPane.showMessageDialog(this, "Deleted from Database!");
+                } catch (SQLException ex) {
+                    JOptionPane.showMessageDialog(this, "Database Error: " + ex.getMessage());
+                }
+            }
+        } else {
+            JOptionPane.showMessageDialog(this, "Please select a row to delete!");
 }
     }//GEN-LAST:event_deleteBtnActionPerformed
 
