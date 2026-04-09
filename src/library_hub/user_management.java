@@ -336,7 +336,7 @@ public class user_management extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void editBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_editBtnActionPerformed
-        String fullName = txtFullName.getText();
+    String fullName = txtFullName.getText();
     String user = txtUsername.getText(); 
     String pass = new String(txtPassword.getPassword());
     String confirmPass = new String(txtConfirmPassword.getPassword()); // Get confirm box

@@ -19,10 +19,14 @@ public class book_management extends javax.swing.JFrame {
         updateJTable();
     }
     
-    private void btnCancelActionPerformed(java.awt.event.ActionEvent evt) {                                          
-    clearFields();
-    jTable2.clearSelection();
-}
+    private Connection getConnection() throws SQLException {
+    
+    String url = "jdbc:mysql://localhost:3306/libraryhub";
+    String dbUser = "root";
+    String dbPass = "";
+    return DriverManager.getConnection(url, dbUser,dbPass );
+}   
+
 
 // Helper method to reuse the clearing logic
     private void clearFields() {
@@ -33,80 +37,24 @@ public class book_management extends javax.swing.JFrame {
         cmbCategory.setSelectedIndex(0);
         cmbStatus.setSelectedIndex(0);
     }
+    private String formatDate(String input) {
+    String digits = input.replaceAll("[^0-9]", ""); // Strip everything but numbers
 
+    
+    //User typed 8 digits (e.g., 09112001)
+    if (digits.length() == 8) {
+        return digits.substring(0, 2) + "/" + 
+               digits.substring(2, 4) + "/" + 
+               digits.substring(4);
+    }
+
+    return input; // If they typed something weird, just return it
+}
 
     private void updateTotal() {
         txtTotalCount.setText(String.valueOf(jTable2.getRowCount()));
     }
     
-    private void btnAddActionPerformed(java.awt.event.ActionEvent evt) {                                       
-    String query = "INSERT INTO books (acquisition_no, title, author, date_published, category, status) VALUES (?, ?, ?, ?, ?, ?)";
-    
-    try (Connection con = getConnection(); 
-         PreparedStatement pst = con.prepareStatement(query)) {
-        
-        // Mapping text fields to the SQL Query "?" placeholders
-        pst.setString(1, txtAcq.getText());
-        pst.setString(2, txtTitle.getText());
-        pst.setString(3, txtAuthor.getText());
-        pst.setString(4, txtDate.getText());
-        pst.setString(5, cmbCategory.getSelectedItem().toString());
-        pst.setString(6, cmbStatus.getSelectedItem().toString());
-
-        int result = pst.executeUpdate(); // Executes the SQL insert
-        
-        if (result > 0) {
-            JOptionPane.showMessageDialog(this, "Book Saved to Database!");
-            updateJTable(); // Refresh the visual table from DB
-            clearFields();
-        }
-        
-    } catch (SQLException ex) {
-        JOptionPane.showMessageDialog(this, "Error Saving: " + ex.getMessage());
-    }
-}
-    
-    private void btnEditActionPerformed(java.awt.event.ActionEvent evt) {                                        
-    String query = "UPDATE books SET title=?, author=?, date_published=?, category=?, status=? WHERE acquisition_no=?";
-    
-    try (Connection con = getConnection(); 
-         PreparedStatement pst = con.prepareStatement(query)) {
-        
-        pst.setString(1, txtTitle.getText());
-        pst.setString(2, txtAuthor.getText());
-        pst.setString(3, txtDate.getText());
-        pst.setString(4, cmbCategory.getSelectedItem().toString());
-        pst.setString(5, cmbStatus.getSelectedItem().toString());
-        pst.setString(6, txtAcq.getText()); // The unique ID for WHERE clause
-
-        pst.executeUpdate();
-        JOptionPane.showMessageDialog(this, "Update Successful");
-        updateJTable();
-        
-    } catch (SQLException ex) {
-        JOptionPane.showMessageDialog(this, "Update Failed: " + ex.getMessage());
-    }
-}
-    
-    private void btnDeleteActionPerformed(java.awt.event.ActionEvent evt) {                                          
-    String query = "DELETE FROM books WHERE acquisition_no=?";
-    
-    int confirm = JOptionPane.showConfirmDialog(this, "Delete this book?", "Confirm", JOptionPane.YES_NO_OPTION);
-    if (confirm == JOptionPane.YES_OPTION) {
-        try (Connection con = getConnection(); 
-             PreparedStatement pst = con.prepareStatement(query)) {
-            
-            pst.setString(1, txtAcq.getText());
-            pst.executeUpdate();
-            
-            updateJTable();
-            clearFields();
-            
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Delete Failed: " + ex.getMessage());
-        }
-    }
-}
     
     public void updateJTable() {
     // Make sure your table variable name is jTable2
@@ -279,6 +227,12 @@ public class book_management extends javax.swing.JFrame {
 
         txtAuthor.addActionListener(this::txtAuthorActionPerformed);
 
+        txtDate.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createTitledBorder("Date (MM/DD/YYYY)")));
+        txtDate.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                txtDateFocusLost(evt);
+            }
+        });
         txtDate.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 txtDateMouseClicked(evt);
@@ -552,63 +506,103 @@ public class book_management extends javax.swing.JFrame {
     }//GEN-LAST:event_cmbCategoryActionPerformed
 
     private void addBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addBtnActionPerformed
-        DefaultTableModel model = (DefaultTableModel) jTable2.getModel();
+                                   
+    String query = "INSERT INTO books (acquisition_no, title, author, date_published, category, status) VALUES (?, ?, ?, ?, ?, ?)";
     
-        // Validation: Check if fields are empty
-        if(txtAcq.getText().equals("") || txtTitle.getText().equals("")) {
-            JOptionPane.showMessageDialog(this, "Please fill in all required fields!");
-        } else {
-            // Add row to table
-            model.addRow(new Object[]{
-                txtAcq.getText(),
-                txtTitle.getText(),
-                txtAuthor.getText(),
-                txtDate.getText(),
-                cmbCategory.getSelectedItem().toString(),
-                cmbStatus.getSelectedItem().toString()
-            });
-            updateJTable();
-            updateTotal(); // Function to update the orange box
-            clearFields(); // Function to reset fields
+    try (Connection con = getConnection(); 
+         PreparedStatement pst = con.prepareStatement(query)) {
+        
+        pst.setString(1, txtAcq.getText());
+        pst.setString(2, txtTitle.getText());
+        pst.setString(3, txtAuthor.getText()); // Put Author here!
+        pst.setString(4, formatDate(txtDate.getText())); // Put Formatted Date here!
+        pst.setString(5, cmbCategory.getSelectedItem().toString());
+        pst.setString(6, cmbStatus.getSelectedItem().toString());
+
+        pst.executeUpdate();
+        JOptionPane.showMessageDialog(this, "Book Added!");
+        
+        updateJTable(); // Refresh UI
+        clearFields();
+    } catch (SQLException ex) {
+        JOptionPane.showMessageDialog(this, "Add Failed: " + ex.getMessage());
     }
     }//GEN-LAST:event_addBtnActionPerformed
 
     private void editBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_editBtnActionPerformed
-        DefaultTableModel model = (DefaultTableModel) jTable2.getModel();
-    int selectedRow = jTable2.getSelectedRow();
-    
-    if(selectedRow >= 0) {
-        model.setValueAt(txtAcq.getText(), selectedRow, 0);
-        model.setValueAt(txtTitle.getText(), selectedRow, 1);
-        model.setValueAt(txtAuthor.getText(), selectedRow, 2);
-        model.setValueAt(txtDate.getText(), selectedRow, 3);
-        model.setValueAt(cmbCategory.getSelectedItem(), selectedRow, 4);
-        model.setValueAt(cmbStatus.getSelectedItem(), selectedRow, 5);
+     String query = "UPDATE books SET title=?, author=?, date_published=?, category=?, status=? WHERE acquisition_no=?";
+     
+    try (Connection con = getConnection(); 
+         PreparedStatement pst = con.prepareStatement(query)) {
         
-        JOptionPane.showMessageDialog(this, "Record Updated Successfully");
-    } else {
-        JOptionPane.showMessageDialog(this, "Please select a row to edit!");
+        pst.setString(1, txtTitle.getText());
+        pst.setString(2, txtAuthor.getText());
+        pst.setString(3, formatDate(txtDate.getText())); // Formatted Date
+        pst.setString(4, cmbCategory.getSelectedItem().toString());
+        pst.setString(5, cmbStatus.getSelectedItem().toString());
+        pst.setString(6, txtAcq.getText());
+
+        int updated = pst.executeUpdate();
+        int selectedRow = jTable2.getSelectedRow();
+        // Compare the current Text Field value to the value already in the Table
+        boolean isSame = txtTitle.getText().equals(jTable2.getValueAt(selectedRow, 1).toString()) &&
+        txtAuthor.getText().equals(jTable2.getValueAt(selectedRow, 2).toString()) &&
+        txtDate.getText().equals(jTable2.getValueAt(selectedRow, 3).toString());
+
+        if (isSame) {
+        JOptionPane.showMessageDialog(this, "No changes detected.");
+        return; // This STOPS the method so the code below never runs
+    }   
+        
+        if (updated > 0) {
+            JOptionPane.showMessageDialog(this, "Update Successful");
+            updateJTable(); // This refreshes the table from the database
+            clearFields();
+        }else{
+            JOptionPane.showMessageDialog(this, "No record found with that Acquisition No.");
+        }
+        
+    } catch (SQLException ex) {
+        JOptionPane.showMessageDialog(this, "Update Failed: " + ex.getMessage());
     }
     }//GEN-LAST:event_editBtnActionPerformed
 
     private void deleteBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteBtnActionPerformed
-        DefaultTableModel model = (DefaultTableModel) jTable2.getModel();
-        int selectedRow = jTable2.getSelectedRow();
+       DefaultTableModel model = (DefaultTableModel) jTable2.getModel();
+int selectedRow = jTable2.getSelectedRow();
 
-        if(selectedRow >= 0) {
-            int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this?", "Warning", JOptionPane.YES_NO_OPTION);
-            if(confirm == JOptionPane.YES_OPTION) {
-                model.removeRow(selectedRow);
-                updateTotal();
-                clearFields();
-            }
-        } else {
-            JOptionPane.showMessageDialog(this, "Please select a row to delete!");
+if(selectedRow >= 0) {
+    // Get the ID from the selected row so we know WHİCH one to kill in MySQL
+    String acqNo = model.getValueAt(selectedRow, 0).toString(); 
+
+    int confirm = JOptionPane.showConfirmDialog(this, "Are you sure?", "Warning", JOptionPane.YES_NO_OPTION);
+    
+    if(confirm == JOptionPane.YES_OPTION) {
+        // --- STEP 1: Delete from Database ---
+        try (Connection con = getConnection(); 
+             PreparedStatement pst = con.prepareStatement("DELETE FROM books WHERE acquisition_no=?")) {
+            
+            pst.setString(1, acqNo);
+            pst.executeUpdate(); 
+            
+            // --- STEP 2: Update UI ---
+            updateJTable(); 
+            updateTotal();
+            clearFields();
+            
+            JOptionPane.showMessageDialog(this, "Deleted from Database!");
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Database Error: " + ex.getMessage());
         }
+    }
+} else {
+    JOptionPane.showMessageDialog(this, "Please select a row to delete!");
+}
     }//GEN-LAST:event_deleteBtnActionPerformed
 
     private void cancelBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelBtnActionPerformed
-        
+    clearFields();
+    jTable2.clearSelection();
     }//GEN-LAST:event_cancelBtnActionPerformed
 
     private void cmbStatusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbStatusActionPerformed
@@ -640,19 +634,28 @@ public class book_management extends javax.swing.JFrame {
     }//GEN-LAST:event_txtTotalCountActionPerformed
 
     private void jTable2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable2MouseClicked
-        
-    }//GEN-LAST:event_jTable2MouseClicked
+    int i = jTable2.getSelectedRow();
+    DefaultTableModel model = (DefaultTableModel)jTable2.getModel();
     
-    public Connection getConnection() {
-        Connection con;
-        try {
-            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/libraryhub", "root", "");
-            return con;
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Database Connection Failed: " + ex.getMessage());
-            return null;
+    txtAcq.setText(model.getValueAt(i, 0).toString());
+    txtTitle.setText(model.getValueAt(i, 1).toString());
+    txtAuthor.setText(model.getValueAt(i, 2).toString());
+    txtDate.setText(model.getValueAt(i, 3).toString());
+    cmbCategory.setSelectedItem(model.getValueAt(i, 4).toString());
+    cmbStatus.setSelectedItem(model.getValueAt(i, 5).toString());
+    
+    txtAcq.setEditable(false);
+    }//GEN-LAST:event_jTable2MouseClicked
+
+    private void txtDateFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtDateFocusLost
+        // TODO add your handling code here:
+        String input = txtDate.getText();
+        if (input.length() == 8 && !input.contains("/")) {
+            txtDate.setText(formatDate(input));
         }
-    }
+    }//GEN-LAST:event_txtDateFocusLost
+    
+    
     
     /**
      * @param args the command line arguments
