@@ -44,7 +44,31 @@ public class borrow_management extends javax.swing.JFrame {
     String dbPass = "";
     return DriverManager.getConnection(url, dbUser,dbPass );
     }   
-    
+    //unnecessary method but who cares lol
+    private void saveBorrowRecord(String name, String course, String year, String acq, String bDate, String dDate) {
+    String query = "INSERT INTO borrow_records (full_name, course, year_level, book_acq_no, borrow_date, due_date) VALUES (?, ?, ?, ?, ?, ?)";
+
+    try (Connection con = getConnection(); 
+         PreparedStatement pst = con.prepareStatement(query)) {
+        
+        pst.setString(1, name);
+        pst.setString(2, course);
+        pst.setString(3, year);
+        pst.setString(4, acq);
+        pst.setString(5, bDate);
+        pst.setString(6, dDate);
+
+        pst.executeUpdate();
+        JOptionPane.showMessageDialog(null, "Saved! Due date is: " + dDate);
+        
+        updateJTable(); 
+        clearFields();  
+        
+    } catch (SQLException ex) {
+        JOptionPane.showMessageDialog(this, "Add Failed: " + ex.getMessage());
+    }
+}
+    //checks if acquisition number exists para iwas duplicates
     private boolean checkAcquisitionExists(String acqNo) {
     boolean exists = false;
     String checkQuery = "SELECT COUNT(*) FROM borrow_records WHERE acquisition_no = ?";
@@ -361,30 +385,39 @@ public class borrow_management extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void addBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addBtnActionPerformed
-    String query = "INSERT INTO borrow_records (full_name, course, year_level, book_acq_no, borrow_date, due_date) VALUES (?, ?, ?, ?, ?, ?)";
-    LocalDate today = LocalDate.now();
-    LocalDate tomorrow = today.plusDays(1);
+    String name = txtFullName.getText().trim();
+    String acq = txtAcq.getText().trim();
+    String course = cmbCourse.getSelectedItem().toString();
+    String year = cmbYear.getSelectedItem().toString();
+    String bDate = LocalDate.now().toString();
+    String dDate = LocalDate.now().plusDays(1).toString();
 
-    String borrowDate = today.toString();    // Becomes "2026-04-09"
-    String dueDate = tomorrow.toString();    // Becomes "2026-04-10"
+    // 2. Validate
+    if (name.isEmpty() || acq.isEmpty() || cmbCourse.getSelectedIndex() == 0) {
+        JOptionPane.showMessageDialog(this, "Please fill in all fields!");
+        return;
+    }
     
-    String acqNo = txtAcq.getText().trim();
-    
-    // 1. Basic Validation: Make sure it's not empty
-    if (acqNo.isEmpty()) {
-        JOptionPane.showMessageDialog(this, "Acquisition Number is required!");
+    if (checkAcquisitionExists(acq)) {
+        JOptionPane.showMessageDialog(this, "Error: Book already borrowed!");
         return;
     }
 
-    // 2. The Check: Does this ID already exist?
-    if (checkAcquisitionExists(acqNo)) {
-        JOptionPane.showMessageDialog(this, "Error: Acquisition No. " + acqNo + " already exists in the system!", "Duplicate Entry", JOptionPane.ERROR_MESSAGE);
-        return; // STOP HERE! Don't run the insert.
-    }
-    if(cmbCourse.getSelectedIndex() == 0 || cmbYear.getSelectedIndex() == 0) {
-    JOptionPane.showMessageDialog(this, "Please select a valid Course and Year!");
-    return;
-}
+    // 3. Call the Method
+    saveBorrowRecord(name, course, year, acq, bDate, dDate);
+    }//GEN-LAST:event_addBtnActionPerformed
+
+    private void editBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_editBtnActionPerformed
+    String name = txtFullName.getText().trim();
+    String acq = txtAcq.getText().trim();
+    String course = cmbCourse.getSelectedItem().toString();
+    String year = cmbYear.getSelectedItem().toString();
+    int selectedRow = jTable2.getSelectedRow();
+    
+    
+    String id = jTable2.getValueAt(selectedRow, 0).toString();
+    String query = "UPDATE borrow_records SET full_name=?, course=?, year_level=?, book_acq_no=? WHERE borrower_id=?";
+
     try (Connection con = getConnection(); 
          PreparedStatement pst = con.prepareStatement(query)) {
         
@@ -392,21 +425,16 @@ public class borrow_management extends javax.swing.JFrame {
         pst.setString(2, cmbCourse.getSelectedItem().toString());
         pst.setString(3, cmbYear.getSelectedItem().toString());
         pst.setString(4, txtAcq.getText());
-        pst.setString(5, borrowDate);
-        pst.setString(6, dueDate);
-        
+        pst.setString(5, id);
 
         pst.executeUpdate();
-        JOptionPane.showMessageDialog(null, "Saved! Due date is: " + dueDate);
-        
-        updateJTable(); // Refresh UI
-        clearFields();
+        updateJTable();
+        JOptionPane.showMessageDialog(this, "Updated!");
     } catch (SQLException ex) {
-        JOptionPane.showMessageDialog(this, "Add Failed: " + ex.getMessage());
+        JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage());
     }
-    }//GEN-LAST:event_addBtnActionPerformed
-
-    private void editBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_editBtnActionPerformed
+    
+        
         
     }//GEN-LAST:event_editBtnActionPerformed
 
@@ -425,7 +453,16 @@ public class borrow_management extends javax.swing.JFrame {
     }//GEN-LAST:event_jButton5ActionPerformed
 
     private void jTable2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable2MouseClicked
-        
+        int i = jTable2.getSelectedRow();
+    DefaultTableModel model = (DefaultTableModel)jTable2.getModel();
+    
+    
+    txtFullName.setText(model.getValueAt(i, 0).toString());
+    cmbCourse.setSelectedItem(model.getValueAt(i, 1).toString());
+    cmbYear.setSelectedItem(model.getValueAt(i, 2).toString());
+    txtAcq.setText(model.getValueAt(i, 3).toString());
+    
+    txtAcq.setEditable(false);
     }//GEN-LAST:event_jTable2MouseClicked
 
     private void jTextField3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField3ActionPerformed
