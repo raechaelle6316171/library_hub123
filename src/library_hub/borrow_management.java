@@ -439,11 +439,43 @@ public class borrow_management extends javax.swing.JFrame {
     }//GEN-LAST:event_editBtnActionPerformed
 
     private void deleteBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteBtnActionPerformed
+        int row = jTable2.getSelectedRow();
+    
+    // 1. Check if a row is actually selected
+    if (row == -1) {
+        JOptionPane.showMessageDialog(this, "Please select a record from the table to delete.");
+        return;
+    }
+
+    // 2. Ask for confirmation (Safety first!)
+    int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this record?", "Confirm Delete", JOptionPane.YES_NO_OPTION);
+    
+    if (confirm == JOptionPane.YES_OPTION) {
+        // 3. Get the ID from the table 
+        String id = jTable2.getValueAt(row, 0).toString();
         
+        String sql = "DELETE FROM borrow_records WHERE borrower_id = ?"; // Change 'id' to your actual column name
+
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setString(1, id);
+            pstmt.executeUpdate();
+            
+            JOptionPane.showMessageDialog(this, "Record deleted successfully!");
+            
+            // 4. Refresh the UI
+            updateJTable();
+            clearFields();
+            
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error deleting record: " + e.getMessage());
+        }
+    }
     }//GEN-LAST:event_deleteBtnActionPerformed
 
     private void cancelBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelBtnActionPerformed
-        
+        clearFields();
     }//GEN-LAST:event_cancelBtnActionPerformed
 
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
