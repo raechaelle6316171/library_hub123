@@ -506,7 +506,7 @@ public class frontpage extends javax.swing.JFrame {
 
     private void userBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_userBtnActionPerformed
         this.dispose();
-        user_management_copy w = new user_management_copy();
+        user_management w = new user_management();
         w.setVisible(true);
     }//GEN-LAST:event_userBtnActionPerformed
 
