@@ -691,6 +691,7 @@ public class book_management extends javax.swing.JFrame {
     if (parentForm != null) {
         parentForm.setAcquisitionNo(acqNo); // This calls a method in borrow_management
         this.dispose(); // Closes the book list automatically
+        return;
     }
     txtAcq.setText(model.getValueAt(i, 0).toString());
     txtTitle.setText(model.getValueAt(i, 1).toString());
