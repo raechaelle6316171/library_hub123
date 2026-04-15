@@ -11,12 +11,22 @@ import javax.swing.table.DefaultTableModel;
 
 public class book_management extends javax.swing.JFrame {
     
-    
+    private borrow_management parentForm;
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(book_management.class.getName());
     
     public book_management() {
         initComponents();
         updateJTable();
+    }
+    // Add this second constructor
+    public book_management(borrow_management parent) {
+        this.parentForm = parent;
+        initComponents();
+        updateJTable();
+        // Hide buttons that shouldn't be used during "Selection Mode"
+        addBtn.setVisible(false);
+        editBtn.setVisible(false);
+        deleteBtn.setVisible(false);
     }
     
     private Connection getConnection() throws SQLException {
@@ -674,6 +684,14 @@ public class book_management extends javax.swing.JFrame {
     int i = jTable2.getSelectedRow();
     DefaultTableModel model = (DefaultTableModel)jTable2.getModel();
     
+    // Get the Acquisition No (Column 0)
+    String acqNo = model.getValueAt(i, 0).toString(); 
+
+    // If we opened this from the Borrow screen, send the data back!
+    if (parentForm != null) {
+        parentForm.setAcquisitionNo(acqNo); // This calls a method in borrow_management
+        this.dispose(); // Closes the book list automatically
+    }
     txtAcq.setText(model.getValueAt(i, 0).toString());
     txtTitle.setText(model.getValueAt(i, 1).toString());
     txtAuthor.setText(model.getValueAt(i, 2).toString());
