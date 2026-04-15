@@ -71,7 +71,7 @@ public class borrow_management extends javax.swing.JFrame {
     //checks if acquisition number exists para iwas duplicates
     private boolean checkAcquisitionExists(String acqNo) {
     boolean exists = false;
-    String checkQuery = "SELECT COUNT(*) FROM borrow_records WHERE acquisition_no = ?";
+    String checkQuery = "SELECT COUNT(*) FROM borrow_records WHERE book_acq_no = ?";
     
     try (Connection con = getConnection();
          PreparedStatement pst = con.prepareStatement(checkQuery)) {
@@ -88,19 +88,22 @@ public class borrow_management extends javax.swing.JFrame {
     }
     return exists;
 }
-    
+    //for the constructor
     public void updateJTable() {
-    // Make sure your table variable name is jTable2
-    DefaultTableModel model = (DefaultTableModel) jTable2.getModel();
-    model.setRowCount(0); // Clear the table first
+    updateJTable("ORDER BY borrower_id DESC"); 
+}
+    public void updateJTable(String orderBy) {
 
+    DefaultTableModel model = (DefaultTableModel) jTable2.getModel();
+    model.setRowCount(0); // Clearing table
+    
+    String sql = "SELECT * FROM borrow_records " + orderBy;
     try {
         Connection con = getConnection();
         Statement st = con.createStatement();
-        ResultSet rs = st.executeQuery("SELECT * FROM borrow_records"); // 'books' is your table name
+        ResultSet rs = st.executeQuery(sql); 
 
         while (rs.next()) {
-            // Add rows based on your database columns
             model.addRow(new Object[]{
                 rs.getString("borrower_id"),
                 rs.getString("full_name"),
@@ -108,7 +111,7 @@ public class borrow_management extends javax.swing.JFrame {
                 rs.getString("year_level"),
                 rs.getString("book_acq_no"),
                 rs.getString("borrow_date"),
-                rs.getString("due_date") // Add this line!
+                rs.getString("due_date") 
             });
         }
       
@@ -133,7 +136,6 @@ public class borrow_management extends javax.swing.JFrame {
         lblAcq = new javax.swing.JLabel();
         lblCourse = new javax.swing.JLabel();
         lblYear = new javax.swing.JLabel();
-        lblBorrow_Date = new javax.swing.JLabel();
         deleteBtn = new javax.swing.JButton();
         cancelBtn = new javax.swing.JButton();
         cmbYear = new javax.swing.JComboBox<>();
@@ -147,8 +149,9 @@ public class borrow_management extends javax.swing.JFrame {
         txtSearchUsername = new javax.swing.JPanel();
         jScrollPane2 = new javax.swing.JScrollPane();
         jTable2 = new javax.swing.JTable();
-        jTextField3 = new javax.swing.JTextField();
+        txtSearchbar = new javax.swing.JTextField();
         jLabel7 = new javax.swing.JLabel();
+        cmbSorter = new javax.swing.JComboBox<>();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -171,10 +174,6 @@ public class borrow_management extends javax.swing.JFrame {
         lblYear.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         lblYear.setForeground(new java.awt.Color(255, 255, 255));
         lblYear.setText("YEAR");
-
-        lblBorrow_Date.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-        lblBorrow_Date.setForeground(new java.awt.Color(255, 255, 255));
-        lblBorrow_Date.setText("Borrow Date");
 
         deleteBtn.setText("DELETE");
         deleteBtn.addActionListener(this::deleteBtnActionPerformed);
@@ -207,7 +206,6 @@ public class borrow_management extends javax.swing.JFrame {
                     .addComponent(lblAcq, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(lblCourse, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(lblYear, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(lblBorrow_Date, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(cmbYear, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(cmbCourse, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
@@ -240,9 +238,7 @@ public class borrow_management extends javax.swing.JFrame {
                 .addComponent(lblYear)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(cmbYear, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(lblBorrow_Date)
-                .addGap(89, 89, 89)
+                .addGap(115, 115, 115)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(addBtn)
                     .addComponent(editBtn))
@@ -323,16 +319,19 @@ public class borrow_management extends javax.swing.JFrame {
         });
         jScrollPane2.setViewportView(jTable2);
 
-        jTextField3.addActionListener(this::jTextField3ActionPerformed);
-        jTextField3.addKeyListener(new java.awt.event.KeyAdapter() {
+        txtSearchbar.addActionListener(this::txtSearchbarActionPerformed);
+        txtSearchbar.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyReleased(java.awt.event.KeyEvent evt) {
-                jTextField3KeyReleased(evt);
+                txtSearchbarKeyReleased(evt);
             }
         });
 
         jLabel7.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         jLabel7.setForeground(new java.awt.Color(255, 255, 255));
         jLabel7.setText("Search Fullname");
+
+        cmbSorter.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Name (A-Z)", "Borrow Date (Newest)", "Due Date (Earliest)" }));
+        cmbSorter.addActionListener(this::cmbSorterActionPerformed);
 
         javax.swing.GroupLayout txtSearchUsernameLayout = new javax.swing.GroupLayout(txtSearchUsername);
         txtSearchUsername.setLayout(txtSearchUsernameLayout);
@@ -342,10 +341,12 @@ public class borrow_management extends javax.swing.JFrame {
                 .addGap(32, 32, 32)
                 .addComponent(jLabel7)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jTextField3, javax.swing.GroupLayout.PREFERRED_SIZE, 146, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(221, Short.MAX_VALUE))
+                .addComponent(txtSearchbar, javax.swing.GroupLayout.PREFERRED_SIZE, 146, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(cmbSorter, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(24, 24, 24))
             .addGroup(txtSearchUsernameLayout.createSequentialGroup()
-                .addComponent(jScrollPane2)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 498, Short.MAX_VALUE)
                 .addContainerGap())
         );
         txtSearchUsernameLayout.setVerticalGroup(
@@ -353,8 +354,9 @@ public class borrow_management extends javax.swing.JFrame {
             .addGroup(txtSearchUsernameLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(txtSearchUsernameLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jTextField3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel7))
+                    .addComponent(txtSearchbar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel7)
+                    .addComponent(cmbSorter, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 203, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
@@ -488,22 +490,49 @@ public class borrow_management extends javax.swing.JFrame {
         int i = jTable2.getSelectedRow();
     DefaultTableModel model = (DefaultTableModel)jTable2.getModel();
     
+    txtFullName.setText(model.getValueAt(i, 1).toString());
+    cmbCourse.setSelectedItem(model.getValueAt(i, 2).toString());
+    cmbYear.setSelectedItem(model.getValueAt(i, 3).toString());
+    txtAcq.setText(model.getValueAt(i, 4).toString());
     
-    txtFullName.setText(model.getValueAt(i, 0).toString());
-    cmbCourse.setSelectedItem(model.getValueAt(i, 1).toString());
-    cmbYear.setSelectedItem(model.getValueAt(i, 2).toString());
-    txtAcq.setText(model.getValueAt(i, 3).toString());
     
     txtAcq.setEditable(false);
     }//GEN-LAST:event_jTable2MouseClicked
 
-    private void jTextField3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField3ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jTextField3ActionPerformed
+    private void txtSearchbarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtSearchbarActionPerformed
+     
+    }//GEN-LAST:event_txtSearchbarActionPerformed
 
-    private void jTextField3KeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTextField3KeyReleased
+    private void txtSearchbarKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtSearchbarKeyReleased
+        String searchName = txtSearchbar.getText().trim();
+    DefaultTableModel model = (DefaultTableModel) jTable2.getModel();
+    model.setRowCount(0);
+
+    // Search by name OR ID
+    String query = "SELECT * FROM borrow_records WHERE full_name LIKE ? OR borrower_id LIKE ?";
+    
+    try (Connection con = getConnection();
+         PreparedStatement pst = con.prepareStatement(query)) {
         
-    }//GEN-LAST:event_jTextField3KeyReleased
+        pst.setString(1, "%" + searchName + "%");
+        pst.setString(2, "%" + searchName + "%"); // Added this to search IDs too
+        ResultSet rs = pst.executeQuery();
+
+        while (rs.next()) {
+            model.addRow(new Object[]{
+                rs.getString("borrower_id"),
+                rs.getString("full_name"),
+                rs.getString("course"),
+                rs.getString("year_level"),
+                rs.getString("book_acq_no"),
+                rs.getString("borrow_date"),
+                rs.getString("due_date")
+            });
+        }
+    } catch (SQLException e) {
+        System.out.println("Search error: " + e.getMessage());
+    }
+    }//GEN-LAST:event_txtSearchbarKeyReleased
 
     private void cmbYearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbYearActionPerformed
         // TODO add your handling code here:
@@ -512,6 +541,22 @@ public class borrow_management extends javax.swing.JFrame {
     private void cmbCourseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbCourseActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_cmbCourseActionPerformed
+
+    private void cmbSorterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbSorterActionPerformed
+        // TODO add your handling code here:
+    String selected = cmbSorter.getSelectedItem().toString();
+    String clause = "ORDER BY borrower_id DESC"; // Default
+
+    if (selected.equals("Name (A-Z)")) {
+        clause = "ORDER BY full_name ASC";
+    } else if (selected.equals("Borrow Date (Newest)")) {
+        clause = "ORDER BY borrow_date DESC";
+    } else if (selected.equals("Due Date (Earliest)")) {
+        clause = "ORDER BY due_date ASC";
+    }
+
+    updateJTable(clause);
+    }//GEN-LAST:event_cmbSorterActionPerformed
 
     /**
      * @param args the command line arguments
@@ -542,6 +587,7 @@ public class borrow_management extends javax.swing.JFrame {
     private javax.swing.JButton addBtn;
     private javax.swing.JButton cancelBtn;
     private javax.swing.JComboBox<String> cmbCourse;
+    private javax.swing.JComboBox<String> cmbSorter;
     private javax.swing.JComboBox<String> cmbYear;
     private javax.swing.JButton deleteBtn;
     private javax.swing.JButton editBtn;
@@ -552,14 +598,13 @@ public class borrow_management extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel4;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JTable jTable2;
-    private javax.swing.JTextField jTextField3;
     private javax.swing.JLabel lblAcq;
-    private javax.swing.JLabel lblBorrow_Date;
     private javax.swing.JLabel lblCourse;
     private javax.swing.JLabel lblFullName;
     private javax.swing.JLabel lblYear;
     private javax.swing.JTextField txtAcq;
     private javax.swing.JTextField txtFullName;
     private javax.swing.JPanel txtSearchUsername;
+    private javax.swing.JTextField txtSearchbar;
     // End of variables declaration//GEN-END:variables
 }
