@@ -34,6 +34,7 @@ public class borrow_management extends javax.swing.JFrame {
         txtAcq.setText("");
         cmbCourse.setSelectedIndex(0);
         cmbYear.setSelectedIndex(0);
+        txtAcq.setEditable(false);
         
     }
     
@@ -45,11 +46,11 @@ public class borrow_management extends javax.swing.JFrame {
     return DriverManager.getConnection(url, dbUser,dbPass );
     }   
     //unnecessary method but who cares lol
-    private void saveBorrowRecord(String name, String course, String year, String acq, String bDate, String dDate) {
+    private void saveBorrowRecord(Connection con, String name, String course, String year, String acq, String bDate, String dDate) throws SQLException {
     String query = "INSERT INTO borrow_records (full_name, course, year_level, book_acq_no, borrow_date, due_date) VALUES (?, ?, ?, ?, ?, ?)";
 
-    try (Connection con = getConnection(); 
-         PreparedStatement pst = con.prepareStatement(query)) {
+    
+        PreparedStatement pst = con.prepareStatement(query);
         
         pst.setString(1, name);
         pst.setString(2, course);
@@ -59,14 +60,7 @@ public class borrow_management extends javax.swing.JFrame {
         pst.setString(6, dDate);
 
         pst.executeUpdate();
-        JOptionPane.showMessageDialog(null, "Saved! Due date is: " + dDate);
-        
-        updateJTable(); 
-        clearFields();  
-        
-    } catch (SQLException ex) {
-        JOptionPane.showMessageDialog(this, "Add Failed: " + ex.getMessage());
-    }
+       
 }
     //checks if acquisition number exists para iwas duplicates
     private boolean checkAcquisitionExists(String acqNo) {
@@ -404,20 +398,52 @@ public class borrow_management extends javax.swing.JFrame {
     String year = cmbYear.getSelectedItem().toString();
     String bDate = LocalDate.now().toString();
     String dDate = LocalDate.now().plusDays(1).toString();
-
-    // 2. Validate
-    if (name.isEmpty() || acq.isEmpty() || cmbCourse.getSelectedIndex() == 0) {
-        JOptionPane.showMessageDialog(this, "Please fill in all fields!");
-        return;
-    }
     
-    if (checkAcquisitionExists(acq)) {
-        JOptionPane.showMessageDialog(this, "Error: Book already borrowed!");
-        return;
-    }
+    try (Connection con = getConnection()) {
+        String checkStatusSql = "SELECT status FROM books WHERE acquisition_no = ?";
+        PreparedStatement pstStatus = con.prepareStatement(checkStatusSql);
+        pstStatus.setString(1, acq);
+        ResultSet rs = pstStatus.executeQuery();
+        
+        
+        
+   
+        
+        if (rs.next()) {
+            String status = rs.getString("status");
+            if (status.equalsIgnoreCase("Unavailable")) {
+                JOptionPane.showMessageDialog(this, "This book is currently Unavailable in the library!");
+                return;
+            }
+        } else {
+            JOptionPane.showMessageDialog(this, "This Acquisition Number does not exist in our library records!");
+            return;
+        }
+    
+        // 2. Validate
+        if (name.isEmpty() || acq.isEmpty() || cmbCourse.getSelectedIndex() == 0) {
+            JOptionPane.showMessageDialog(this, "Please fill in all fields!");
+            return;
+        }
 
-    // 3. Call the Method
-    saveBorrowRecord(name, course, year, acq, bDate, dDate);
+        if (checkAcquisitionExists(acq)) {
+            JOptionPane.showMessageDialog(this, "Error: Book already borrowed!");
+            return;
+        }
+        saveBorrowRecord(con, name, course, year, acq, bDate, dDate);
+        String updateStatusSql = "UPDATE books SET status = 'Unavailable' WHERE acquisition_no = ?";
+        PreparedStatement pstUpdate = con.prepareStatement(updateStatusSql);
+        pstUpdate.setString(1, acq);
+        pstUpdate.executeUpdate();
+        JOptionPane.showMessageDialog(null, "Saved! Due date is: " + dDate);
+        
+        updateJTable(); 
+        clearFields();  
+        
+
+    } catch (SQLException e) {
+        JOptionPane.showMessageDialog(this, "Database Error: " + e.getMessage());
+        }
     }//GEN-LAST:event_addBtnActionPerformed
 
     private void editBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_editBtnActionPerformed
@@ -453,7 +479,6 @@ public class borrow_management extends javax.swing.JFrame {
 
     private void deleteBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteBtnActionPerformed
         int row = jTable2.getSelectedRow();
-    
     // 1. Check if a row is actually selected
     if (row == -1) {
         JOptionPane.showMessageDialog(this, "Please select a record from the table to delete.");
@@ -465,16 +490,19 @@ public class borrow_management extends javax.swing.JFrame {
     
     if (confirm == JOptionPane.YES_OPTION) {
         // 3. Get the ID from the table 
-        String id = jTable2.getValueAt(row, 0).toString();
+        String id = jTable2.getValueAt(row, 0).toString(); //borrower id
+        String acqFromTable = jTable2.getValueAt(row, 4).toString(); //acquisiton id
         
         String sql = "DELETE FROM borrow_records WHERE borrower_id = ?"; // Change 'id' to your actual column name
-
+        String updateBook = "UPDATE books SET status = 'Available' WHERE acquisition_no = ?";
+        
         try (Connection conn = getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
+            PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            PreparedStatement pstStatus = conn.prepareStatement(updateBook);
             pstmt.setString(1, id);
             pstmt.executeUpdate();
-            
+            pstStatus.setString(1, acqFromTable);
+            pstStatus.executeUpdate();
             JOptionPane.showMessageDialog(this, "Record deleted successfully!");
             
             // 4. Refresh the UI
@@ -483,7 +511,8 @@ public class borrow_management extends javax.swing.JFrame {
             
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(this, "Error deleting record: " + e.getMessage());
-        }
+            }
+        
     }
     }//GEN-LAST:event_deleteBtnActionPerformed
 
@@ -574,7 +603,7 @@ public class borrow_management extends javax.swing.JFrame {
     }
     private void btnSelectActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSelectActionPerformed
 
-        book_management bookList = new book_management(this);
+        book_management bookList = new book_management(this); 
         bookList.setVisible(true);
                     
     }//GEN-LAST:event_btnSelectActionPerformed
