@@ -197,39 +197,36 @@ public class login1 extends javax.swing.JFrame {
 
     private void loginBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loginBtnActionPerformed
         String uname = enterUsername.getText();
-String upassword = enterPassword.getText();
+        String upassword = enterPassword.getText();
 
-// 1. Validation: Check if either field is empty
-if (uname.trim().isEmpty() || upassword.trim().isEmpty()) {
-    JOptionPane.showMessageDialog(null, "Please enter your username and password", "Login Error", JOptionPane.WARNING_MESSAGE);
-    
-    // Optional: focus back on the username field for convenience
-    enterUsername.requestFocus();
-} else {
-    // 2. If fields are filled, proceed to database check
-    try {
-        Connection conn = MySQLConnect.getConnection();
-        
-        // Ensure your table column names match exactly (e.g., userName vs username)
-        String query = "SELECT * FROM user WHERE userName = ? AND password = ?";
-        PreparedStatement ps = conn.prepareStatement(query);
-        ps.setString(1, uname);
-        ps.setString(2, upassword);
-        
-        ResultSet rs = ps.executeQuery();
-        
-        if (rs.next()) {
-            this.dispose();
-            frontpage b = new frontpage();
-            b.setVisible(true);
+        if (uname.trim().isEmpty() || upassword.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Please enter your username and password", "Login Error", JOptionPane.WARNING_MESSAGE);
+
+            enterUsername.requestFocus();
         } else {
-            JOptionPane.showMessageDialog(null, "ACCESS DENIED: Invalid username or password");
+
+            try {
+                Connection conn = MySQLConnect.getConnection();
+
+                String query = "SELECT * FROM user WHERE userName = ? AND password = ?";
+                PreparedStatement ps = conn.prepareStatement(query);
+                ps.setString(1, uname);
+                ps.setString(2, upassword);
+
+                ResultSet rs = ps.executeQuery();
+
+                if (rs.next()) {
+                    this.dispose();
+                    frontpage b = new frontpage();
+                    b.setVisible(true);
+                } else {
+                    JOptionPane.showMessageDialog(null, "ACCESS DENIED: Invalid username or password");
+                }
+
+            } catch (SQLException e) {
+                JOptionPane.showMessageDialog(null, "Database error: " + e.getMessage());
+            }
         }
-        
-    } catch (SQLException e) {
-        JOptionPane.showMessageDialog(null, "Database error: " + e.getMessage());
-    }
-}
     }//GEN-LAST:event_loginBtnActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed

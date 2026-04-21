@@ -13,7 +13,6 @@ public class register extends javax.swing.JFrame {
     public boolean isUsernameTaken(String username) {
         boolean exists = false;
         try {
-            // NOTE: Make sure your DB name, user, and pass are correct here!
             Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/libraryhub", "root", "");
             String sql = "SELECT * FROM user WHERE username = ?";
             PreparedStatement pst = conn.prepareStatement(sql);
