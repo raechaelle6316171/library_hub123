@@ -222,6 +222,11 @@ public class issuebook_management extends javax.swing.JFrame {
             return;
         }
 
+        // To get the date
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm");
+        LocalDateTime now = LocalDateTime.now();
+        String nowStr = now.format(formatter);
+
         DefaultTableModel model = (DefaultTableModel) jTableIssuedBooks.getModel();
 
         int issueId = Integer.parseInt(model.getValueAt(row, 0).toString());
@@ -239,39 +244,62 @@ public class issuebook_management extends javax.swing.JFrame {
         if (confirm == JOptionPane.YES_OPTION) {
             try {
                 Connection conn = MySQLConnect.getConnection();
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm");
 
+                // WE NEED THIS LINE to define dueDate for the penalty calculation below
                 LocalDateTime dueDate = LocalDateTime.parse(dueDateStr, formatter);
-                LocalDateTime now = LocalDateTime.now();
+
                 long penalty = 0;
 
                 if (now.isAfter(dueDate)) {
-
                     long hoursLate = java.time.Duration.between(dueDate, now).toHours();
-                    if (hoursLate == 0) hoursLate = 1; 
+                    if (hoursLate <= 0) hoursLate = 1; 
 
                     penalty = hoursLate * 10; 
                     JOptionPane.showMessageDialog(this, "OVERDUE DETECTED!\nHours Late: " + hoursLate + "\nPenalty to Collect: ₱" + penalty);
                 }
+                String getAuthorSql = "SELECT author FROM books WHERE acquisition_no = ?";
+                PreparedStatement pstAuth = conn.prepareStatement(getAuthorSql);
+                pstAuth.setString(1, acqNo);
+                ResultSet rsAuth = pstAuth.executeQuery();
+                String authorName = rsAuth.next() ? rsAuth.getString("author") : "Unknown";
 
-                String updateIssueSql = "UPDATE issued_books SET status = 'Returned' WHERE issue_id = ?";
-                PreparedStatement pstIssue = conn.prepareStatement(updateIssueSql);
-                pstIssue.setInt(1, issueId);
-                pstIssue.executeUpdate();
+                // 2. ARCHIVE: Move to issue_report
+                String insertReportSql = "INSERT INTO issue_report (fullname, usertype, book_acq_no, book_title, author, issue_date, due_date, actual_return_date, penalty_paid, status) " +
+                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Returned')";
 
+                PreparedStatement pstReport = conn.prepareStatement(insertReportSql);
+                pstReport.setString(1, model.getValueAt(row, 1).toString()); // fullname
+                pstReport.setString(2, "Member"); 
+                pstReport.setString(3, acqNo);
+                pstReport.setString(4, model.getValueAt(row, 2).toString()); // book_title
+                pstReport.setString(5, authorName); // author
+                pstReport.setString(6, model.getValueAt(row, 4).toString()); // issue_date
+                pstReport.setString(7, dueDateStr); // due_date
+                pstReport.setString(8, nowStr); // actual_return_date
+                pstReport.setString(9, String.valueOf(penalty)); // penalty_paid - NOW THIS HAS A '?' TO FILL
+                pstReport.executeUpdate();
+
+                String updateActiveSql = "UPDATE issued_books SET status = 'Returned' WHERE issue_id = ?";
+                PreparedStatement pstUpdateActive = conn.prepareStatement(updateActiveSql);
+                pstUpdateActive.setInt(1, issueId);
+                pstUpdateActive.executeUpdate();
+
+                // 4. UPDATE book status
                 String updateBookSql = "UPDATE books SET status = 'Available' WHERE acquisition_no = ?";
                 PreparedStatement pstBook = conn.prepareStatement(updateBookSql);
                 pstBook.setString(1, acqNo);
                 pstBook.executeUpdate();
 
-                JOptionPane.showMessageDialog(this, "Book successfully returned!");
+                JOptionPane.showMessageDialog(this, "Book successfully returned and archived!");
 
                 populateIssuedTable(""); 
 
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(this, "Error during return: " + e.getMessage());
+                e.printStackTrace();
             }
         }
+
     }//GEN-LAST:event_btnMarkAsReturnedActionPerformed
 
     private void deleteBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteBtnActionPerformed

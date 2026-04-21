@@ -27,42 +27,37 @@ public class issuereport_management1 extends javax.swing.JFrame {
 
     try {
         Connection conn = MySQLConnect.getConnection();
+        // Using LEFT JOIN to link members with their issued books
+        // This lets us see Member Info (Course/Year) AND Book Info (Title/Date) together
+       String sql = "SELECT * FROM issue_report WHERE fullname LIKE ? OR book_title LIKE ? ORDER BY id DESC";
 
-        // This UNION ALL joins both tables into one result set
-        String sql = "SELECT issue_id, fullname, usertype, book_acq_no, book_title, issue_date, due_date, status FROM issued_books " +
-                     "WHERE fullname LIKE ? OR book_title LIKE ? " +
-                     "UNION ALL " +
-                     "SELECT id, fullname, usertype, course, year, 'Borrowing' FROM member_records " +
-                     "WHERE fullname LIKE ?" +
-                     "ORDER BY issue_date DESC";
-        
         PreparedStatement pst = conn.prepareStatement(sql);
-        pst.setString(1, "%" + query + "%");
-        pst.setString(2, "%" + query + "%");
-        pst.setString(3, "%" + query + "%");
-        pst.setString(4, "%" + query + "%");
+        String search = "%" + query + "%";
+        pst.setString(1, search);
+        pst.setString(2, search);
         
         ResultSet rs = pst.executeQuery();
         
         while (rs.next()) {
             Object[] row = {
-                rs.getString(1),  // Id
-                rs.getString(2),  // Full Name
-                rs.getString(3),  // User Type
-                rs.getString(4),  // Course
-                rs.getString(5),  // Year
-                rs.getString(6),  // Book Title
-                rs.getString(7),  // Acq No
-                rs.getString(8),  // Date
-                rs.getString(9),  // Due Date
-                rs.getString(10), // Actual Return
-                rs.getString(11), // Penalty
-                rs.getString(12)  // Status
+                rs.getInt("id"),                // Use getInt for IDs
+                rs.getString("fullname"),
+                rs.getString("usertype"),
+                "N/A",                          // Course (Check if this column exists in issue_report)
+                "N/A",                          // Year (Check if this column exists in issue_report)
+                rs.getString("book_acq_no"),
+                rs.getString("book_title"),
+                rs.getString("author"),
+                rs.getString("issue_date"),
+                rs.getString("due_date"),
+                rs.getString("actual_return_date"), // REAL DATA NOW
+                rs.getString("penalty_paid"),            // REAL DATA NOW
+                rs.getString("status")
             };
             model.addRow(row);
         }
     } catch (SQLException e) {
-        JOptionPane.showMessageDialog(null, "Error combining tables: " + e.getMessage());
+        JOptionPane.showMessageDialog(null, "Report Error: " + e.getMessage());
     }
 }
 
