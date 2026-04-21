@@ -11,11 +11,11 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 import javax.swing.RowFilter;
 
-public class issuereport_management extends javax.swing.JFrame {
+public class issuereport_management1 extends javax.swing.JFrame {
     
-    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(issuereport_management.class.getName());
+    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(issuereport_management1.class.getName());
 
-    public issuereport_management() {
+    public issuereport_management1() {
         initComponents();
         populateIssuedTable(""); 
     }
@@ -268,7 +268,7 @@ public class issuereport_management extends javax.swing.JFrame {
         //</editor-fold>
 
         /* Create and display the form */
-        java.awt.EventQueue.invokeLater(() -> new issuereport_management().setVisible(true));
+        java.awt.EventQueue.invokeLater(() -> new issuereport_management1().setVisible(true));
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

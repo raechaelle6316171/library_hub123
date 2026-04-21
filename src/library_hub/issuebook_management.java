@@ -10,11 +10,11 @@ import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 
 
-public class return_management_123 extends javax.swing.JFrame {
+public class issuebook_management extends javax.swing.JFrame {
     
-    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(return_management_123.class.getName());
+    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(issuebook_management.class.getName());
 
-    public return_management_123() {
+    public issuebook_management() {
         initComponents();
         populateIssuedTable("");
     }
@@ -79,7 +79,7 @@ public class return_management_123 extends javax.swing.JFrame {
 
         jLabel8.setFont(new java.awt.Font("Century Gothic", 1, 24)); // NOI18N
         jLabel8.setForeground(new java.awt.Color(255, 255, 255));
-        jLabel8.setText("RETURN BOOK MANAGEMENT");
+        jLabel8.setText("ISSUE BOOK MANAGEMENT");
 
         jButton5.setText("x");
         jButton5.addActionListener(this::jButton5ActionPerformed);
@@ -91,7 +91,7 @@ public class return_management_123 extends javax.swing.JFrame {
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jLabel8)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 528, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 551, Short.MAX_VALUE)
                 .addComponent(jButton5)
                 .addContainerGap())
         );
@@ -342,7 +342,7 @@ public class return_management_123 extends javax.swing.JFrame {
         //</editor-fold>
 
         /* Create and display the form */
-        java.awt.EventQueue.invokeLater(() -> new return_management_123().setVisible(true));
+        java.awt.EventQueue.invokeLater(() -> new issuebook_management().setVisible(true));
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

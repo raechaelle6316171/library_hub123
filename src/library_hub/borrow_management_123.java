@@ -732,7 +732,7 @@ ResultSet rsCount = countPst.executeQuery();
 
     private void cancelBtn1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelBtn1ActionPerformed
         this.dispose();
-        return_management_123 w = new return_management_123();
+        issuebook_management w = new issuebook_management();
         w.setVisible(true);
     }//GEN-LAST:event_cancelBtn1ActionPerformed
 
