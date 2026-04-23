@@ -72,7 +72,7 @@ public class register_member_try extends javax.swing.JFrame {
     memberId = -1; 
 }
     
-    public void populateTable(String searchName) { // Add this parameter!
+    public void populateTable(String searchName) { 
     try {
         Connection conn = MySQLConnect.getConnection();
         DefaultTableModel tblModel = (DefaultTableModel) jTable2.getModel();
@@ -162,7 +162,7 @@ public class register_member_try extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        txtSearchUsername.setBackground(new java.awt.Color(153, 0, 0));
+        txtSearchUsername.setBackground(new java.awt.Color(102, 0, 102));
         txtSearchUsername.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 5));
 
         txtSearchMember.addActionListener(this::txtSearchMemberActionPerformed);
@@ -217,8 +217,8 @@ public class register_member_try extends javax.swing.JFrame {
         });
         jScrollPane2.setViewportView(jTable2);
 
-        cancelBtn1.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
-        cancelBtn1.setText("←");
+        cancelBtn1.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        cancelBtn1.setText("←BACK TO BORROWER");
         cancelBtn1.addActionListener(this::cancelBtn1ActionPerformed);
 
         javax.swing.GroupLayout txtSearchUsernameLayout = new javax.swing.GroupLayout(txtSearchUsername);
@@ -228,7 +228,7 @@ public class register_member_try extends javax.swing.JFrame {
             .addGroup(txtSearchUsernameLayout.createSequentialGroup()
                 .addGap(26, 26, 26)
                 .addGroup(txtSearchUsernameLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(cancelBtn1, javax.swing.GroupLayout.PREFERRED_SIZE, 61, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(cancelBtn1)
                     .addGroup(txtSearchUsernameLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                         .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGroup(txtSearchUsernameLayout.createSequentialGroup()
@@ -246,18 +246,18 @@ public class register_member_try extends javax.swing.JFrame {
                     .addComponent(jLabel7))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 231, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 29, Short.MAX_VALUE)
+                .addGap(26, 26, 26)
                 .addComponent(cancelBtn1, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(23, 23, 23))
+                .addContainerGap(26, Short.MAX_VALUE))
         );
 
-        jPanel3.setBackground(new java.awt.Color(153, 0, 0));
+        jPanel3.setBackground(new java.awt.Color(102, 0, 102));
         jPanel3.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 5));
         jPanel3.setPreferredSize(new java.awt.Dimension(285, 53));
 
         jLabel8.setFont(new java.awt.Font("Century Gothic", 1, 24)); // NOI18N
         jLabel8.setForeground(new java.awt.Color(255, 255, 255));
-        jLabel8.setText("REGISTER MEMBER");
+        jLabel8.setText("MEMBER REGISTRATION");
 
         jButton5.setText("x");
         jButton5.addActionListener(this::jButton5ActionPerformed);
@@ -269,7 +269,7 @@ public class register_member_try extends javax.swing.JFrame {
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jLabel8)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 256, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 197, Short.MAX_VALUE)
                 .addComponent(jButton5)
                 .addContainerGap())
         );
@@ -283,7 +283,7 @@ public class register_member_try extends javax.swing.JFrame {
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        jPanel4.setBackground(new java.awt.Color(153, 0, 0));
+        jPanel4.setBackground(new java.awt.Color(102, 0, 102));
         jPanel4.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 5));
 
         jLabel1.setFont(new java.awt.Font("Century Gothic", 1, 24)); // NOI18N
@@ -327,7 +327,7 @@ public class register_member_try extends javax.swing.JFrame {
         jLabel11.setForeground(new java.awt.Color(255, 255, 255));
         jLabel11.setText("YEAR");
 
-        cmbYear.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "~Select Year~", "I", "II", "III", "IV", "V" }));
+        cmbYear.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "~Select Year~", "I", "II", "III", "IV" }));
         cmbYear.addActionListener(this::cmbYearActionPerformed);
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
@@ -437,20 +437,18 @@ public class register_member_try extends javax.swing.JFrame {
     int selectedRow = jTable2.getSelectedRow();
 
     if (selectedRow != -1) {
-        // 1. Get Data from Table
+
         memberId = Integer.parseInt(tblModel.getValueAt(selectedRow, 0).toString());
         String name = tblModel.getValueAt(selectedRow, 1).toString();
         String type = tblModel.getValueAt(selectedRow, 2).toString();
         String course = tblModel.getValueAt(selectedRow, 3).toString();
         String year = tblModel.getValueAt(selectedRow, 4).toString();
-
-        // 2. Set Text Fields and ComboBoxes
+        
         txtFullName.setText(name);
         cmbUserType.setSelectedItem(type);
         cmbCourse.setSelectedItem(course);
         cmbYear.setSelectedItem(year);
 
-        // 3. SMART DISABLE: If Faculty, gray out Course and Year immediately
         if (type.equalsIgnoreCase("Faculty")) {
             cmbCourse.setEnabled(false);
             cmbYear.setEnabled(false);
@@ -459,7 +457,6 @@ public class register_member_try extends javax.swing.JFrame {
             cmbYear.setEnabled(true);
         }
 
-        // 4. Enable/Disable Buttons
         txtFullName.setEnabled(true);
         cmbUserType.setEnabled(true);
         
@@ -493,20 +490,18 @@ public class register_member_try extends javax.swing.JFrame {
     String course = cmbCourse.getSelectedItem().toString();
     String year = cmbYear.getSelectedItem().toString();
 
-    // 1. Basic Validation
     if (name.isEmpty() || type.equals("~Select User Type~")) {
         JOptionPane.showMessageDialog(this, "Please enter a Name and select a User Type!");
         return;
     }
 
-    // 2. SMART VALIDATION: Handle Student vs Faculty requirements
     if (type.equalsIgnoreCase("Student")) {
         if (course.equals("~Select Course~") || year.equals("~Select Year~")) {
             JOptionPane.showMessageDialog(this, "Students must have a valid Course and Year!");
             return;
         }
     } else if (type.equalsIgnoreCase("Faculty")) {
-        // Force Faculty to N/A for consistency in the table
+
         course = "N/A";
         year = "N/A";
     }
@@ -514,7 +509,6 @@ public class register_member_try extends javax.swing.JFrame {
     try {
         Connection conn = MySQLConnect.getConnection();
 
-        // 3. THE DUPLICATE CHECK: Prevent registering the same name twice
         String checkQuery = "SELECT * FROM member_records WHERE fullname = ?";
         PreparedStatement checkPst = conn.prepareStatement(checkQuery);
         checkPst.setString(1, name);
@@ -523,10 +517,9 @@ public class register_member_try extends javax.swing.JFrame {
         if (rs.next()) {
             JOptionPane.showMessageDialog(this, "Error: Member '" + name + "' is already registered!", "Duplicate Entry", JOptionPane.ERROR_MESSAGE);
             txtFullName.requestFocus();
-            return; // Stop the code here
+            return; 
         }
 
-        // 4. DATABASE SAVE: Proceed if no duplicate was found
         String sql = "INSERT INTO member_records (fullname, usertype, course, year) VALUES (?, ?, ?, ?)";
         PreparedStatement pst = conn.prepareStatement(sql);
         pst.setString(1, name);
@@ -537,7 +530,6 @@ public class register_member_try extends javax.swing.JFrame {
         pst.executeUpdate();
         JOptionPane.showMessageDialog(this, "Member Registered Successfully!");
         
-        // 5. REFRESH UI
         populateTable(""); 
         clearFields();     
 
@@ -595,13 +587,11 @@ public class register_member_try extends javax.swing.JFrame {
     String course = cmbCourse.getSelectedItem().toString();
     String year = cmbYear.getSelectedItem().toString();
 
-    // 1. Basic Validation
     if (name.isEmpty() || type.equals("~Select User Type~")) {
         JOptionPane.showMessageDialog(this, "Full Name and User Type are required!");
         return;
     }
 
-    // 2. SMART VALIDATION: Faculty handling
     if (type.equalsIgnoreCase("Student")) {
         if (course.equals("~Select Course~") || year.equals("~Select Year~")) {
             JOptionPane.showMessageDialog(this, "Please select a valid Course and Year for Students!");
@@ -615,8 +605,6 @@ public class register_member_try extends javax.swing.JFrame {
     try {
         Connection conn = MySQLConnect.getConnection();
 
-        // 3. ADVANCED DUPLICATE CHECK: 
-        // Check if the name exists for ANY OTHER ID besides the one we are currently updating
         String checkSql = "SELECT * FROM member_records WHERE fullname = ? AND id != ?";
         PreparedStatement checkPst = conn.prepareStatement(checkSql);
         checkPst.setString(1, name);
@@ -628,7 +616,6 @@ public class register_member_try extends javax.swing.JFrame {
             return;
         }
 
-        // 4. DATABASE UPDATE
         String sql = "UPDATE member_records SET fullname=?, usertype=?, course=?, year=? WHERE id=?";
         PreparedStatement pst = conn.prepareStatement(sql);
         
@@ -641,8 +628,8 @@ public class register_member_try extends javax.swing.JFrame {
         pst.executeUpdate();
         JOptionPane.showMessageDialog(this, "Member Updated Successfully!");
         
-        populateTable(""); // Refresh the list
-        clearFields();     // Reset the form
+        populateTable(""); 
+        clearFields();     
         
     } catch (SQLException e) {
         JOptionPane.showMessageDialog(this, "Update Error: " + e.getMessage());
@@ -650,19 +637,17 @@ public class register_member_try extends javax.swing.JFrame {
     }//GEN-LAST:event_updateBtnActionPerformed
 
     private void addNewBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addNewBtnActionPerformed
-        // 1. Unlock everything
         txtFullName.setEnabled(true);
         cmbUserType.setEnabled(true);
         cmbCourse.setEnabled(true);
         cmbYear.setEnabled(true);
 
-        // 2. UI Logic
         saveBtn.setEnabled(true);     
         addNewBtn.setEnabled(false);  
         updateBtn.setEnabled(false);
         deleteBtn.setEnabled(false);
 
-        //txtAcq.requestFocus();        // Cursor jumps to the first box
+        //txtAcq.requestFocus();       
     }//GEN-LAST:event_addNewBtnActionPerformed
 
     private void cmbCourseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbCourseActionPerformed
@@ -683,15 +668,14 @@ public class register_member_try extends javax.swing.JFrame {
         String selectedUser = cmbUserType.getSelectedItem().toString();
     
         if (selectedUser.equalsIgnoreCase("Faculty")) {
-            // Disable the fields
+           
             cmbCourse.setEnabled(false);
             cmbYear.setEnabled(false);
 
-            // Optional: Reset them to "N/A" or empty so they don't save old data
             cmbCourse.setSelectedIndex(0); 
             cmbYear.setSelectedIndex(0);
         } else {
-            // Re-enable them if "Student" is selected
+
             cmbCourse.setEnabled(true);
             cmbYear.setEnabled(true);
         }

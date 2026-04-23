@@ -42,7 +42,7 @@
                   <Component id="jPanel4" pref="292" max="32767" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
-              <Component id="jPanel3" max="32767" attributes="0"/>
+              <Component id="jPanel3" min="-2" max="-2" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
@@ -374,8 +374,8 @@
                   <EmptySpace min="-2" pref="38" max="-2" attributes="0"/>
                   <Component id="cancelBtn" min="-2" pref="91" max="-2" attributes="0"/>
                   <EmptySpace max="32767" attributes="0"/>
-                  <Component id="cancelBtn1" min="-2" pref="61" max="-2" attributes="0"/>
-                  <EmptySpace min="-2" pref="24" max="-2" attributes="0"/>
+                  <Component id="cancelBtn2" min="-2" pref="195" max="-2" attributes="0"/>
+                  <EmptySpace min="-2" pref="28" max="-2" attributes="0"/>
               </Group>
               <Group type="102" alignment="1" attributes="0">
                   <EmptySpace max="32767" attributes="0"/>
@@ -455,9 +455,9 @@
                   <Group type="103" groupAlignment="3" attributes="0">
                       <Component id="IssueBookBtn" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="cancelBtn" alignment="3" min="-2" max="-2" attributes="0"/>
-                      <Component id="cancelBtn1" alignment="3" min="-2" pref="29" max="-2" attributes="0"/>
+                      <Component id="cancelBtn2" alignment="3" min="-2" pref="29" max="-2" attributes="0"/>
                   </Group>
-                  <EmptySpace pref="23" max="32767" attributes="0"/>
+                  <EmptySpace pref="24" max="32767" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
@@ -635,15 +635,15 @@
             <Property name="text" type="java.lang.String" value="(mm/dd/yyyy)"/>
           </Properties>
         </Component>
-        <Component class="javax.swing.JButton" name="cancelBtn1">
+        <Component class="javax.swing.JButton" name="cancelBtn2">
           <Properties>
             <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-              <Font name="Segoe UI" size="18" style="1"/>
+              <Font name="Segoe UI" size="14" style="0"/>
             </Property>
-            <Property name="text" type="java.lang.String" value="&#x2192;"/>
+            <Property name="text" type="java.lang.String" value="&#x2190;BACK TO ISSUE BOOK"/>
           </Properties>
           <Events>
-            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="cancelBtn1ActionPerformed"/>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="cancelBtn2ActionPerformed"/>
           </Events>
         </Component>
       </SubComponents>

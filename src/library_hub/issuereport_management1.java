@@ -27,8 +27,7 @@ public class issuereport_management1 extends javax.swing.JFrame {
 
     try {
         Connection conn = MySQLConnect.getConnection();
-        // Using LEFT JOIN to link members with their issued books
-        // This lets us see Member Info (Course/Year) AND Book Info (Title/Date) together
+
        String sql = "SELECT * FROM issue_report WHERE fullname LIKE ? OR book_title LIKE ? ORDER BY id DESC";
 
         PreparedStatement pst = conn.prepareStatement(sql);
@@ -40,18 +39,18 @@ public class issuereport_management1 extends javax.swing.JFrame {
         
         while (rs.next()) {
             Object[] row = {
-                rs.getInt("id"),                // Use getInt for IDs
+                rs.getInt("id"),               
                 rs.getString("fullname"),
                 rs.getString("usertype"),
-                "N/A",                          // Course (Check if this column exists in issue_report)
-                "N/A",                          // Year (Check if this column exists in issue_report)
+                rs.getString("course"),
+                rs.getString("year"),                         
                 rs.getString("book_acq_no"),
                 rs.getString("book_title"),
                 rs.getString("author"),
                 rs.getString("issue_date"),
                 rs.getString("due_date"),
-                rs.getString("actual_return_date"), // REAL DATA NOW
-                rs.getString("penalty_paid"),            // REAL DATA NOW
+                rs.getString("actual_return_date"), 
+                rs.getString("penalty_paid"),            
                 rs.getString("status")
             };
             model.addRow(row);
@@ -122,6 +121,7 @@ public class issuereport_management1 extends javax.swing.JFrame {
         deleteBtn.setBackground(new java.awt.Color(255, 51, 51));
         deleteBtn.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         deleteBtn.setText("DELETE");
+        deleteBtn.addActionListener(this::deleteBtnActionPerformed);
 
         printBtn.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         printBtn.setText("PRINT TO PDF");
@@ -142,19 +142,20 @@ public class issuereport_management1 extends javax.swing.JFrame {
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                .addContainerGap(18, Short.MAX_VALUE)
+                .addContainerGap(1172, Short.MAX_VALUE)
+                .addComponent(deleteBtn)
+                .addGap(18, 18, 18)
+                .addComponent(printBtn)
+                .addGap(14, 14, 14))
+            .addGroup(jPanel3Layout.createSequentialGroup()
+                .addContainerGap()
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                        .addComponent(deleteBtn)
-                        .addGap(18, 18, 18)
-                        .addComponent(printBtn))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(jPanel3Layout.createSequentialGroup()
-                            .addComponent(jLabel1)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                            .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 164, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 1175, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addGap(20, 20, 20))
+                    .addComponent(jScrollPane1)
+                    .addGroup(jPanel3Layout.createSequentialGroup()
+                        .addComponent(jLabel1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 164, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -165,11 +166,11 @@ public class issuereport_management1 extends javax.swing.JFrame {
                     .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 319, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 50, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 45, Short.MAX_VALUE)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(deleteBtn)
                     .addComponent(printBtn))
-                .addGap(16, 16, 16))
+                .addGap(21, 21, 21))
         );
 
         jPanel4.setBackground(new java.awt.Color(102, 51, 0));
@@ -190,7 +191,7 @@ public class issuereport_management1 extends javax.swing.JFrame {
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jLabel9)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 1206, Short.MAX_VALUE)
                 .addComponent(jButton6)
                 .addContainerGap())
         );
@@ -208,8 +209,8 @@ public class issuereport_management1 extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, 1223, Short.MAX_VALUE)
-            .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, 1223, Short.MAX_VALUE)
+            .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, 1405, Short.MAX_VALUE)
+            .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, 1405, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -233,13 +234,44 @@ public class issuereport_management1 extends javax.swing.JFrame {
         TableRowSorter<DefaultTableModel> trs = new TableRowSorter<>(model);
         jTable1.setRowSorter(trs);
 
-        // Filters based on the "Full Name" column (index 1)
         trs.setRowFilter(RowFilter.regexFilter("(?i)" + searchStr, 1));
     }//GEN-LAST:event_txtSearchKeyReleased
 
     private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
-        // TODO add your handling code here:
+        this.dispose();
+        frontpage w = new frontpage();
+        w.setVisible(true);
     }//GEN-LAST:event_jButton6ActionPerformed
+
+    private void deleteBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteBtnActionPerformed
+        int row = jTable1.getSelectedRow();
+
+    if (row == -1) {
+        JOptionPane.showMessageDialog(this, "Select a report record to delete!");
+        return;
+    }
+
+    String reportId = jTable1.getValueAt(row, 0).toString();
+
+    int confirm = JOptionPane.showConfirmDialog(this, "Permanently delete report ID: " + reportId + "?", "Warning", JOptionPane.YES_NO_OPTION);
+
+    if (confirm == JOptionPane.YES_OPTION) {
+        try {
+            Connection conn = MySQLConnect.getConnection();
+            
+            String sql = "DELETE FROM issue_report WHERE id = ?"; 
+            PreparedStatement pst = conn.prepareStatement(sql);
+            pst.setString(1, reportId);
+
+            pst.executeUpdate();
+            JOptionPane.showMessageDialog(this, "Report entry removed.");
+            populateIssuedTable(""); 
+            
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error deleting report: " + e.getMessage());
+        }
+    }
+    }//GEN-LAST:event_deleteBtnActionPerformed
 
     /**
      * @param args the command line arguments

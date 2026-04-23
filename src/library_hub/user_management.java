@@ -147,6 +147,25 @@ public class user_management extends javax.swing.JFrame {
         saveBtn.setEnabled(false);
     }
 }
+    
+    public boolean isFullNameDuplicate(String fullName) {
+    boolean exists = false;
+    try {
+        Connection conn = MySQLConnect.getConnection();
+        String sql = "SELECT * FROM user WHERE fullName = ?";
+        PreparedStatement pst = conn.prepareStatement(sql);
+        pst.setString(1, fullName);
+        ResultSet rs = pst.executeQuery();
+        
+        if (rs.next()) {
+            exists = true;
+        }
+    } catch (SQLException e) {
+        JOptionPane.showMessageDialog(null, "Validation Error: " + e.getMessage());
+    }
+    return exists;
+}
+    
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -380,12 +399,12 @@ public class user_management extends javax.swing.JFrame {
             .addGroup(txtSearchUsernameLayout.createSequentialGroup()
                 .addGap(26, 26, 26)
                 .addGroup(txtSearchUsernameLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 446, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(txtSearchUsernameLayout.createSequentialGroup()
                         .addComponent(jLabel7)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 146, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(18, Short.MAX_VALUE))
+                .addContainerGap(28, Short.MAX_VALUE))
         );
         txtSearchUsernameLayout.setVerticalGroup(
             txtSearchUsernameLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -395,7 +414,7 @@ public class user_management extends javax.swing.JFrame {
                     .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel7))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 412, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 395, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -477,7 +496,7 @@ public class user_management extends javax.swing.JFrame {
 
     private void txtSearchKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtSearchKeyReleased
         DefaultTableModel model = (DefaultTableModel) jTable2.getModel();
-    model.setRowCount(0); // Clear current table data
+    model.setRowCount(0); 
 
     String searchText = txtSearch.getText().trim();
     
@@ -518,55 +537,67 @@ public class user_management extends javax.swing.JFrame {
 
     private void saveBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveBtnActionPerformed
         String fullName = txtFullName.getText().trim();
-        String userName = txtUsername.getText().trim();
-        String password = txtPassword.getText();
-        String confirmPass = txtConfirmPassword.getText();
-        String userType = cmbUserType.getSelectedItem().toString();
+    String userName = txtUsername.getText().trim();
+    String password = txtPassword.getText();
+    String confirmPass = txtConfirmPassword.getText();
+    String userType = cmbUserType.getSelectedItem().toString();
 
-        if (fullName.isEmpty() || userName.isEmpty() || password.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please fill in all fields before saving!");
-            return; 
-        }
-        if (!password.equals(confirmPass)) {
-            JOptionPane.showMessageDialog(this, "Passwords do not match!");
-            txtPassword.requestFocus();
-            return; 
-        }
+    // 1. Basic Validation
+    if (fullName.isEmpty() || userName.isEmpty() || password.isEmpty()) {
+        JOptionPane.showMessageDialog(this, "Please fill in all fields before saving!");
+        return; 
+    }
+    
+    if (!password.equals(confirmPass)) {
+        JOptionPane.showMessageDialog(this, "Passwords do not match!");
+        txtPassword.requestFocus();
+        return; 
+    }
 
-        try {
-            Connection conn = MySQLConnect.getConnection();
+    try {
+        Connection conn = MySQLConnect.getConnection();
 
-            String checkSql = "SELECT * FROM user WHERE userName = ?";
-            PreparedStatement checkPst = conn.prepareStatement(checkSql);
-            checkPst.setString(1, userName);
-            ResultSet rs = checkPst.executeQuery();
+        // 2. Check if EITHER Username OR Full Name already exists
+        String checkSql = "SELECT * FROM user WHERE userName = ? OR fullName = ?";
+        PreparedStatement checkPst = conn.prepareStatement(checkSql);
+        checkPst.setString(1, userName);
+        checkPst.setString(2, fullName);
+        ResultSet rs = checkPst.executeQuery();
 
-            if (rs.next()) {
-                // If the database finds a match, show error and stop
+        if (rs.next()) {
+            String existingUser = rs.getString("userName");
+            String existingName = rs.getString("fullName");
+
+            if (existingUser.equalsIgnoreCase(userName)) {
                 JOptionPane.showMessageDialog(this, "The username '" + userName + "' is already taken!");
                 txtUsername.requestFocus();
-                return; 
+            } else if (existingName.equalsIgnoreCase(fullName)) {
+                JOptionPane.showMessageDialog(this, "The full name '" + fullName + "' is already registered!");
+                txtFullName.requestFocus();
             }
-
-            String sql = "INSERT INTO user (fullName, userName, password, category) VALUES (?, ?, ?, ?)";
-            PreparedStatement pst = conn.prepareStatement(sql);
-
-            pst.setString(1, fullName);
-            pst.setString(2, userName);
-            pst.setString(3, password);
-            pst.setString(4, userType);
-
-            int result = pst.executeUpdate();
-
-            if (result > 0) {
-                JOptionPane.showMessageDialog(this, "User Created Successfully!");
-                populateTable(); 
-                clearFields();       
-            }
-
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Database Error: " + e.getMessage());
+            return; 
         }
+
+        // 3. If no duplicates, perform the INSERT
+        String sql = "INSERT INTO user (fullName, userName, password, category) VALUES (?, ?, ?, ?)";
+        PreparedStatement pst = conn.prepareStatement(sql);
+
+        pst.setString(1, fullName);
+        pst.setString(2, userName);
+        pst.setString(3, password);
+        pst.setString(4, userType);
+
+        int result = pst.executeUpdate();
+
+        if (result > 0) {
+            JOptionPane.showMessageDialog(this, "User Created Successfully!");
+            populateTable(); 
+            clearFields();       
+        }
+
+    } catch (SQLException e) {
+        JOptionPane.showMessageDialog(this, "Database Error: " + e.getMessage());
+    }
     }//GEN-LAST:event_saveBtnActionPerformed
 
     private void deleteBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteBtnActionPerformed
@@ -601,11 +632,21 @@ public class user_management extends javax.swing.JFrame {
     }//GEN-LAST:event_deleteBtnActionPerformed
 
     private void updateBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_updateBtnActionPerformed
+        String fullName = txtFullName.getText().trim();
+    String userName = txtUsername.getText().trim();
     String password = txtPassword.getText();
     String confirmPass = txtConfirmPassword.getText();
+    String userType = cmbUserType.getSelectedItem().toString();
 
+    // 1. Check if a user is selected
     if (userId == -1) {
         JOptionPane.showMessageDialog(this, "Please select a user from the table first!");
+        return;
+    }
+
+    // 2. Basic Validation
+    if (fullName.isEmpty() || userName.isEmpty() || password.isEmpty()) {
+        JOptionPane.showMessageDialog(this, "Please fill in all fields before updating!");
         return;
     }
 
@@ -615,16 +656,39 @@ public class user_management extends javax.swing.JFrame {
         return; 
     }
 
-    String sql = "UPDATE user SET fullName=?, userName=?, password=?, category=? WHERE id=?";
-
     try {
         Connection conn = MySQLConnect.getConnection();
+
+        // 3. Check for duplicates excluding the CURRENT userId
+        String checkSql = "SELECT * FROM user WHERE (userName = ? OR fullName = ?) AND id != ?";
+        PreparedStatement checkPst = conn.prepareStatement(checkSql);
+        checkPst.setString(1, userName);
+        checkPst.setString(2, fullName);
+        checkPst.setInt(3, userId);
+        ResultSet rs = checkPst.executeQuery();
+
+        if (rs.next()) {
+            String existingUser = rs.getString("userName");
+            String existingName = rs.getString("fullName");
+
+            if (existingUser.equalsIgnoreCase(userName)) {
+                JOptionPane.showMessageDialog(this, "The username '" + userName + "' is already taken by another user!");
+                txtUsername.requestFocus();
+            } else if (existingName.equalsIgnoreCase(fullName)) {
+                JOptionPane.showMessageDialog(this, "The full name '" + fullName + "' is already registered to another user!");
+                txtFullName.requestFocus();
+            }
+            return; 
+        }
+
+        // 4. Perform the UPDATE if no duplicates found
+        String sql = "UPDATE user SET fullName=?, userName=?, password=?, category=? WHERE id=?";
         PreparedStatement pst = conn.prepareStatement(sql);
 
-        pst.setString(1, txtFullName.getText());   
-        pst.setString(2, txtUsername.getText());   
-        pst.setString(3, password); // Using the variable from step 1
-        pst.setString(4, cmbUserType.getSelectedItem().toString()); 
+        pst.setString(1, fullName);   
+        pst.setString(2, userName);   
+        pst.setString(3, password); 
+        pst.setString(4, userType); 
         pst.setInt(5, userId);                     
 
         int updated = pst.executeUpdate();

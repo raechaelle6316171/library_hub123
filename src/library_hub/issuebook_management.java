@@ -25,10 +25,18 @@ public class issuebook_management extends javax.swing.JFrame {
     DefaultTableModel model = (DefaultTableModel) jTableIssuedBooks.getModel();
     model.setRowCount(0);
 
+    String selectedSort = sort.getSelectedItem().toString();
+
     try {
         Connection conn = MySQLConnect.getConnection();
+        
+        String orderByClause = "issue_date DESC"; 
+        if (selectedSort.equalsIgnoreCase("Returned")) {
+            orderByClause = "issue_id DESC"; 
+        }
 
-        String sql = "SELECT * FROM issued_books WHERE fullname LIKE ? OR book_title LIKE ? ORDER BY issue_id DESC";
+        String sql = "SELECT * FROM issued_books WHERE (fullname LIKE ? OR book_title LIKE ?) " +
+                     "ORDER BY " + orderByClause;
         
         PreparedStatement pst = conn.prepareStatement(sql);
         pst.setString(1, "%" + query + "%");
@@ -37,7 +45,6 @@ public class issuebook_management extends javax.swing.JFrame {
         ResultSet rs = pst.executeQuery();
         
         while (rs.next()) {
-
             Object[] row = {
                 rs.getInt("issue_id"),
                 rs.getString("fullname"),
@@ -45,12 +52,12 @@ public class issuebook_management extends javax.swing.JFrame {
                 rs.getString("book_acq_no"),
                 rs.getString("issue_date"),
                 rs.getString("due_date"),
+                rs.getString("penalty_paid"),
                 rs.getString("status") 
             };
             model.addRow(row);
         }
     } catch (SQLException e) {
-
         JOptionPane.showMessageDialog(null, "Error: " + e.getMessage());
     }
 }
@@ -70,6 +77,8 @@ public class issuebook_management extends javax.swing.JFrame {
         jLabel1 = new javax.swing.JLabel();
         btnMarkAsReturned = new javax.swing.JButton();
         deleteBtn = new javax.swing.JButton();
+        jLabel2 = new javax.swing.JLabel();
+        sort = new javax.swing.JComboBox<>();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -111,17 +120,17 @@ public class issuebook_management extends javax.swing.JFrame {
 
         jTableIssuedBooks.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null}
+                {null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null}
             },
             new String [] {
-                "Id", "Member Name", "Book Title", "Acq No", "Issued Date", "Due Date", "Status"
+                "Id", "Member Name", "Book Title", "Acq No", "Issued Date", "Due Date", "Penalty Paid", "Status"
             }
         ) {
             boolean[] canEdit = new boolean [] {
-                false, false, false, false, false, false, false
+                false, false, false, false, false, false, false, false
             };
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
@@ -152,41 +161,54 @@ public class issuebook_management extends javax.swing.JFrame {
         deleteBtn.setText("DELETE");
         deleteBtn.addActionListener(this::deleteBtnActionPerformed);
 
+        jLabel2.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        jLabel2.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel2.setText("Sort");
+
+        sort.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Issued", "Returned" }));
+        sort.addActionListener(this::sortActionPerformed);
+
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
                 .addContainerGap(24, Short.MAX_VALUE)
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addGroup(jPanel4Layout.createSequentialGroup()
+                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addGroup(jPanel4Layout.createSequentialGroup()
+                                .addComponent(deleteBtn)
+                                .addGap(18, 18, 18)
+                                .addComponent(btnMarkAsReturned))
+                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 855, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(22, 22, 22))
                     .addGroup(jPanel4Layout.createSequentialGroup()
                         .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 148, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txtSearchMember, javax.swing.GroupLayout.PREFERRED_SIZE, 164, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
-                            .addComponent(deleteBtn)
-                            .addGap(18, 18, 18)
-                            .addComponent(btnMarkAsReturned)
-                            .addGap(42, 42, 42))
-                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
-                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 855, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGap(22, 22, 22)))))
+                        .addComponent(txtSearchMember, javax.swing.GroupLayout.PREFERRED_SIZE, 164, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(sort, javax.swing.GroupLayout.PREFERRED_SIZE, 94, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(58, 58, 58))))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel4Layout.createSequentialGroup()
-                .addGap(32, 32, 32)
+                .addGap(39, 39, 39)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(txtSearchMember, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel1))
+                    .addComponent(jLabel1)
+                    .addComponent(jLabel2)
+                    .addComponent(sort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(37, 37, 37)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 33, Short.MAX_VALUE)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(deleteBtn)
                     .addComponent(btnMarkAsReturned))
-                .addContainerGap(23, Short.MAX_VALUE))
+                .addGap(20, 20, 20))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -216,90 +238,107 @@ public class issuebook_management extends javax.swing.JFrame {
 
     private void btnMarkAsReturnedActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMarkAsReturnedActionPerformed
         int row = jTableIssuedBooks.getSelectedRow();
-    
-        if (row == -1) {
-            JOptionPane.showMessageDialog(this, "Please select a record from the table first!");
-            return;
-        }
 
-        // To get the date
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm");
-        LocalDateTime now = LocalDateTime.now();
-        String nowStr = now.format(formatter);
+    if (row == -1) {
+        JOptionPane.showMessageDialog(this, "Please select a record from the table first!");
+        return;
+    }
 
-        DefaultTableModel model = (DefaultTableModel) jTableIssuedBooks.getModel();
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm");
+    LocalDateTime now = LocalDateTime.now();
+    String nowStr = now.format(formatter);
 
-        int issueId = Integer.parseInt(model.getValueAt(row, 0).toString());
-        String acqNo = model.getValueAt(row, 3).toString();
-        String dueDateStr = model.getValueAt(row, 5).toString();
-        String currentStatus = model.getValueAt(row, 6).toString();
+    DefaultTableModel model = (DefaultTableModel) jTableIssuedBooks.getModel();
 
-        if (currentStatus.equalsIgnoreCase("Returned")) {
-            JOptionPane.showMessageDialog(this, "This book has already been returned!");
-            return;
-        }
+    int issueId = Integer.parseInt(model.getValueAt(row, 0).toString());
+    String acqNo = model.getValueAt(row, 3).toString();
+    String dueDateStr = model.getValueAt(row, 5).toString();
+    String currentStatus = model.getValueAt(row, 6).toString();
 
-        int confirm = JOptionPane.showConfirmDialog(this, "Confirm return for Book Acq No: " + acqNo + "?", "Confirm Return", JOptionPane.YES_NO_OPTION);
+    if (currentStatus.equalsIgnoreCase("Returned")) {
+        JOptionPane.showMessageDialog(this, "This book has already been returned!");
+        return;
+    }
 
-        if (confirm == JOptionPane.YES_OPTION) {
-            try {
-                Connection conn = MySQLConnect.getConnection();
+    int confirm = JOptionPane.showConfirmDialog(this, "Confirm return for Book Acq No: " + acqNo + "?", "Confirm Return", JOptionPane.YES_NO_OPTION);
 
-                // WE NEED THIS LINE to define dueDate for the penalty calculation below
-                LocalDateTime dueDate = LocalDateTime.parse(dueDateStr, formatter);
+    if (confirm == JOptionPane.YES_OPTION) {
+        try {
+            Connection conn = MySQLConnect.getConnection();
 
-                long penalty = 0;
+            String memberSql = "SELECT course, year, usertype FROM member_records WHERE LOWER(TRIM(fullname)) = LOWER(TRIM(?))";
+            PreparedStatement pstMem = conn.prepareStatement(memberSql);
+            String searchName = model.getValueAt(row, 1).toString().trim();
+            pstMem.setString(1, searchName); 
 
-                if (now.isAfter(dueDate)) {
-                    long hoursLate = java.time.Duration.between(dueDate, now).toHours();
-                    if (hoursLate <= 0) hoursLate = 1; 
+            ResultSet rsMem = pstMem.executeQuery();
 
-                    penalty = hoursLate * 10; 
-                    JOptionPane.showMessageDialog(this, "OVERDUE DETECTED!\nHours Late: " + hoursLate + "\nPenalty to Collect: ₱" + penalty);
-                }
-                String getAuthorSql = "SELECT author FROM books WHERE acquisition_no = ?";
-                PreparedStatement pstAuth = conn.prepareStatement(getAuthorSql);
-                pstAuth.setString(1, acqNo);
-                ResultSet rsAuth = pstAuth.executeQuery();
-                String authorName = rsAuth.next() ? rsAuth.getString("author") : "Unknown";
+            String course = "N/A";
+            String year = "N/A";
+            String utype = "Member"; 
 
-                // 2. ARCHIVE: Move to issue_report
-                String insertReportSql = "INSERT INTO issue_report (fullname, usertype, book_acq_no, book_title, author, issue_date, due_date, actual_return_date, penalty_paid, status) " +
-                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Returned')";
-
-                PreparedStatement pstReport = conn.prepareStatement(insertReportSql);
-                pstReport.setString(1, model.getValueAt(row, 1).toString()); // fullname
-                pstReport.setString(2, "Member"); 
-                pstReport.setString(3, acqNo);
-                pstReport.setString(4, model.getValueAt(row, 2).toString()); // book_title
-                pstReport.setString(5, authorName); // author
-                pstReport.setString(6, model.getValueAt(row, 4).toString()); // issue_date
-                pstReport.setString(7, dueDateStr); // due_date
-                pstReport.setString(8, nowStr); // actual_return_date
-                pstReport.setString(9, String.valueOf(penalty)); // penalty_paid - NOW THIS HAS A '?' TO FILL
-                pstReport.executeUpdate();
-
-                String updateActiveSql = "UPDATE issued_books SET status = 'Returned' WHERE issue_id = ?";
-                PreparedStatement pstUpdateActive = conn.prepareStatement(updateActiveSql);
-                pstUpdateActive.setInt(1, issueId);
-                pstUpdateActive.executeUpdate();
-
-                // 4. UPDATE book status
-                String updateBookSql = "UPDATE books SET status = 'Available' WHERE acquisition_no = ?";
-                PreparedStatement pstBook = conn.prepareStatement(updateBookSql);
-                pstBook.setString(1, acqNo);
-                pstBook.executeUpdate();
-
-                JOptionPane.showMessageDialog(this, "Book successfully returned and archived!");
-
-                populateIssuedTable(""); 
-
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(this, "Error during return: " + e.getMessage());
-                e.printStackTrace();
+            if (rsMem.next()) {
+                course = rsMem.getString("course");
+                year = rsMem.getString("year");
+                utype = rsMem.getString("usertype");
             }
-        }
 
+            LocalDateTime dueDate = LocalDateTime.parse(dueDateStr, formatter);
+            long penalty = 0;
+
+            if (!utype.equalsIgnoreCase("Faculty")) {
+                if (now.isAfter(dueDate)) {
+                    long daysLate = java.time.Duration.between(dueDate, now).toDays();
+                     
+                    daysLate = daysLate + 1; 
+
+                    penalty = daysLate * 100; 
+                    JOptionPane.showMessageDialog(this, "OVERDUE DETECTED!\nDays Late: " + daysLate + "\nPenalty Collected: ₱" + penalty);
+                }
+            }
+            String getAuthorSql = "SELECT author FROM books WHERE acquisition_no = ?";
+            PreparedStatement pstAuth = conn.prepareStatement(getAuthorSql);
+            pstAuth.setString(1, acqNo);
+            ResultSet rsAuth = pstAuth.executeQuery();
+            String authorName = rsAuth.next() ? rsAuth.getString("author") : "Unknown";
+
+            String insertReportSql = "INSERT INTO issue_report (fullname, usertype, course, year, book_acq_no, book_title, author, issue_date, due_date, actual_return_date, penalty_paid, status) " +
+                                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Returned')";
+
+            PreparedStatement pstReport = conn.prepareStatement(insertReportSql);
+            pstReport.setString(1, model.getValueAt(row, 1).toString()); 
+            pstReport.setString(2, utype);   
+            pstReport.setString(3, course);  
+            pstReport.setString(4, year);    
+            pstReport.setString(5, acqNo);
+            pstReport.setString(6, model.getValueAt(row, 2).toString()); 
+            pstReport.setString(7, authorName); 
+            pstReport.setString(8, model.getValueAt(row, 4).toString()); 
+            pstReport.setString(9, dueDateStr);
+            pstReport.setString(10, nowStr); 
+            pstReport.setString(11, String.valueOf(penalty)); 
+
+            pstReport.executeUpdate();
+
+            String updateActiveSql = "UPDATE issued_books SET status = 'Returned', penalty_paid = ? WHERE issue_id = ?";
+            PreparedStatement pstUpdateActive = conn.prepareStatement(updateActiveSql);
+            pstUpdateActive.setString(1, String.valueOf(penalty)); 
+            pstUpdateActive.setInt(2, issueId);
+            pstUpdateActive.executeUpdate();
+
+            String updateBookSql = "UPDATE books SET status = 'Available' WHERE acquisition_no = ?";
+            PreparedStatement pstBook = conn.prepareStatement(updateBookSql);
+            pstBook.setString(1, acqNo);
+            pstBook.executeUpdate();
+
+            JOptionPane.showMessageDialog(this, "Book successfully returned and archived!");
+            populateIssuedTable(""); 
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error during return: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
     }//GEN-LAST:event_btnMarkAsReturnedActionPerformed
 
     private void deleteBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteBtnActionPerformed
@@ -348,6 +387,10 @@ public class issuebook_management extends javax.swing.JFrame {
         populateIssuedTable(txtSearchMember.getText());
     }//GEN-LAST:event_txtSearchMemberKeyReleased
 
+    private void sortActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sortActionPerformed
+        populateIssuedTable(txtSearchMember.getText());
+    }//GEN-LAST:event_sortActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -378,11 +421,13 @@ public class issuebook_management extends javax.swing.JFrame {
     private javax.swing.JButton deleteBtn;
     private javax.swing.JButton jButton5;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel8;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable jTableIssuedBooks;
+    private javax.swing.JComboBox<String> sort;
     private javax.swing.JTextField txtSearchMember;
     // End of variables declaration//GEN-END:variables
 }
