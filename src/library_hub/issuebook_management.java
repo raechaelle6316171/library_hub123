@@ -1,12 +1,17 @@
 package library_hub;
 
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Font;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import javax.swing.JOptionPane;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
 
@@ -16,44 +21,112 @@ public class issuebook_management extends javax.swing.JFrame {
 
     public issuebook_management() {
         initComponents();
+        
+        // Apply color rendering to the Status column (Index 7)
+        jTableIssuedBooks.getColumnModel().getColumn(7).setCellRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                String status = (value != null) ? value.toString() : "";
+
+                if (status.equalsIgnoreCase("Overdue")) {
+                    c.setForeground(Color.RED);
+                    c.setFont(c.getFont().deriveFont(Font.BOLD));
+                } else if (status.equalsIgnoreCase("Returned")) {
+                    c.setForeground(new Color(0, 153, 0)); // Dark Green
+                    c.setFont(c.getFont().deriveFont(Font.BOLD));
+                } else if (status.equalsIgnoreCase("Issued")) {
+                    c.setForeground(Color.BLUE);
+                } else {
+                    c.setForeground(Color.BLACK);
+                }
+
+                if (isSelected) {
+                    c.setBackground(table.getSelectionBackground());
+                } else {
+                    c.setBackground(table.getBackground());
+                }
+                return c;
+            }
+        });
+
         populateIssuedTable("");
     }
-    
-    
     
     public void populateIssuedTable(String query) {
     DefaultTableModel model = (DefaultTableModel) jTableIssuedBooks.getModel();
     model.setRowCount(0);
 
-    String selectedSort = sort.getSelectedItem().toString();
+    String selectedStatusFilter = sort.getSelectedItem().toString();
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm");
+    LocalDateTime now = LocalDateTime.now();
 
     try {
         Connection conn = MySQLConnect.getConnection();
+        StringBuilder sql = new StringBuilder("SELECT * FROM issued_books WHERE (fullname LIKE ? OR book_title LIKE ?) ");
         
-        String orderByClause = "issue_date DESC"; 
-        if (selectedSort.equalsIgnoreCase("Returned")) {
-            orderByClause = "issue_id DESC"; 
+        if (selectedStatusFilter.equalsIgnoreCase("Returned")) {
+            sql.append(" AND status = 'Returned' ");
+        } else if (selectedStatusFilter.equalsIgnoreCase("Issued")) {
+            sql.append(" AND status = 'Issued' AND STR_TO_DATE(due_date, '%m/%d/%Y %H:%i') > NOW() ");
+        } else if (selectedStatusFilter.equalsIgnoreCase("Overdue")) {
+            sql.append(" AND status = 'Issued' AND STR_TO_DATE(due_date, '%m/%d/%Y %H:%i') < NOW() ");
         }
 
-        String sql = "SELECT * FROM issued_books WHERE (fullname LIKE ? OR book_title LIKE ?) " +
-                     "ORDER BY " + orderByClause;
-        
-        PreparedStatement pst = conn.prepareStatement(sql);
+        sql.append(" ORDER BY issue_date DESC");
+
+        PreparedStatement pst = conn.prepareStatement(sql.toString());
         pst.setString(1, "%" + query + "%");
         pst.setString(2, "%" + query + "%");
         
         ResultSet rs = pst.executeQuery();
         
         while (rs.next()) {
+            String dbStatus = rs.getString("status");
+            String dueDateStr = rs.getString("due_date");
+            String penaltyDisplay = rs.getString("penalty_paid");
+            String displayStatus = dbStatus;
+
+            if (dbStatus.equalsIgnoreCase("Issued") && dueDateStr != null) {
+                try {
+                    LocalDateTime dueDate = LocalDateTime.parse(dueDateStr, formatter);
+                    if (now.isAfter(dueDate)) {
+                        displayStatus = "Overdue";
+                        
+                        // --- UPDATED PENALTY CALCULATION (NO WEEKENDS) ---
+                        long businessDaysLate = 0;
+                        LocalDateTime tempDate = dueDate;
+
+                        // Loop from the due date until the current time
+                        while (tempDate.isBefore(now)) {
+                            tempDate = tempDate.plusDays(1);
+                            
+                            // Get the day of the week
+                            java.time.DayOfWeek day = tempDate.getDayOfWeek();
+                            
+                            // Only count if it is NOT Saturday and NOT Sunday
+                            if (day != java.time.DayOfWeek.SATURDAY && day != java.time.DayOfWeek.SUNDAY) {
+                                businessDaysLate++;
+                            }
+                        }
+                        
+                        long calculatedPenalty = businessDaysLate * 100; 
+                        penaltyDisplay = String.valueOf(calculatedPenalty);
+                    }
+                } catch (Exception e) {
+                    displayStatus = dbStatus;
+                }
+            }
+            
             Object[] row = {
                 rs.getInt("issue_id"),
                 rs.getString("fullname"),
                 rs.getString("book_title"),
                 rs.getString("book_acq_no"),
                 rs.getString("issue_date"),
-                rs.getString("due_date"),
-                rs.getString("penalty_paid"),
-                rs.getString("status") 
+                dueDateStr,
+                penaltyDisplay,
+                displayStatus 
             };
             model.addRow(row);
         }
@@ -61,7 +134,6 @@ public class issuebook_management extends javax.swing.JFrame {
         JOptionPane.showMessageDialog(null, "Error: " + e.getMessage());
     }
 }
-    
 
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -146,7 +218,7 @@ public class issuebook_management extends javax.swing.JFrame {
             }
         });
 
-        jLabel1.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        jLabel1.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         jLabel1.setForeground(new java.awt.Color(255, 255, 255));
         jLabel1.setText("Search Member Name:");
 
@@ -161,11 +233,11 @@ public class issuebook_management extends javax.swing.JFrame {
         deleteBtn.setText("DELETE");
         deleteBtn.addActionListener(this::deleteBtnActionPerformed);
 
-        jLabel2.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        jLabel2.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         jLabel2.setForeground(new java.awt.Color(255, 255, 255));
-        jLabel2.setText("Sort");
+        jLabel2.setText("STATUS");
 
-        sort.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Issued", "Returned" }));
+        sort.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "All", "Issued", "Overdue", "Returned" }));
         sort.addActionListener(this::sortActionPerformed);
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
@@ -174,24 +246,22 @@ public class issuebook_management extends javax.swing.JFrame {
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
                 .addContainerGap(24, Short.MAX_VALUE)
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel4Layout.createSequentialGroup()
-                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addGroup(jPanel4Layout.createSequentialGroup()
-                                .addComponent(deleteBtn)
-                                .addGap(18, 18, 18)
-                                .addComponent(btnMarkAsReturned))
-                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 855, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(22, 22, 22))
-                    .addGroup(jPanel4Layout.createSequentialGroup()
-                        .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 148, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 160, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(txtSearchMember, javax.swing.GroupLayout.PREFERRED_SIZE, 164, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(sort, javax.swing.GroupLayout.PREFERRED_SIZE, 94, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(58, 58, 58))))
+                        .addComponent(jLabel2)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(sort, javax.swing.GroupLayout.PREFERRED_SIZE, 162, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                        .addGroup(jPanel4Layout.createSequentialGroup()
+                            .addComponent(deleteBtn)
+                            .addGap(18, 18, 18)
+                            .addComponent(btnMarkAsReturned))
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 855, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addGap(22, 22, 22))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -255,6 +325,7 @@ public class issuebook_management extends javax.swing.JFrame {
     String dueDateStr = model.getValueAt(row, 5).toString();
     String currentStatus = model.getValueAt(row, 6).toString();
 
+    // Prevent returning books that are already returned
     if (currentStatus.equalsIgnoreCase("Returned")) {
         JOptionPane.showMessageDialog(this, "This book has already been returned!");
         return;
@@ -266,45 +337,44 @@ public class issuebook_management extends javax.swing.JFrame {
         try {
             Connection conn = MySQLConnect.getConnection();
 
+            // Fetch Member Details
             String memberSql = "SELECT course, year, usertype FROM member_records WHERE LOWER(TRIM(fullname)) = LOWER(TRIM(?))";
             PreparedStatement pstMem = conn.prepareStatement(memberSql);
             String searchName = model.getValueAt(row, 1).toString().trim();
             pstMem.setString(1, searchName); 
-
             ResultSet rsMem = pstMem.executeQuery();
 
-            String course = "N/A";
-            String year = "N/A";
-            String utype = "Member"; 
-
+            String course = "N/A", year = "N/A", utype = "Member"; 
             if (rsMem.next()) {
                 course = rsMem.getString("course");
                 year = rsMem.getString("year");
                 utype = rsMem.getString("usertype");
             }
 
+            // Calculate Penalty if Overdue
             LocalDateTime dueDate = LocalDateTime.parse(dueDateStr, formatter);
             long penalty = 0;
 
             if (!utype.equalsIgnoreCase("Faculty")) {
                 if (now.isAfter(dueDate)) {
                     long daysLate = java.time.Duration.between(dueDate, now).toDays();
-                     
-                    daysLate = daysLate + 1; 
+                    daysLate = (daysLate < 1) ? 1 : daysLate + 1; // Ensure at least 1 day if hours passed
 
                     penalty = daysLate * 100; 
                     JOptionPane.showMessageDialog(this, "OVERDUE DETECTED!\nDays Late: " + daysLate + "\nPenalty Collected: ₱" + penalty);
                 }
             }
+
+            // Fetch Author
             String getAuthorSql = "SELECT author FROM books WHERE acquisition_no = ?";
             PreparedStatement pstAuth = conn.prepareStatement(getAuthorSql);
             pstAuth.setString(1, acqNo);
             ResultSet rsAuth = pstAuth.executeQuery();
             String authorName = rsAuth.next() ? rsAuth.getString("author") : "Unknown";
 
+            // 1. Insert into Report Table
             String insertReportSql = "INSERT INTO issue_report (fullname, usertype, course, year, book_acq_no, book_title, author, issue_date, due_date, actual_return_date, penalty_paid, status) " +
                                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Returned')";
-
             PreparedStatement pstReport = conn.prepareStatement(insertReportSql);
             pstReport.setString(1, model.getValueAt(row, 1).toString()); 
             pstReport.setString(2, utype);   
@@ -317,22 +387,23 @@ public class issuebook_management extends javax.swing.JFrame {
             pstReport.setString(9, dueDateStr);
             pstReport.setString(10, nowStr); 
             pstReport.setString(11, String.valueOf(penalty)); 
-
             pstReport.executeUpdate();
 
+            // 2. Update Issued Books table (Set to Returned)
             String updateActiveSql = "UPDATE issued_books SET status = 'Returned', penalty_paid = ? WHERE issue_id = ?";
             PreparedStatement pstUpdateActive = conn.prepareStatement(updateActiveSql);
             pstUpdateActive.setString(1, String.valueOf(penalty)); 
             pstUpdateActive.setInt(2, issueId);
             pstUpdateActive.executeUpdate();
 
+            // 3. Update Book Stock Status
             String updateBookSql = "UPDATE books SET status = 'Available' WHERE acquisition_no = ?";
             PreparedStatement pstBook = conn.prepareStatement(updateBookSql);
             pstBook.setString(1, acqNo);
             pstBook.executeUpdate();
 
             JOptionPane.showMessageDialog(this, "Book successfully returned and archived!");
-            populateIssuedTable(""); 
+            populateIssuedTable(""); // Refresh the table
 
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Error during return: " + e.getMessage());
@@ -395,6 +466,16 @@ public class issuebook_management extends javax.swing.JFrame {
      * @param args the command line arguments
      */
     public static void main(String args[]) {
+        
+        try {
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+        } catch (Exception ex) { logger.log(java.util.logging.Level.SEVERE, null, ex); }
+        java.awt.EventQueue.invokeLater(() -> new issuebook_management().setVisible(true));
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.

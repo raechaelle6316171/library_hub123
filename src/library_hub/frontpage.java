@@ -171,7 +171,6 @@ public void showIssuedBooksInTable() {
         borrowBtn = new javax.swing.JButton();
         issueBookBtn = new javax.swing.JButton();
         issueReportBtn = new javax.swing.JButton();
-        penaltyBtn = new javax.swing.JButton();
         logoutBtn = new javax.swing.JButton();
         userBtn = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
@@ -242,12 +241,6 @@ public void showIssuedBooksInTable() {
         issueReportBtn.setText("ISSUE REPORT");
         issueReportBtn.addActionListener(this::issueReportBtnActionPerformed);
 
-        penaltyBtn.setBackground(new java.awt.Color(0, 153, 0));
-        penaltyBtn.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-        penaltyBtn.setForeground(new java.awt.Color(255, 255, 255));
-        penaltyBtn.setText("PENALTY");
-        penaltyBtn.addActionListener(this::penaltyBtnActionPerformed);
-
         logoutBtn.setBackground(new java.awt.Color(0, 153, 0));
         logoutBtn.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         logoutBtn.setForeground(new java.awt.Color(255, 255, 255));
@@ -283,7 +276,6 @@ public void showIssuedBooksInTable() {
                         .addComponent(borrowBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(issueBookBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(issueReportBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(penaltyBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(userBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 143, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(jLabel1))
                 .addGap(25, 25, 25))
@@ -305,8 +297,6 @@ public void showIssuedBooksInTable() {
                 .addComponent(issueBookBtn)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(issueReportBtn)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(penaltyBtn)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(userBtn)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -700,11 +690,11 @@ public void showIssuedBooksInTable() {
                         .addComponent(jButton4, javax.swing.GroupLayout.PREFERRED_SIZE, 19, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 19, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addGap(31, 31, 31)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 224, Short.MAX_VALUE)
-                    .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 202, Short.MAX_VALUE)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                    .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
+                .addContainerGap(28, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
@@ -720,8 +710,8 @@ public void showIssuedBooksInTable() {
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
+                .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
@@ -800,12 +790,6 @@ public void showIssuedBooksInTable() {
         issuereport_management1 w = new issuereport_management1();
         w.setVisible(true);
     }//GEN-LAST:event_issueReportBtnActionPerformed
-
-    private void penaltyBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_penaltyBtnActionPerformed
-        this.dispose(); 
-        penalty w = new penalty();
-        w.setVisible(true);
-    }//GEN-LAST:event_penaltyBtnActionPerformed
 
     private void logoutBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_logoutBtnActionPerformed
         int response = javax.swing.JOptionPane.showConfirmDialog(this, 
@@ -951,7 +935,6 @@ this.repaint();
     private javax.swing.JTable jTableBook;
     private javax.swing.JTable jTableMember;
     private javax.swing.JButton logoutBtn;
-    private javax.swing.JButton penaltyBtn;
     private javax.swing.JButton registerBtn;
     private javax.swing.JTextField txtTotalBook;
     private javax.swing.JTextField txtTotalBorrowed;

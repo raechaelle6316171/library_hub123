@@ -432,7 +432,7 @@ public class borrow_management_123 extends javax.swing.JFrame {
         jLabel11.setText("(mm/dd/yyyy)");
 
         cancelBtn2.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        cancelBtn2.setText("←BACK TO ISSUE BOOK");
+        cancelBtn2.setText("←GO TO ISSUE BOOK");
         cancelBtn2.addActionListener(this::cancelBtn2ActionPerformed);
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);

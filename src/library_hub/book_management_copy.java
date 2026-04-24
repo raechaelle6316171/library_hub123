@@ -215,7 +215,7 @@ public class book_management_copy extends javax.swing.JFrame {
         btnAddCategory = new javax.swing.JButton();
         btnDeleteCategory = new javax.swing.JButton();
         btnAddCopy = new javax.swing.JButton();
-        txtSearchUsername = new javax.swing.JPanel();
+        closeBtnn = new javax.swing.JPanel();
         txtSearch = new javax.swing.JTextField();
         jLabel7 = new javax.swing.JLabel();
         jPanel6 = new javax.swing.JPanel();
@@ -228,6 +228,7 @@ public class book_management_copy extends javax.swing.JFrame {
         STATUS = new javax.swing.JLabel();
         cmbStatusBook = new javax.swing.JComboBox<>();
         jLabel13 = new javax.swing.JLabel();
+        close = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -453,8 +454,8 @@ public class book_management_copy extends javax.swing.JFrame {
 
         cmbCategory.getAccessibleContext().setAccessibleName("");
 
-        txtSearchUsername.setBackground(new java.awt.Color(0, 102, 102));
-        txtSearchUsername.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 5));
+        closeBtnn.setBackground(new java.awt.Color(0, 102, 102));
+        closeBtnn.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 5));
 
         txtSearch.addActionListener(this::txtSearchActionPerformed);
         txtSearch.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -566,7 +567,7 @@ public class book_management_copy extends javax.swing.JFrame {
         jScrollPane2.setViewportView(jTable2);
 
         cancelBtn1.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        cancelBtn1.setText("←BACK TO BORROWER");
+        cancelBtn1.setText("←GO TO BORROW");
         cancelBtn1.addActionListener(this::cancelBtn1ActionPerformed);
 
         STATUS.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
@@ -580,46 +581,53 @@ public class book_management_copy extends javax.swing.JFrame {
         jLabel13.setForeground(new java.awt.Color(255, 255, 255));
         jLabel13.setText("SEARCH TITLE");
 
-        javax.swing.GroupLayout txtSearchUsernameLayout = new javax.swing.GroupLayout(txtSearchUsername);
-        txtSearchUsername.setLayout(txtSearchUsernameLayout);
-        txtSearchUsernameLayout.setHorizontalGroup(
-            txtSearchUsernameLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(txtSearchUsernameLayout.createSequentialGroup()
+        close.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        close.setText("x");
+        close.addActionListener(this::closeActionPerformed);
+
+        javax.swing.GroupLayout closeBtnnLayout = new javax.swing.GroupLayout(closeBtnn);
+        closeBtnn.setLayout(closeBtnnLayout);
+        closeBtnnLayout.setHorizontalGroup(
+            closeBtnnLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(closeBtnnLayout.createSequentialGroup()
                 .addContainerGap(9, Short.MAX_VALUE)
                 .addComponent(jLabel7)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(txtSearchUsernameLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addGroup(txtSearchUsernameLayout.createSequentialGroup()
+                .addGroup(closeBtnnLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addGroup(closeBtnnLayout.createSequentialGroup()
                         .addComponent(jLabel13)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 146, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(close)
+                        .addGap(28, 28, 28)
                         .addComponent(STATUS)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(cmbStatusBook, javax.swing.GroupLayout.PREFERRED_SIZE, 147, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(17, 17, 17))
-                    .addGroup(txtSearchUsernameLayout.createSequentialGroup()
-                        .addGroup(txtSearchUsernameLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(closeBtnnLayout.createSequentialGroup()
+                        .addGroup(closeBtnnLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                             .addComponent(cancelBtn1, javax.swing.GroupLayout.PREFERRED_SIZE, 195, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 793, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addGap(20, 20, 20))))
         );
-        txtSearchUsernameLayout.setVerticalGroup(
-            txtSearchUsernameLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(txtSearchUsernameLayout.createSequentialGroup()
+        closeBtnnLayout.setVerticalGroup(
+            closeBtnnLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(closeBtnnLayout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(jLabel7)
                 .addGap(437, 437, 437))
-            .addGroup(txtSearchUsernameLayout.createSequentialGroup()
+            .addGroup(closeBtnnLayout.createSequentialGroup()
                 .addGap(25, 25, 25)
-                .addGroup(txtSearchUsernameLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(txtSearchUsernameLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(closeBtnnLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(closeBtnnLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(jLabel13)
                         .addComponent(STATUS)
-                        .addComponent(cmbStatusBook, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(cmbStatusBook, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(close))
                     .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 250, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -637,7 +645,7 @@ public class book_management_copy extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, 838, Short.MAX_VALUE)
-                    .addComponent(txtSearchUsername, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                    .addComponent(closeBtnn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -645,7 +653,7 @@ public class book_management_copy extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(txtSearchUsername, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(closeBtnn, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
         pack();
@@ -1124,6 +1132,11 @@ public class book_management_copy extends javax.swing.JFrame {
     }
         search(txtSearch.getText());
     }//GEN-LAST:event_cmbStatusBookActionPerformed
+
+    private void closeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_closeActionPerformed
+        txtSearch.setText(""); 
+        cmbStatusBook.setSelectedIndex(0); // Sets selection to "Available"
+    }//GEN-LAST:event_closeActionPerformed
     
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */
@@ -1154,7 +1167,9 @@ public class book_management_copy extends javax.swing.JFrame {
     private javax.swing.JButton btnAddCopy;
     private javax.swing.JButton btnDeleteCategory;
     private javax.swing.JButton cancelBtn1;
+    private javax.swing.JButton close;
     private javax.swing.JButton closeBtn;
+    private javax.swing.JPanel closeBtnn;
     private javax.swing.JComboBox<String> cmbCategory;
     private javax.swing.JComboBox<String> cmbStatus;
     private javax.swing.JComboBox<String> cmbStatusBook;
@@ -1182,7 +1197,6 @@ public class book_management_copy extends javax.swing.JFrame {
     private javax.swing.JTextField txtAuthor;
     private javax.swing.JFormattedTextField txtDate;
     private javax.swing.JTextField txtSearch;
-    private javax.swing.JPanel txtSearchUsername;
     private javax.swing.JTextField txtTitle;
     private javax.swing.JTextField txtTotalCount;
     private javax.swing.JButton updateBtn;

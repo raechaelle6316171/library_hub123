@@ -182,8 +182,6 @@ public class user_management extends javax.swing.JFrame {
         txtPassword = new javax.swing.JPasswordField();
         txtConfirmPassword = new javax.swing.JPasswordField();
         cmbUserType = new javax.swing.JComboBox<>();
-        jLabel9 = new javax.swing.JLabel();
-        jButton6 = new javax.swing.JButton();
         closeBtn = new javax.swing.JButton();
         saveBtn = new javax.swing.JButton();
         deleteBtn = new javax.swing.JButton();
@@ -229,12 +227,6 @@ public class user_management extends javax.swing.JFrame {
 
         cmbUserType.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "~Select User Type~", "Admin", "Librarian" }));
         cmbUserType.addActionListener(this::cmbUserTypeActionPerformed);
-
-        jLabel9.setForeground(new java.awt.Color(255, 255, 255));
-        jLabel9.setText("Already have an account?");
-
-        jButton6.setText("LOGIN");
-        jButton6.addActionListener(this::jButton6ActionPerformed);
 
         closeBtn.setText("CANCEL");
         closeBtn.addActionListener(this::closeBtnActionPerformed);
@@ -285,15 +277,6 @@ public class user_management extends javax.swing.JFrame {
                         .addComponent(cmbUserType, javax.swing.GroupLayout.PREFERRED_SIZE, 197, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(jLabel1))
                 .addContainerGap(26, Short.MAX_VALUE))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
-                        .addComponent(jLabel9, javax.swing.GroupLayout.PREFERRED_SIZE, 144, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(58, 58, 58))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
-                        .addComponent(jButton6, javax.swing.GroupLayout.PREFERRED_SIZE, 103, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(80, 80, 80))))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -330,11 +313,7 @@ public class user_management extends javax.swing.JFrame {
                     .addComponent(saveBtn))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(closeBtn)
-                .addGap(18, 18, 18)
-                .addComponent(jLabel9)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButton6)
-                .addContainerGap(12, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         txtSearchUsername.setBackground(new java.awt.Color(0, 0, 102));
@@ -414,8 +393,8 @@ public class user_management extends javax.swing.JFrame {
                     .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel7))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 395, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 330, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(36, Short.MAX_VALUE))
         );
 
         jPanel3.setBackground(new java.awt.Color(0, 0, 102));
@@ -463,11 +442,11 @@ public class user_management extends javax.swing.JFrame {
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
+            .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(txtSearchUsername, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-            .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(txtSearchUsername, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
         pack();
@@ -483,12 +462,6 @@ public class user_management extends javax.swing.JFrame {
         frontpage w = new frontpage();
         w.setVisible(true);
     }//GEN-LAST:event_jButton5ActionPerformed
-
-    private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
-        this.dispose();
-        librarianOradministrator w = new librarianOradministrator();
-        w.setVisible(true);
-    }//GEN-LAST:event_jButton6ActionPerformed
 
     private void txtSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtSearchActionPerformed
         // TODO add your handling code here:
@@ -542,7 +515,7 @@ public class user_management extends javax.swing.JFrame {
     String confirmPass = txtConfirmPassword.getText();
     String userType = cmbUserType.getSelectedItem().toString();
 
-    // 1. Basic Validation
+    // 1. Basic Validation for empty fields
     if (fullName.isEmpty() || userName.isEmpty() || password.isEmpty()) {
         JOptionPane.showMessageDialog(this, "Please fill in all fields before saving!");
         return; 
@@ -552,6 +525,13 @@ public class user_management extends javax.swing.JFrame {
         JOptionPane.showMessageDialog(this, "Passwords do not match!");
         txtPassword.requestFocus();
         return; 
+    }
+    
+    // INSERTED BLOCK: Check for valid selection first
+    if (cmbUserType.getSelectedIndex() == 0) {
+        JOptionPane.showMessageDialog(this, "Select a User Type!");
+        cmbUserType.requestFocus();
+        return;
     }
 
     try {
@@ -578,7 +558,7 @@ public class user_management extends javax.swing.JFrame {
             return; 
         }
 
-        // 3. If no duplicates, perform the INSERT
+        // 3. Perform the INSERT
         String sql = "INSERT INTO user (fullName, userName, password, category) VALUES (?, ?, ?, ?)";
         PreparedStatement pst = conn.prepareStatement(sql);
 
@@ -638,13 +618,13 @@ public class user_management extends javax.swing.JFrame {
     String confirmPass = txtConfirmPassword.getText();
     String userType = cmbUserType.getSelectedItem().toString();
 
-    // 1. Check if a user is selected
+    // 1. Check if a user is selected from the table
     if (userId == -1) {
         JOptionPane.showMessageDialog(this, "Please select a user from the table first!");
         return;
     }
 
-    // 2. Basic Validation
+    // 2. Basic Validation for empty fields
     if (fullName.isEmpty() || userName.isEmpty() || password.isEmpty()) {
         JOptionPane.showMessageDialog(this, "Please fill in all fields before updating!");
         return;
@@ -656,10 +636,17 @@ public class user_management extends javax.swing.JFrame {
         return; 
     }
 
+    // 3. User Type Validation - Matches your Save logic
+    if (cmbUserType.getSelectedIndex() == 0) {
+        JOptionPane.showMessageDialog(this, "Select a User Type!");
+        cmbUserType.requestFocus();
+        return; // Stops execution so "~Select User Type~" isn't saved
+    }
+
     try {
         Connection conn = MySQLConnect.getConnection();
 
-        // 3. Check for duplicates excluding the CURRENT userId
+        // 4. Check for duplicates excluding the CURRENT userId
         String checkSql = "SELECT * FROM user WHERE (userName = ? OR fullName = ?) AND id != ?";
         PreparedStatement checkPst = conn.prepareStatement(checkSql);
         checkPst.setString(1, userName);
@@ -681,7 +668,7 @@ public class user_management extends javax.swing.JFrame {
             return; 
         }
 
-        // 4. Perform the UPDATE if no duplicates found
+        // 5. Perform the UPDATE if no duplicates found
         String sql = "UPDATE user SET fullName=?, userName=?, password=?, category=? WHERE id=?";
         PreparedStatement pst = conn.prepareStatement(sql);
 
@@ -777,7 +764,6 @@ public class user_management extends javax.swing.JFrame {
     private javax.swing.JComboBox<String> cmbUserType;
     private javax.swing.JButton deleteBtn;
     private javax.swing.JButton jButton5;
-    private javax.swing.JButton jButton6;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
@@ -786,7 +772,6 @@ public class user_management extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
-    private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JScrollPane jScrollPane2;

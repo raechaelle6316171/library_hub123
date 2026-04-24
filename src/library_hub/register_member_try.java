@@ -218,7 +218,7 @@ public class register_member_try extends javax.swing.JFrame {
         jScrollPane2.setViewportView(jTable2);
 
         cancelBtn1.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        cancelBtn1.setText("←BACK TO BORROWER");
+        cancelBtn1.setText("←GO TO BORROW");
         cancelBtn1.addActionListener(this::cancelBtn1ActionPerformed);
 
         javax.swing.GroupLayout txtSearchUsernameLayout = new javax.swing.GroupLayout(txtSearchUsername);
