@@ -208,6 +208,7 @@ public class issuereport_management1 extends javax.swing.JFrame {
         jPanel8 = new javax.swing.JPanel();
         txtTotalPaid = new javax.swing.JTextField();
         jLabel3 = new javax.swing.JLabel();
+        close1 = new javax.swing.JButton();
         jPanel4 = new javax.swing.JPanel();
         jLabel9 = new javax.swing.JLabel();
         jButton6 = new javax.swing.JButton();
@@ -365,6 +366,10 @@ public class issuereport_management1 extends javax.swing.JFrame {
                 .addContainerGap())
         );
 
+        close1.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        close1.setText("x");
+        close1.addActionListener(this::close1ActionPerformed);
+
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
@@ -377,7 +382,9 @@ public class issuereport_management1 extends javax.swing.JFrame {
                         .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 164, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(227, 227, 227)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(close1)
+                        .addGap(194, 194, 194)
                         .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(120, 120, 120)
                         .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -404,7 +411,8 @@ public class issuereport_management1 extends javax.swing.JFrame {
                         .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel1)
-                            .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(close1))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)))
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 319, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(29, 29, 29)
@@ -470,12 +478,17 @@ public class issuereport_management1 extends javax.swing.JFrame {
     }//GEN-LAST:event_txtSearchActionPerformed
 
     private void txtSearchKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtSearchKeyReleased
-        String searchStr = txtSearch.getText();
+        String searchStr = txtSearch.getText().trim();
         DefaultTableModel model = (DefaultTableModel) jTableIssueReport.getModel();
         TableRowSorter<DefaultTableModel> trs = new TableRowSorter<>(model);
         jTableIssueReport.setRowSorter(trs);
 
-        trs.setRowFilter(RowFilter.regexFilter("(?i)" + searchStr, 1));
+        // Indices: 0 (ID), 1 (Member Name), 5 (Acq No), 6 (Book Title)
+        // (?i) makes the search case-insensitive
+        trs.setRowFilter(RowFilter.regexFilter("(?i)" + searchStr, 0, 1, 5, 6));
+
+        // Automatically update the Total Paid box based on the filtered results
+        //updateTotalPaid();
     }//GEN-LAST:event_txtSearchKeyReleased
 
     private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
@@ -511,6 +524,8 @@ public class issuereport_management1 extends javax.swing.JFrame {
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Error deleting report: " + e.getMessage());
         }
+        updateTotalPaid();
+        updateTotalUnpaid();
     }
     }//GEN-LAST:event_deleteBtnActionPerformed
 
@@ -647,6 +662,26 @@ public class issuereport_management1 extends javax.swing.JFrame {
 }
     }//GEN-LAST:event_printBtnActionPerformed
 
+    private void close1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_close1ActionPerformed
+        // 1. Clear the search text field
+    txtSearch.setText("");
+    
+    // 2. Remove the filter from the table to show all records
+    DefaultTableModel model = (DefaultTableModel) jTableIssueReport.getModel();
+    TableRowSorter<DefaultTableModel> trs = new TableRowSorter<>(model);
+    jTableIssueReport.setRowSorter(trs);
+    trs.setRowFilter(null); 
+    
+    // 3. Update your Total Paid and Total Unpaid displays
+    updateTotalPaid();
+    //updateTotalUnpaid();
+    // If you have a method for unpaid:
+    // updateTotalUnpaid(); 
+    
+    // 4. Return focus to the search bar for convenience
+    txtSearch.requestFocus();
+    }//GEN-LAST:event_close1ActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -673,6 +708,7 @@ public class issuereport_management1 extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton close1;
     private javax.swing.JButton deleteBtn;
     private javax.swing.JButton jButton6;
     private javax.swing.JLabel jLabel1;

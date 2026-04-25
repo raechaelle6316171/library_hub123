@@ -17,9 +17,16 @@ public class frontpage extends javax.swing.JFrame {
     
     public frontpage(String role) {
     initComponents();
+    this.userRole = role; // Set the role first
+
+    // Explicitly handle button visibility based on role
+    if ("Librarian".equals(userRole)) {
+        userBtn.setVisible(false);
+    } else {
+        userBtn.setVisible(true); // Ensure it shows for Admin
+    }
+
     loadDashboardData();
-    this.userRole = role;
-    
     showMembersInTable(); 
     showBooksInTable();
     showIssuedBooksInTable();
@@ -27,25 +34,27 @@ public class frontpage extends javax.swing.JFrame {
     displayTotalMembers();
     displayTotalBooks();
     updateTotalBorrowed();
-    displayTotalUnreturned();
-
-    if ("Librarian".equals(userRole)) {
-        userBtn.setVisible(false);
-    }
+    //displayTotalUnreturned();
+    displayTotalOverdue();
 }
 
-    public frontpage() {
-        initComponents();
-        loadDashboardData();
-        if ("Librarian".equals(userRole)) {
-            userBtn.setVisible(false);
-        }
-        displayTotalMembers();
-        displayTotalBooks();
-        updateTotalBorrowed();
-        displayTotalUnreturned();
-        
+public frontpage() {
+    initComponents();
+    
+    // Default safety check for the no-argument constructor
+    if ("Librarian".equals(userRole)) {
+        userBtn.setVisible(false);
+    } else {
+        userBtn.setVisible(true); // Default to visible for Admin
     }
+
+    loadDashboardData();
+    displayTotalMembers();
+    displayTotalBooks();
+    updateTotalBorrowed();
+    //displayTotalUnreturned();
+    displayTotalOverdue();
+}
     
     public void loadDashboardData() {
 
@@ -56,7 +65,7 @@ public class frontpage extends javax.swing.JFrame {
     displayTotalMembers();
     displayTotalBooks();
     updateTotalBorrowed();
-    displayTotalUnreturned();
+    //displayTotalUnreturned();
     
     if ("Librarian".equals(userRole)) {
         userBtn.setVisible(false);
@@ -191,7 +200,7 @@ public void showIssuedBooksInTable() {
         jPanel13 = new javax.swing.JPanel();
         jPanel17 = new javax.swing.JPanel();
         jPanel18 = new javax.swing.JPanel();
-        txtTotalUnreturned = new javax.swing.JTextField();
+        txtTotalOverdue = new javax.swing.JTextField();
         jLabel6 = new javax.swing.JLabel();
         jLabel7 = new javax.swing.JLabel();
         jLabel4 = new javax.swing.JLabel();
@@ -220,13 +229,13 @@ public void showIssuedBooksInTable() {
         bookBtn.setBackground(new java.awt.Color(0, 153, 0));
         bookBtn.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         bookBtn.setForeground(new java.awt.Color(255, 255, 255));
-        bookBtn.setText("BOOK");
+        bookBtn.setText("ADD BOOK");
         bookBtn.addActionListener(this::bookBtnActionPerformed);
 
         borrowBtn.setBackground(new java.awt.Color(0, 153, 0));
         borrowBtn.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         borrowBtn.setForeground(new java.awt.Color(255, 255, 255));
-        borrowBtn.setText("BORROW");
+        borrowBtn.setText("BORROW BOOK");
         borrowBtn.addActionListener(this::borrowBtnActionPerformed);
 
         issueBookBtn.setBackground(new java.awt.Color(0, 153, 0));
@@ -478,12 +487,12 @@ public void showIssuedBooksInTable() {
             .addGap(0, 11, Short.MAX_VALUE)
         );
 
-        txtTotalUnreturned.setEditable(false);
-        txtTotalUnreturned.setBackground(new java.awt.Color(204, 204, 204));
-        txtTotalUnreturned.setFont(new java.awt.Font("Segoe UI", 1, 36)); // NOI18N
-        txtTotalUnreturned.setForeground(new java.awt.Color(0, 0, 0));
-        txtTotalUnreturned.setBorder(null);
-        txtTotalUnreturned.addActionListener(this::txtTotalUnreturnedActionPerformed);
+        txtTotalOverdue.setEditable(false);
+        txtTotalOverdue.setBackground(new java.awt.Color(204, 204, 204));
+        txtTotalOverdue.setFont(new java.awt.Font("Segoe UI", 1, 36)); // NOI18N
+        txtTotalOverdue.setForeground(new java.awt.Color(0, 0, 0));
+        txtTotalOverdue.setBorder(null);
+        txtTotalOverdue.addActionListener(this::txtTotalOverdueActionPerformed);
 
         javax.swing.GroupLayout jPanel17Layout = new javax.swing.GroupLayout(jPanel17);
         jPanel17.setLayout(jPanel17Layout);
@@ -491,7 +500,7 @@ public void showIssuedBooksInTable() {
             jPanel17Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel17Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(txtTotalUnreturned, javax.swing.GroupLayout.DEFAULT_SIZE, 118, Short.MAX_VALUE)
+                .addComponent(txtTotalOverdue, javax.swing.GroupLayout.DEFAULT_SIZE, 118, Short.MAX_VALUE)
                 .addContainerGap())
             .addComponent(jPanel18, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
@@ -500,7 +509,7 @@ public void showIssuedBooksInTable() {
             .addGroup(jPanel17Layout.createSequentialGroup()
                 .addComponent(jPanel18, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(txtTotalUnreturned)
+                .addComponent(txtTotalOverdue)
                 .addGap(7, 7, 7))
         );
 
@@ -510,7 +519,7 @@ public void showIssuedBooksInTable() {
 
         jLabel7.setFont(new java.awt.Font("STXihei", 1, 14)); // NOI18N
         jLabel7.setForeground(new java.awt.Color(255, 255, 255));
-        jLabel7.setText("Total Unreturned");
+        jLabel7.setText("Total Overdue");
 
         jLabel4.setFont(new java.awt.Font("STXihei", 1, 14)); // NOI18N
         jLabel4.setForeground(new java.awt.Color(255, 255, 255));
@@ -843,9 +852,9 @@ this.repaint();
         // TODO add your handling code here:
     }//GEN-LAST:event_txtTotalBorrowedActionPerformed
 
-    private void txtTotalUnreturnedActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtTotalUnreturnedActionPerformed
+    private void txtTotalOverdueActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtTotalOverdueActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_txtTotalUnreturnedActionPerformed
+    }//GEN-LAST:event_txtTotalOverdueActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         this.dispose();
@@ -867,7 +876,7 @@ this.repaint();
 
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
         this.dispose();
-        issuereport_management1 w = new issuereport_management1();
+        issuebook_management w = new issuebook_management();
         w.setVisible(true);
     }//GEN-LAST:event_jButton4ActionPerformed
 
@@ -939,7 +948,7 @@ this.repaint();
     private javax.swing.JTextField txtTotalBook;
     private javax.swing.JTextField txtTotalBorrowed;
     private javax.swing.JTextField txtTotalMember;
-    private javax.swing.JTextField txtTotalUnreturned;
+    private javax.swing.JTextField txtTotalOverdue;
     private javax.swing.JButton userBtn;
     // End of variables declaration//GEN-END:variables
 
@@ -986,22 +995,41 @@ public void displayTotalBooks() {
         }
     }
 
-public void displayTotalUnreturned() {
-        try {
-            Connection conn = MySQLConnect.getConnection();
+public void displayTotalOverdue() {
+    int count = 0;
+    // Your date format from the database
+    java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm");
+    java.time.LocalDateTime now = java.time.LocalDateTime.now();
 
-            // Count only the books that have not been returned yet
-            String sql = "SELECT COUNT(*) FROM issued_books WHERE status = 'Issued'";
-            PreparedStatement pst = conn.prepareStatement(sql);
-            ResultSet rs = pst.executeQuery();
+    try {
+        java.sql.Connection conn = MySQLConnect.getConnection();
+        // Query books that are not yet returned
+        String sql = "SELECT due_date FROM issued_books WHERE status != 'Returned'";
+        java.sql.PreparedStatement pst = conn.prepareStatement(sql);
+        java.sql.ResultSet rs = pst.executeQuery();
 
-            if (rs.next()) {
-                int total = rs.getInt(1);
-                // This will now work because the variable name matches the Design UI
-                txtTotalUnreturned.setText(String.valueOf(total));
+        while (rs.next()) {
+            String dueDateStr = rs.getString("due_date");
+            if (dueDateStr != null && !dueDateStr.isEmpty()) {
+                try {
+                    java.time.LocalDateTime dueDate = java.time.LocalDateTime.parse(dueDateStr, formatter);
+                    // If the current time is AFTER the due date, it is overdue
+                    if (now.isAfter(dueDate)) {
+                        count++;
+                    }
+                } catch (Exception e) {
+                    // Skip rows with formatting errors
+                }
             }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Error fetching unreturned total: " + e.getMessage());
         }
+        
+        // Update your Red Box text label
+        // Replace 'lblTotalOverdue' with your actual Variable Name for that box
+        txtTotalOverdue.setText(String.valueOf(count));
+
+    } catch (java.sql.SQLException e) {
+        System.out.println("Error: " + e.getMessage());
     }
+}
+
 }
