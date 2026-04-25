@@ -57,13 +57,14 @@ public class book_management_copy extends javax.swing.JFrame {
     
     private boolean isValidDate(String dateStr) {
     // Check if the mask is completely filled
+    dateStr = dateStr.trim();
     if (dateStr.contains("_") || dateStr.length() < 10) return false;
 
     try {
         // STRICT mode prevents impossible dates like Feb 30
         java.time.format.DateTimeFormatter dtf = 
-            java.time.format.DateTimeFormatter.ofPattern("MM/dd/yyyy")
-            .withResolverStyle(java.time.format.ResolverStyle.STRICT);
+        java.time.format.DateTimeFormatter.ofPattern("MM/dd/uuuu")
+        .withResolverStyle(java.time.format.ResolverStyle.STRICT);
             
         java.time.LocalDate inputDate = java.time.LocalDate.parse(dateStr, dtf);
         java.time.LocalDate today = java.time.LocalDate.now(); // This is April 25, 2026
@@ -74,8 +75,8 @@ public class book_management_copy extends javax.swing.JFrame {
             return false;
         }
 
-        // Sets a reasonable historical limit (e.g., year 1800)
-        return inputDate.getYear() >= 1800;
+        // Sets a reasonable historical limit (e.g., year 1450)
+        return inputDate.getYear() >= 1450;
         
     } catch (java.time.format.DateTimeParseException e) {
         return false; // Blocks invalid calendar dates
@@ -880,7 +881,6 @@ public class book_management_copy extends javax.swing.JFrame {
     String title = txtTitle.getText().trim();
     String author = txtAuthor.getText().trim();
     String dateInput = txtDate.getText(); 
-    String cleanDate = dateInput.replace("/", "").trim(); 
     
     // Null safety for ComboBox selections
     Object selectedCatObj = cmbCategory.getSelectedItem();
@@ -995,8 +995,7 @@ public class book_management_copy extends javax.swing.JFrame {
     String acqNo = txtAcq.getText().trim();
     String title = txtTitle.getText().trim();
     String author = txtAuthor.getText().trim();
-    String dateInput = txtDate.getText(); // Contains slashes from mask
-    String cleanDate = dateInput.replace("/", "").trim(); 
+    String dateInput = txtDate.getText().trim(); // Contains slashes from mask
     
     // Null safety for ComboBox selections
     Object selectedCatObj = cmbCategory.getSelectedItem();
@@ -1019,12 +1018,20 @@ public class book_management_copy extends javax.swing.JFrame {
     if (!isValidDate(dateInput)) {
     JOptionPane.showMessageDialog(this, 
         "Invalid Date Published!\n" +
-        "- Date must exist (No Feb 30).\n" +
+        "- Date must exist.\n" +
         "- Date cannot be in the future.", 
         "Date Error", JOptionPane.ERROR_MESSAGE);
     txtDate.requestFocus();
     return;
 }
+    String mysqlDate;
+    try {
+        java.time.format.DateTimeFormatter inputFormatter = java.time.format.DateTimeFormatter.ofPattern("MM/dd/yyyy");
+        java.time.LocalDate date = java.time.LocalDate.parse(dateInput.trim(), inputFormatter);
+        mysqlDate = date.toString(); // Result: "2026-04-25"
+    } catch (Exception e) {
+        mysqlDate = "0000-00-00"; // Fallback
+    }
 
     if (category.equals("~Select Category~") || category.isEmpty()) {
         JOptionPane.showMessageDialog(this, "Please select a valid Book Category!");
@@ -1060,7 +1067,7 @@ public class book_management_copy extends javax.swing.JFrame {
         pst.setString(1, acqNo);
         pst.setString(2, title);
         pst.setString(3, author);
-        pst.setString(4, dateInput); 
+        pst.setString(4, mysqlDate); 
         pst.setString(5, category);
         pst.setObject(6, selectedStatusObj);
 
