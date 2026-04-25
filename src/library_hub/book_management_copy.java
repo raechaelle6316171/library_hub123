@@ -57,7 +57,7 @@ public class book_management_copy extends javax.swing.JFrame {
     
     private boolean isValidDate(String dateStr) {
     // Check if the mask is completely filled
-    dateStr = dateStr.trim();
+    //dateStr = dateStr.trim();
     if (dateStr.contains("_") || dateStr.length() < 10) return false;
 
     try {
@@ -267,6 +267,8 @@ public class book_management_copy extends javax.swing.JFrame {
 
             DefaultTableModel tblModel = (DefaultTableModel) jTable2.getModel();
             tblModel.setRowCount(0);
+            
+            
 
             while (rs.next()) {
                 Vector colData = new Vector();
@@ -274,7 +276,18 @@ public class book_management_copy extends javax.swing.JFrame {
                 colData.add(rs.getString("acquisition_no"));
                 colData.add(rs.getString("title"));
                 colData.add(rs.getString("author"));
-                colData.add(rs.getString("date_published"));
+                // 1. Get the raw date from the DB (e.g., "2026-04-25")
+                String rawDate = rs.getString("date_published");
+
+                // 2. Format it for the UI (e.g., "04/25/2026")
+                String formattedDate = rawDate; // fallback
+                try {
+                    java.time.LocalDate dbDate = java.time.LocalDate.parse(rawDate);
+                    formattedDate = dbDate.format(java.time.format.DateTimeFormatter.ofPattern("MM/dd/yyyy"));
+                } catch (Exception e) {
+                    // If date is null or weird, just keep it as is
+                }
+                colData.add(formattedDate);
                 colData.add(rs.getString("category"));
                 colData.add(rs.getString("status"));
                 tblModel.addRow(colData);

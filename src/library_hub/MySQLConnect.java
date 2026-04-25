@@ -12,14 +12,18 @@ public class MySQLConnect {
     
     public static Connection getConnection(){
         Connection conn = null;
+        
         try{
             Class.forName("com.mysql.cj.jdbc.Driver");
             conn = DriverManager.getConnection(URL, USER, PASS);
             //JOptionPane.showMessageDialog(null, PASS);
             
         }catch(ClassNotFoundException | SQLException e){
+            e.printStackTrace();
             JOptionPane.showMessageDialog(null, PASS);
+            
         }
+        
         return conn;
     }
 }
