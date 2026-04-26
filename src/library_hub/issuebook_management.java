@@ -70,7 +70,7 @@ public class issuebook_management extends javax.swing.JFrame {
         } else if (selectedStatusFilter.equalsIgnoreCase("Issued")) {
             sql.append(" AND status = 'Issued' AND due_date > NOW() ");
         } else if (selectedStatusFilter.equalsIgnoreCase("Overdue")) {
-            sql.append(" AND status = 'Issued' AND due_date < NOW() ");
+            sql.append(" AND status = 'Overdue' AND due_date < NOW() ");
         }
         sql.append(" ORDER BY issue_date DESC");
 
@@ -81,6 +81,7 @@ public class issuebook_management extends javax.swing.JFrame {
         ResultSet rs = pst.executeQuery();
         
         while (rs.next()) {
+            int issueId = rs.getInt("issue_id");
             String dbStatus = rs.getString("status");
             java.sql.Timestamp issueTs = rs.getTimestamp("issue_date");
             java.sql.Timestamp dueTs = rs.getTimestamp("due_date");
@@ -108,6 +109,11 @@ public class issuebook_management extends javax.swing.JFrame {
                     
                     long calculatedPenalty = businessDaysLate * 100; 
                     penaltyDisplay = String.valueOf(calculatedPenalty);
+                    String updateSql = "UPDATE issued_books SET penalty_paid = ?, status = 'Overdue' " + "WHERE issue_id = ? AND status = 'Issued'";
+                    PreparedStatement pstUpdate = conn.prepareStatement(updateSql);
+                    pstUpdate.setString(1, penaltyDisplay);
+                    pstUpdate.setInt(2, issueId);
+                    pstUpdate.executeUpdate();
                 }
                 }
             
@@ -123,6 +129,7 @@ public class issuebook_management extends javax.swing.JFrame {
             };
             model.addRow(row);
         }
+        
     } catch (SQLException e) {
         JOptionPane.showMessageDialog(null, "Error: " + e.getMessage());
     }
@@ -314,11 +321,11 @@ public class issuebook_management extends javax.swing.JFrame {
     String nowStr = now.format(formatter);
 
     DefaultTableModel model = (DefaultTableModel) jTableIssuedBooks.getModel();
-
+    
     int issueId = Integer.parseInt(model.getValueAt(row, 0).toString());
     String acqNo = model.getValueAt(row, 3).toString();
     String dueDateStr = model.getValueAt(row, 5).toString();
-    String currentStatus = model.getValueAt(row, 6).toString();
+    String currentStatus = model.getValueAt(row, 7).toString();
 
     // Prevent returning books that are already returned
     if (currentStatus.equalsIgnoreCase("Returned")) {
@@ -331,7 +338,19 @@ public class issuebook_management extends javax.swing.JFrame {
     if (confirm == JOptionPane.YES_OPTION) {
         try {
             Connection conn = MySQLConnect.getConnection();
-                
+             
+
+            // FIX 2: Database Safety Net (Check if already 'Returned' in DB)
+            String checkSql = "SELECT status FROM issued_books WHERE issue_id = ?";
+            PreparedStatement pstCheck = conn.prepareStatement(checkSql);
+            pstCheck.setInt(1, issueId);
+            ResultSet rsCheck = pstCheck.executeQuery();
+            
+            if (rsCheck.next() && rsCheck.getString("status").equalsIgnoreCase("Returned")) {
+                JOptionPane.showMessageDialog(this, "Error: This record was already updated as Returned.");
+                populateIssuedTable(""); 
+                return;
+            }   
             // Fetch Member Details
             String memberSql = "SELECT course, year, usertype FROM member_records WHERE LOWER(TRIM(fullname)) = LOWER(TRIM(?))";
             PreparedStatement pstMem = conn.prepareStatement(memberSql);
@@ -359,11 +378,23 @@ public class issuebook_management extends javax.swing.JFrame {
 
             if (!utype.equalsIgnoreCase("Faculty")) {
                 if (now.isAfter(dueDate)) {
-                    long daysLate = java.time.Duration.between(dueDate, now).toDays();
-                    daysLate = (daysLate < 1) ? 1 : daysLate + 1; // Ensure at least 1 day if hours passed
+                    long businessDaysLate = 0;
+                    LocalDateTime tempDate = dueDate;
 
-                    penalty = daysLate * 100; 
-                    JOptionPane.showMessageDialog(this, "OVERDUE DETECTED!\nDays Late: " + daysLate + "\nPenalty Collected: ₱" + penalty);
+                    // This loop matches your Table's logic exactly
+                    while (tempDate.isBefore(now)) {
+                        tempDate = tempDate.plusDays(1);
+                        java.time.DayOfWeek day = tempDate.getDayOfWeek();
+                        // Only count if it's not Saturday or Sunday
+                        if (day != java.time.DayOfWeek.SATURDAY && day != java.time.DayOfWeek.SUNDAY) {
+                            businessDaysLate++;
+                        }
+                    }
+                    penalty = businessDaysLate * 100; 
+                    
+                    if (penalty > 0) {
+                         JOptionPane.showMessageDialog(this, "OVERDUE DETECTED!\nDays Late: " + businessDaysLate + "\nPenalty Collected: ₱" + penalty);
+                    }
                 }
             }
 
@@ -462,6 +493,7 @@ public class issuebook_management extends javax.swing.JFrame {
 
     private void sortActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sortActionPerformed
         populateIssuedTable(txtSearchMember.getText());
+        
     }//GEN-LAST:event_sortActionPerformed
 
     /**
