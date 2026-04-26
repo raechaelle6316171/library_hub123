@@ -40,7 +40,7 @@ public class issuereport_management1 extends javax.swing.JFrame {
     public void populateIssuedTable(String query) {
     DefaultTableModel model = (DefaultTableModel) jTableIssueReport.getModel();
     model.setRowCount(0);
-
+    java.text.SimpleDateFormat displayFormat = new java.text.SimpleDateFormat("MM/dd/yyyy HH:mm");
     try {
         Connection conn = MySQLConnect.getConnection();
 
@@ -54,6 +54,14 @@ public class issuereport_management1 extends javax.swing.JFrame {
         ResultSet rs = pst.executeQuery();
         
         while (rs.next()) {
+            java.sql.Timestamp issueTs = rs.getTimestamp("issue_date");
+            java.sql.Timestamp dueTs = rs.getTimestamp("due_date");
+            java.sql.Timestamp returnTs = rs.getTimestamp("actual_return_date");
+
+            // Convert to clean Strings
+            String issueStr = (issueTs != null) ? displayFormat.format(issueTs) : "N/A";
+            String dueStr = (dueTs != null) ? displayFormat.format(dueTs) : "N/A";
+            String returnStr = (returnTs != null) ? displayFormat.format(returnTs) : "N/A";
             Object[] row = {
                 rs.getInt("id"),               
                 rs.getString("fullname"),
@@ -63,9 +71,9 @@ public class issuereport_management1 extends javax.swing.JFrame {
                 rs.getString("book_acq_no"),
                 rs.getString("book_title"),
                 rs.getString("author"),
-                rs.getString("issue_date"),
-                rs.getString("due_date"),
-                rs.getString("actual_return_date"), 
+                issueStr,    // Formatted
+                dueStr,      // Formatted
+                returnStr, 
                 rs.getString("penalty_paid"),            
                 rs.getString("status")
             };

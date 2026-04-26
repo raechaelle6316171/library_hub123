@@ -657,6 +657,7 @@ public class borrow_management_123 extends javax.swing.JFrame {
             PreparedStatement countPst = conn.prepareStatement(countSql);
             countPst.setString(1, name);
             ResultSet rsCount = countPst.executeQuery();
+            
 
             if (rsCount.next()) {
                 int borrowedCount = rsCount.getInt(1);
@@ -696,7 +697,13 @@ public class borrow_management_123 extends javax.swing.JFrame {
                 return;
             }
         }
-
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm");
+        LocalDateTime issueLDT = LocalDateTime.parse(txtIssueDate.getText(), formatter);
+        java.sql.Timestamp issueTS = java.sql.Timestamp.valueOf(issueLDT);
+        LocalDateTime dueLDT = LocalDateTime.parse(txtDueDate.getText(), formatter);
+        java.sql.Timestamp dueTS = java.sql.Timestamp.valueOf(dueLDT);
+        
+        
         String issueSql = "INSERT INTO issued_books (fullname, usertype, book_acq_no, book_title, issue_date, due_date, penalty_paid, status) "
                         + "VALUES (?, ?, ?, ?, ?, ?, ?, 'Issued')";
 
@@ -705,8 +712,8 @@ public class borrow_management_123 extends javax.swing.JFrame {
         issuePst.setString(2, userType);
         issuePst.setString(3, acqNo);
         issuePst.setString(4, title);
-        issuePst.setString(5, iDate);
-        issuePst.setString(6, dDate);
+        issuePst.setTimestamp(5, issueTS);
+        issuePst.setTimestamp(6, dueTS);        
         issuePst.setString(7, "0"); // Manually setting initial penalty to 0 to avoid DB errors
 
         int result = issuePst.executeUpdate();

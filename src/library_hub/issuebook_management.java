@@ -58,7 +58,7 @@ public class issuebook_management extends javax.swing.JFrame {
     model.setRowCount(0);
 
     String selectedStatusFilter = sort.getSelectedItem().toString();
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm");
+    java.text.SimpleDateFormat displayFormat = new java.text.SimpleDateFormat("MM/dd/yyyy HH:mm");
     LocalDateTime now = LocalDateTime.now();
 
     try {
@@ -68,11 +68,10 @@ public class issuebook_management extends javax.swing.JFrame {
         if (selectedStatusFilter.equalsIgnoreCase("Returned")) {
             sql.append(" AND status = 'Returned' ");
         } else if (selectedStatusFilter.equalsIgnoreCase("Issued")) {
-            sql.append(" AND status = 'Issued' AND STR_TO_DATE(due_date, '%m/%d/%Y %H:%i') > NOW() ");
+            sql.append(" AND status = 'Issued' AND due_date > NOW() ");
         } else if (selectedStatusFilter.equalsIgnoreCase("Overdue")) {
-            sql.append(" AND status = 'Issued' AND STR_TO_DATE(due_date, '%m/%d/%Y %H:%i') < NOW() ");
+            sql.append(" AND status = 'Issued' AND due_date < NOW() ");
         }
-
         sql.append(" ORDER BY issue_date DESC");
 
         PreparedStatement pst = conn.prepareStatement(sql.toString());
@@ -83,47 +82,41 @@ public class issuebook_management extends javax.swing.JFrame {
         
         while (rs.next()) {
             String dbStatus = rs.getString("status");
-            String dueDateStr = rs.getString("due_date");
+            java.sql.Timestamp issueTs = rs.getTimestamp("issue_date");
+            java.sql.Timestamp dueTs = rs.getTimestamp("due_date");
             String penaltyDisplay = rs.getString("penalty_paid");
             String displayStatus = dbStatus;
+            String issueDateStr = (issueTs != null) ? displayFormat.format(issueTs) : "";
+            String dueDateStr = (dueTs != null) ? displayFormat.format(dueTs) : "";
+            if (dbStatus.equalsIgnoreCase("Issued") && dueTs != null) {
+                // Convert Timestamp to LocalDateTime for Java logic
+                LocalDateTime dueDate = dueTs.toLocalDateTime();
+                
+                if (now.isAfter(dueDate)) {
+                    displayStatus = "Overdue";
+                    
+                    long businessDaysLate = 0;
+                    LocalDateTime tempDate = dueDate;
 
-            if (dbStatus.equalsIgnoreCase("Issued") && dueDateStr != null) {
-                try {
-                    LocalDateTime dueDate = LocalDateTime.parse(dueDateStr, formatter);
-                    if (now.isAfter(dueDate)) {
-                        displayStatus = "Overdue";
-                        
-                        // --- UPDATED PENALTY CALCULATION (NO WEEKENDS) ---
-                        long businessDaysLate = 0;
-                        LocalDateTime tempDate = dueDate;
-
-                        // Loop from the due date until the current time
-                        while (tempDate.isBefore(now)) {
-                            tempDate = tempDate.plusDays(1);
-                            
-                            // Get the day of the week
-                            java.time.DayOfWeek day = tempDate.getDayOfWeek();
-                            
-                            // Only count if it is NOT Saturday and NOT Sunday
-                            if (day != java.time.DayOfWeek.SATURDAY && day != java.time.DayOfWeek.SUNDAY) {
-                                businessDaysLate++;
-                            }
+                    while (tempDate.isBefore(now)) {
+                        tempDate = tempDate.plusDays(1);
+                        java.time.DayOfWeek day = tempDate.getDayOfWeek();
+                        if (day != java.time.DayOfWeek.SATURDAY && day != java.time.DayOfWeek.SUNDAY) {
+                            businessDaysLate++;
                         }
-                        
-                        long calculatedPenalty = businessDaysLate * 100; 
-                        penaltyDisplay = String.valueOf(calculatedPenalty);
                     }
-                } catch (Exception e) {
-                    displayStatus = dbStatus;
+                    
+                    long calculatedPenalty = businessDaysLate * 100; 
+                    penaltyDisplay = String.valueOf(calculatedPenalty);
                 }
-            }
+                }
             
             Object[] row = {
                 rs.getInt("issue_id"),
                 rs.getString("fullname"),
                 rs.getString("book_title"),
                 rs.getString("book_acq_no"),
-                rs.getString("issue_date"),
+                issueDateStr, // Now formatted as MM/dd/yyyy HH:mm
                 dueDateStr,
                 penaltyDisplay,
                 displayStatus 
@@ -314,6 +307,8 @@ public class issuebook_management extends javax.swing.JFrame {
         return;
     }
 
+   
+    // Match exactly what populateIssuedTable is putting into the table
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm");
     LocalDateTime now = LocalDateTime.now();
     String nowStr = now.format(formatter);
@@ -336,13 +331,20 @@ public class issuebook_management extends javax.swing.JFrame {
     if (confirm == JOptionPane.YES_OPTION) {
         try {
             Connection conn = MySQLConnect.getConnection();
-
+                
             // Fetch Member Details
             String memberSql = "SELECT course, year, usertype FROM member_records WHERE LOWER(TRIM(fullname)) = LOWER(TRIM(?))";
             PreparedStatement pstMem = conn.prepareStatement(memberSql);
             String searchName = model.getValueAt(row, 1).toString().trim();
             pstMem.setString(1, searchName); 
             ResultSet rsMem = pstMem.executeQuery();
+            
+            LocalDateTime issueLDT = LocalDateTime.parse(model.getValueAt(row, 4).toString(), formatter);
+            LocalDateTime dueLDT = LocalDateTime.parse(dueDateStr, formatter);
+            
+            java.sql.Timestamp issueTS = java.sql.Timestamp.valueOf(issueLDT);
+            java.sql.Timestamp dueTS = java.sql.Timestamp.valueOf(dueLDT);
+            java.sql.Timestamp nowTS = java.sql.Timestamp.valueOf(now);
 
             String course = "N/A", year = "N/A", utype = "Member"; 
             if (rsMem.next()) {
@@ -383,9 +385,9 @@ public class issuebook_management extends javax.swing.JFrame {
             pstReport.setString(5, acqNo);
             pstReport.setString(6, model.getValueAt(row, 2).toString()); 
             pstReport.setString(7, authorName); 
-            pstReport.setString(8, model.getValueAt(row, 4).toString()); 
-            pstReport.setString(9, dueDateStr);
-            pstReport.setString(10, nowStr); 
+            pstReport.setTimestamp(8, issueTS); 
+            pstReport.setTimestamp(9, dueTS);
+            pstReport.setTimestamp(10, nowTS); 
             pstReport.setString(11, String.valueOf(penalty)); 
             pstReport.executeUpdate();
 

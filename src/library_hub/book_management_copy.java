@@ -240,12 +240,15 @@ public class book_management_copy extends javax.swing.JFrame {
         ResultSet rs = pst.executeQuery();
 
         while(rs.next()) {
+            java.sql.Date dbDate = rs.getDate("date_published");
+            String formattedDate = (dbDate != null) ? 
+            new java.text.SimpleDateFormat("MM/dd/yyyy").format(dbDate) : "";
             model.addRow(new Object[]{
                 rs.getString("id"),
                 rs.getString("acquisition_no"),
                 rs.getString("title"),
                 rs.getString("author"),
-                rs.getString("date_published"),
+                formattedDate,
                 rs.getString("category"),
                 rs.getString("status")
             });
@@ -276,16 +279,12 @@ public class book_management_copy extends javax.swing.JFrame {
                 colData.add(rs.getString("acquisition_no"));
                 colData.add(rs.getString("title"));
                 colData.add(rs.getString("author"));
-                // 1. Get the raw date from the DB (e.g., "2026-04-25")
-                String rawDate = rs.getString("date_published");
+                java.sql.Date dbDate = rs.getDate("date_published"); 
+                String formattedDate = "";
 
-                // 2. Format it for the UI (e.g., "04/25/2026")
-                String formattedDate = rawDate; // fallback
-                try {
-                    java.time.LocalDate dbDate = java.time.LocalDate.parse(rawDate);
-                    formattedDate = dbDate.format(java.time.format.DateTimeFormatter.ofPattern("MM/dd/yyyy"));
-                } catch (Exception e) {
-                    // If date is null or weird, just keep it as is
+                if (dbDate != null) {
+                    // This matches your ##/##/#### mask exactly!
+                    formattedDate = new java.text.SimpleDateFormat("MM/dd/yyyy").format(dbDate);
                 }
                 colData.add(formattedDate);
                 colData.add(rs.getString("category"));
@@ -937,14 +936,19 @@ public class book_management_copy extends javax.swing.JFrame {
     // 4. Database Operations
     try {
         Connection conn = MySQLConnect.getConnection();
-
+        
+        java.text.SimpleDateFormat inputFormat = new java.text.SimpleDateFormat("MM/dd/yyyy");
+        java.util.Date parsedDate = inputFormat.parse(dateInput);
+        java.sql.Date sqlDatePublished = new java.sql.Date(parsedDate.getTime());
+        
         // UPDATE DATA based on acquisition_no
         String sql = "UPDATE books SET title = ?, author = ?, date_published = ?, category = ?, status = ? WHERE acquisition_no = ?";
         PreparedStatement pst = conn.prepareStatement(sql);
+        
 
         pst.setString(1, title);
         pst.setString(2, author);
-        pst.setString(3, dateInput); 
+        pst.setDate(3, sqlDatePublished);
         pst.setString(4, category);
         pst.setObject(5, selectedStatusObj);
         pst.setString(6, acqNo); // Matches the WHERE clause
@@ -961,10 +965,13 @@ public class book_management_copy extends javax.swing.JFrame {
         } else {
             JOptionPane.showMessageDialog(this, "Error: Book with Acquisition No " + acqNo + " not found.");
         }
+    } catch (java.text.ParseException e) {
+        // This catch block was missing!
+        JOptionPane.showMessageDialog(this, "Date Error: Please use the format MM/dd/yyyy");
 
     } catch (SQLException e) {
-        JOptionPane.showMessageDialog(this, "Database Error: " + e.getMessage());
-    }
+            JOptionPane.showMessageDialog(this, "Database Error: " + e.getMessage());
+        }
     }//GEN-LAST:event_updateBtnActionPerformed
 
     private void deleteBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteBtnActionPerformed
@@ -1126,8 +1133,16 @@ public class book_management_copy extends javax.swing.JFrame {
         // 2. IMPORTANT: Convert the view index to the MODEL index for filtered tables
         int modelRow = jTable2.convertRowIndexToModel(viewRow);
         DefaultTableModel tblModel = (DefaultTableModel) jTable2.getModel();
+        
+        //System.out.println("--- DEBUG START ---");
+        //for(int i = 0; i < tblModel.getColumnCount(); i++) {
+        //    System.out.println("Column " + i + ": " + tblModel.getValueAt(modelRow, i));
+        //}
+        //System.out.println("--- DEBUG END ---");
+        
+        
 
-        // 3. Enable Fields
+        // 1. Enable Fields
         txtAcq.setEnabled(true);
         txtTitle.setEnabled(true);
         txtAuthor.setEnabled(true);
@@ -1135,28 +1150,22 @@ public class book_management_copy extends javax.swing.JFrame {
         cmbCategory.setEnabled(true);
         cmbStatus.setEnabled(true);
 
-        // 4. THE MAPPING (Using modelRow ensures correct data even when filtered)
-        // Column 0 = ID
+        // Mapping based on your Debug Console output:
         id = Integer.parseInt(tblModel.getValueAt(modelRow, 0).toString());
-        
-        // Column 1 = ACQUISITION No
         txtAcq.setText(tblModel.getValueAt(modelRow, 1).toString());
-        
-        // Column 2 = BOOK TITLE
         txtTitle.setText(tblModel.getValueAt(modelRow, 2).toString());
-        
-        // Column 3 = BOOK AUTHOR
         txtAuthor.setText(tblModel.getValueAt(modelRow, 3).toString());
         
-        // Column 4 = DATE PUBLISHED
-        txtDate.setText(tblModel.getValueAt(modelRow, 4).toString());
+        id = Integer.parseInt(tblModel.getValueAt(modelRow, 0).toString());
+        txtAcq.setText(String.valueOf(tblModel.getValueAt(modelRow, 1)));
+        txtTitle.setText(String.valueOf(tblModel.getValueAt(modelRow, 2)));
+        txtAuthor.setText(String.valueOf(tblModel.getValueAt(modelRow, 3)));
         
-        // Column 5 = CATEGORY
-        cmbCategory.setSelectedItem(tblModel.getValueAt(modelRow, 5).toString());
-        
-        // Column 6 = STATUS
+        // Date handling - The Mask is now happy because we fixed the source data
+        txtDate.setValue(null); // Clear the formatter internal state
+        txtDate.setText(String.valueOf(tblModel.getValueAt(modelRow, 4)));
+        cmbCategory.setSelectedItem(tblModel.getValueAt(modelRow, 5).toString()); // Col 5: Poet
         cmbStatus.setSelectedItem(tblModel.getValueAt(modelRow, 6).toString());
-
         // 5. Button Logic
         addNewBtn.setEnabled(false);
         updateBtn.setEnabled(true);
@@ -1311,12 +1320,15 @@ if (selectedItem != null && !selectedItem.toString().equals("~Select Category~")
         model.setRowCount(0);
 
         while(rs.next()) {
+            java.sql.Date dbDate = rs.getDate("date_published");
+            String formattedDate = (dbDate != null) ? 
+            new java.text.SimpleDateFormat("MM/dd/yyyy").format(dbDate) : "";
             model.addRow(new Object[]{
                 rs.getString("id"),
                 rs.getString("acquisition_no"),
                 rs.getString("title"),
                 rs.getString("author"),
-                rs.getString("date_published"),
+                formattedDate,
                 rs.getString("category"),
                 rs.getString("status")
             });
