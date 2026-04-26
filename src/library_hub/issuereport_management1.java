@@ -82,119 +82,89 @@ public class issuereport_management1 extends javax.swing.JFrame {
     } catch (SQLException e) {
         JOptionPane.showMessageDialog(null, "Report Error: " + e.getMessage());
     }
-    calculateTotalUnpaid();
+    //calculateTotalUnpaid();
+    calculateTotalPaid();
+
 }
     
     public void calculateTotalUnpaid() {
     double totalUnpaid = 0.0;
-    
-    // Iterate through every row in the JTable
     for (int i = 0; i < jTableIssueReport.getRowCount(); i++) {
         try {
-            // Get the Status (Index 7) and Penalty (Index 6)
-            String status = jTableIssueReport.getValueAt(i, 7).toString();
-            Object penaltyValue = jTableIssueReport.getValueAt(i, 6);
+            // Index 12 is Status, Index 11 is the Penalty amount
+            Object statusObj = jTableIssueReport.getValueAt(i, 12);
+            Object penaltyObj = jTableIssueReport.getValueAt(i, 11);
             
-            // Only sum up if the status is "Overdue"
-            if (status.equalsIgnoreCase("Overdue") && penaltyValue != null) {
-                double amount = Double.parseDouble(penaltyValue.toString());
-                totalUnpaid += amount;
+            if (statusObj != null && penaltyObj != null) {
+                String status = statusObj.toString();
+                // We sum it up if it is Overdue OR if there is a penalty but it hasn't been "Paid" yet
+                if (status.equalsIgnoreCase("Overdue")) {
+                    double amount = Double.parseDouble(penaltyObj.toString());
+                    totalUnpaid += amount;
+                }
             }
-        } catch (NumberFormatException e) {
-            // Skip rows with invalid numbers
+        } catch (Exception e) {
+            // This catches "N/A" or empty strings so the loop doesn't crash
         }
     }
-    
-    // Update your "TOTAL UNPAID" text field
-    // Change 'txtTotalUnpaid' to your actual variable name
     txtTotalUnpaid.setText(String.format("%.2f", totalUnpaid));
 }
 
     public void calculateTotalPaid() {
     double total = 0;
-    
-    // Iterate through every row in the table
     for (int i = 0; i < jTableIssueReport.getRowCount(); i++) {
         try {
-            // Get the value from the 'Penalty Paid' column (Index 11)
+            // Penalty Paid is at Index 11
             Object value = jTableIssueReport.getValueAt(i, 11);
+            String status = jTableIssueReport.getValueAt(i, 12).toString();
             
-            if (value != null) {
-                // Convert the object/string to a double
-                double amount = Double.parseDouble(value.toString());
-                total += amount;
+            if (status.equalsIgnoreCase("Returned") && value != null) {
+                total += Double.parseDouble(value.toString());
             }
-        } catch (NumberFormatException e) {
-            // Skip rows that don't have a valid number
-        }
+        } catch (Exception e) { /* Skip errors */ }
     }
-    
-    // Set the result to your Total Paid text field
-    // Replace 'txtTotalPaid' with the actual variable name of your text field
     txtTotalPaid.setText(String.format("%.2f", total));
-}
+    }
+   
     
     public void updateTotalUnpaid() {
-    double totalUnpaid = 0;
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm");
-    LocalDateTime now = LocalDateTime.now();
-
     try {
         Connection conn = MySQLConnect.getConnection();
-        // We only care about books that are NOT 'Returned'
-        String sql = "SELECT due_date FROM issued_books WHERE status != 'Returned'";
+        
+        // Sums up penalty_paid from issued_books where it is Overdue
+        String sql = "SELECT SUM(penalty_paid) AS total_fine FROM issued_books WHERE status = 'Overdue'";
+        
         PreparedStatement pst = conn.prepareStatement(sql);
         ResultSet rs = pst.executeQuery();
 
-        while (rs.next()) {
-            String dueDateStr = rs.getString("due_date");
-            if (dueDateStr != null) {
-                try {
-                    LocalDateTime dueDate = LocalDateTime.parse(dueDateStr, formatter);
-                    if (now.isAfter(dueDate)) {
-                        long businessDaysLate = 0;
-                        LocalDateTime tempDate = dueDate;
-
-                        // Weekend Skip Logic
-                        while (tempDate.isBefore(now)) {
-                            tempDate = tempDate.plusDays(1);
-                            java.time.DayOfWeek day = tempDate.getDayOfWeek();
-                            if (day != java.time.DayOfWeek.SATURDAY && day != java.time.DayOfWeek.SUNDAY) {
-                                businessDaysLate++;
-                            }
-                        }
-                        totalUnpaid += (businessDaysLate * 100);
-                    }
-                } catch (Exception e) { /* Skip formatting errors */ }
-            }
+        if (rs.next()) {
+            double amount = rs.getDouble("total_fine");
+            txtTotalUnpaid.setText(String.format("%.2f", amount));
+        } else {
+            txtTotalUnpaid.setText("0.00");
         }
-        // Change 'txtTotalUnpaid' to your actual Variable Name for the white box
-        txtTotalUnpaid.setText(String.format("%.2f", totalUnpaid));
         
     } catch (SQLException e) {
-        System.out.println("Error: " + e.getMessage());
+        // If there is an error, this will physically pop up on your screen
+        JOptionPane.showMessageDialog(this, "Database Error in Unpaid Calculation:\n" + e.getMessage(), "SQL Error", JOptionPane.ERROR_MESSAGE);
     }
 }
     
     public void updateTotalPaid() {
-    double total = 0.0;
-    // Index 11 is the 'Penalty Paid' column
-    int penaltyColumnIndex = 11; 
+    try {
+        Connection conn = MySQLConnect.getConnection();
+        // This sums all penalties from books that have actually been returned/paid
+        String sql = "SELECT SUM(penalty_paid) AS total FROM issue_report WHERE status = 'Returned'";
+        
+        PreparedStatement pst = conn.prepareStatement(sql);
+        ResultSet rs = pst.executeQuery();
 
-    for (int i = 0; i < jTableIssueReport.getRowCount(); i++) {
-        try {
-            Object value = jTableIssueReport.getValueAt(i, penaltyColumnIndex);
-            if (value != null) {
-                // Remove any spaces and convert to a number
-                double amount = Double.parseDouble(value.toString().trim());
-                total += amount;
-            }
-        } catch (NumberFormatException e) {
-            // This skips rows that don't have a valid number
+        if (rs.next()) {
+            txtTotalPaid.setText(String.format("%.2f", rs.getDouble("total")));
         }
+    } catch (SQLException e) {
+        System.out.println("Paid DB Error: " + e.getMessage());
     }
-    // Display the sum with two decimal places
-    txtTotalPaid.setText(String.format("%.2f", total));
 }
     
     @SuppressWarnings("unchecked")

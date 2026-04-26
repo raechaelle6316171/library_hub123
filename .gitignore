@@ -1,3 +1,25 @@
 /dist/
 /nbproject/private/
 /build/
+
+# --- NetBeans Specific ---
+nbproject/private/
+nbbuild/
+dist/
+build/
+.nb-gradle/
+
+# --- Java/Maven/Gradle Specific ---
+*.class
+*.jar
+*.war
+*.ear
+target/
+.gradle/
+
+# --- OS Specific (Optional but good) ---
+.DS_Store
+Thumbs.db
+
+# --- Database / Sensitive Info ---
+# If you ever store DB configs in a separate file, add it here

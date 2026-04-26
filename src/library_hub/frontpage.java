@@ -56,6 +56,7 @@ public frontpage() {
     displayTotalOverdue();
 }
     
+    
     public void loadDashboardData() {
 
     showMembersInTable();
@@ -154,7 +155,9 @@ public void showIssuedBooksInTable() {
     try {
         Connection conn = MySQLConnect.getConnection();
         
-        String sql = "SELECT COUNT(*) AS total FROM issued_books WHERE status = 'Issued'";
+        String sql = "SELECT COUNT(*) AS total FROM issued_books WHERE status IN ('Issued', 'Overdue')";
+        
+        
         
         PreparedStatement pst = conn.prepareStatement(sql);
         ResultSet rs = pst.executeQuery();
@@ -955,80 +958,48 @@ this.repaint();
     
     public void displayTotalMembers() {
         try {
-            // Update the DB name 'library_hub' if yours is different
-            String url = "jdbc:mysql://localhost:3306/libraryhub"; 
-            Connection con = DriverManager.getConnection(url, "root", "");
+        Connection con = MySQLConnect.getConnection(); // Use your helper class!
+        String sql = "SELECT COUNT(*) FROM member_records";
+        PreparedStatement pst = con.prepareStatement(sql);
+        ResultSet rs = pst.executeQuery();
 
-            String sql = "SELECT COUNT(*) FROM member_records";
-            PreparedStatement pst = con.prepareStatement(sql);
-            ResultSet rs = pst.executeQuery();
-
-            if (rs.next()) {
-                int count = rs.getInt(1);
-                txtTotalMember.setText(String.valueOf(count)); 
-            }
-            con.close();
-        } catch (Exception e) {
-            System.out.println("Error: " + e.getMessage());
+        if (rs.next()) {
+            txtTotalMember.setText(String.valueOf(rs.getInt(1))); 
         }
+    } catch (Exception e) {
+        System.out.println("Member Count Error: " + e.getMessage());
+    }
     }
 public void displayTotalBooks() {
         try {
-            // 1. Establish Connection
-            Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/libraryhub", "root", "");
+        Connection conn = MySQLConnect.getConnection(); // Use your helper class!
+        String sql = "SELECT COUNT(*) FROM books";
+        PreparedStatement pst = conn.prepareStatement(sql);
+        ResultSet rs = pst.executeQuery();
 
-            // 2. Prepare Query
-            String sql = "SELECT COUNT(*) AS total FROM books";
-            PreparedStatement pst = conn.prepareStatement(sql);
-            ResultSet rs = pst.executeQuery();
-
-            // 3. Update the Label
-            if (rs.next()) {
-                int total = rs.getInt("total");
-                // Replace 'lblTotalBooks' with the actual variable name of your label
-                txtTotalBook.setText(String.valueOf(total));
-            }
-
-            conn.close();
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (rs.next()) {
+            txtTotalBook.setText(String.valueOf(rs.getInt(1)));
         }
+    } catch (Exception e) {
+        System.out.println("Book Count Error: " + e.getMessage());
+    }
     }
 
 public void displayTotalOverdue() {
-    int count = 0;
-    // Your date format from the database
-    java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm");
-    java.time.LocalDateTime now = java.time.LocalDateTime.now();
-
     try {
-        java.sql.Connection conn = MySQLConnect.getConnection();
-        // Query books that are not yet returned
-        String sql = "SELECT due_date FROM issued_books WHERE status != 'Returned'";
-        java.sql.PreparedStatement pst = conn.prepareStatement(sql);
-        java.sql.ResultSet rs = pst.executeQuery();
-
-        while (rs.next()) {
-            String dueDateStr = rs.getString("due_date");
-            if (dueDateStr != null && !dueDateStr.isEmpty()) {
-                try {
-                    java.time.LocalDateTime dueDate = java.time.LocalDateTime.parse(dueDateStr, formatter);
-                    // If the current time is AFTER the due date, it is overdue
-                    if (now.isAfter(dueDate)) {
-                        count++;
-                    }
-                } catch (Exception e) {
-                    // Skip rows with formatting errors
-                }
-            }
-        }
+        Connection conn = MySQLConnect.getConnection();
         
-        // Update your Red Box text label
-        // Replace 'lblTotalOverdue' with your actual Variable Name for that box
-        txtTotalOverdue.setText(String.valueOf(count));
+        // This targets any book that isn't returned and is past the due date
+        String sql = "SELECT COUNT(*) FROM issued_books WHERE status != 'Returned' AND due_date < NOW()";
+        
+        PreparedStatement pst = conn.prepareStatement(sql);
+        ResultSet rs = pst.executeQuery();
 
-    } catch (java.sql.SQLException e) {
-        System.out.println("Error: " + e.getMessage());
+        if (rs.next()) {
+            txtTotalOverdue.setText(String.valueOf(rs.getInt(1)));
+        }
+    } catch (Exception e) {
+        System.out.println("Overdue Calculation Error: " + e.getMessage());
     }
 }
 

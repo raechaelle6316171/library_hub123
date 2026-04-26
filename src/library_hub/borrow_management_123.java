@@ -80,10 +80,10 @@ public class borrow_management_123 extends javax.swing.JFrame {
         String sql;
         
         if (query.isEmpty()) {
-            sql = "SELECT acquisition_no, title, author, status FROM books";
+            sql = "SELECT acquisition_no, title, author, status FROM books WHERE status != 'Unavailable'";
         } else {
-            // Updated to search BOTH acquisition_no and title
-            sql = "SELECT acquisition_no, title, author, status FROM books WHERE acquisition_no LIKE ? OR title LIKE ?";
+            sql = "SELECT acquisition_no, title, author, status FROM books " +
+                  "WHERE (acquisition_no LIKE ? OR title LIKE ?) AND status != 'Unavailable'";
         }
 
         PreparedStatement pst = conn.prepareStatement(sql);
