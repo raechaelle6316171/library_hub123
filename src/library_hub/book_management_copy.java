@@ -13,7 +13,7 @@ public class book_management_copy extends javax.swing.JFrame {
     
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(book_management_copy.class.getName());
-    
+    private String originalAcqNo = ""; // Add this at the top of the file
     private int id;
     private String check;
     public book_management_copy() {
@@ -175,7 +175,14 @@ public class book_management_copy extends javax.swing.JFrame {
         System.out.println("Error: " + e.getMessage());
     }
 }
-    
+     private void unlockFields() {
+    txtAcq.setEnabled(true);
+    txtTitle.setEnabled(true);
+    txtAuthor.setEnabled(true);
+    txtDate.setEnabled(true);
+    cmbCategory.setEnabled(true);
+    cmbStatus.setEnabled(true);
+    }
     public void lockFields() {
      txtAcq.setEnabled(false);
         txtTitle.setEnabled(false);
@@ -889,7 +896,7 @@ public class book_management_copy extends javax.swing.JFrame {
 
     private void updateBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_updateBtnActionPerformed
         // 1. Collect and Trim Data
-    String acqNo = txtAcq.getText().trim();
+    String newAcqNo = txtAcq.getText().trim();
     String title = txtTitle.getText().trim();
     String author = txtAuthor.getText().trim();
     String dateInput = txtDate.getText(); 
@@ -901,7 +908,7 @@ public class book_management_copy extends javax.swing.JFrame {
     Object selectedStatusObj = cmbStatus.getSelectedItem();
 
     // 2. Validation Checks
-    if (acqNo.isEmpty()) {
+    if (newAcqNo.isEmpty()) {
         JOptionPane.showMessageDialog(this, "Select a book from the table first!");
         return;
     }
@@ -941,29 +948,47 @@ public class book_management_copy extends javax.swing.JFrame {
         java.util.Date parsedDate = inputFormat.parse(dateInput);
         java.sql.Date sqlDatePublished = new java.sql.Date(parsedDate.getTime());
         
+        
+        if (!newAcqNo.equals(originalAcqNo)) {
+            String checkSql = "SELECT title FROM books WHERE acquisition_no = ?";
+            PreparedStatement pstCheck = conn.prepareStatement(checkSql);
+            pstCheck.setString(1, newAcqNo);
+            ResultSet rsCheck = pstCheck.executeQuery();
+            
+            if (rsCheck.next()) {
+                JOptionPane.showMessageDialog(this, 
+                    "Error: Acquisition Number '" + newAcqNo + "' is already assigned to: " + rsCheck.getString("title"), 
+                    "Duplicate ID", JOptionPane.ERROR_MESSAGE);
+                return; // Stop the update!
+            }
+        }
+        
         // UPDATE DATA based on acquisition_no
-        String sql = "UPDATE books SET title = ?, author = ?, date_published = ?, category = ?, status = ? WHERE acquisition_no = ?";
+        String sql = "UPDATE books SET acquisition_no = ?, title = ?, author = ?, date_published = ?, category = ?, status = ? WHERE acquisition_no = ?";
         PreparedStatement pst = conn.prepareStatement(sql);
         
 
-        pst.setString(1, title);
-        pst.setString(2, author);
-        pst.setDate(3, sqlDatePublished);
-        pst.setString(4, category);
-        pst.setObject(5, selectedStatusObj);
-        pst.setString(6, acqNo); // Matches the WHERE clause
-
+        pst.setString(1, newAcqNo);      // The new number
+        pst.setString(2, title);
+        pst.setString(3, author);
+        pst.setDate(4, sqlDatePublished);
+        pst.setString(5, category);
+        pst.setObject(6, selectedStatusObj);
+        pst.setString(7, originalAcqNo); // Matches the WHERE clause
+        
+        
+        
         int updatedRows = pst.executeUpdate();
         
         if (updatedRows > 0) {
             JOptionPane.showMessageDialog(this, "Book Updated Successfully!");
-            
+            originalAcqNo = newAcqNo;
             // 5. Refresh UI, Filters, and Reset
             fillAllCategoryComboBoxes(); 
             populateTable(); 
             setDefault(); 
         } else {
-            JOptionPane.showMessageDialog(this, "Error: Book with Acquisition No " + acqNo + " not found.");
+            JOptionPane.showMessageDialog(this, "Error: Book with Acquisition No " + newAcqNo + " not found.");
         }
     } catch (java.text.ParseException e) {
         // This catch block was missing!
@@ -1126,47 +1151,36 @@ public class book_management_copy extends javax.swing.JFrame {
     }//GEN-LAST:event_txtTotalCountActionPerformed
 
     private void jTable2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable2MouseClicked
-        // 1. Get the row index from the VIEW (the UI)
     int viewRow = jTable2.getSelectedRow();
     
     if (viewRow != -1) {
-        // 2. IMPORTANT: Convert the view index to the MODEL index for filtered tables
+        // 2. Convert view index to model index (Crucial for filtered/sorted tables)
         int modelRow = jTable2.convertRowIndexToModel(viewRow);
         DefaultTableModel tblModel = (DefaultTableModel) jTable2.getModel();
-        
-        //System.out.println("--- DEBUG START ---");
-        //for(int i = 0; i < tblModel.getColumnCount(); i++) {
-        //    System.out.println("Column " + i + ": " + tblModel.getValueAt(modelRow, i));
-        //}
-        //System.out.println("--- DEBUG END ---");
-        
-        
 
-        // 1. Enable Fields
-        txtAcq.setEnabled(true);
-        txtTitle.setEnabled(true);
-        txtAuthor.setEnabled(true);
-        txtDate.setEnabled(true);
-        cmbCategory.setEnabled(true);
-        cmbStatus.setEnabled(true);
+        // 3. Save the ORIGINAL Acquisition Number (Column 1)
+        // We use this in the Update Button to find the record even if you rename the ID
+        originalAcqNo = tblModel.getValueAt(modelRow, 1).toString(); 
+        
+        // 4. Capture the Database ID (Column 0) for internal use
+        id = Integer.parseInt(tblModel.getValueAt(modelRow, 0).toString());
 
-        // Mapping based on your Debug Console output:
-        id = Integer.parseInt(tblModel.getValueAt(modelRow, 0).toString());
-        txtAcq.setText(tblModel.getValueAt(modelRow, 1).toString());
-        txtTitle.setText(tblModel.getValueAt(modelRow, 2).toString());
-        txtAuthor.setText(tblModel.getValueAt(modelRow, 3).toString());
+        // 5. Fill the Text Fields (Matching your table columns)
+        txtAcq.setText(tblModel.getValueAt(modelRow, 1).toString());      // Col 1: Acq No
+        txtTitle.setText(tblModel.getValueAt(modelRow, 2).toString());    // Col 2: Title
+        txtAuthor.setText(tblModel.getValueAt(modelRow, 3).toString());   // Col 3: Author
         
-        id = Integer.parseInt(tblModel.getValueAt(modelRow, 0).toString());
-        txtAcq.setText(String.valueOf(tblModel.getValueAt(modelRow, 1)));
-        txtTitle.setText(String.valueOf(tblModel.getValueAt(modelRow, 2)));
-        txtAuthor.setText(String.valueOf(tblModel.getValueAt(modelRow, 3)));
+        // Date handling
+        txtDate.setValue(null); 
+        txtDate.setText(tblModel.getValueAt(modelRow, 4).toString());     // Col 4: Date
         
-        // Date handling - The Mask is now happy because we fixed the source data
-        txtDate.setValue(null); // Clear the formatter internal state
-        txtDate.setText(String.valueOf(tblModel.getValueAt(modelRow, 4)));
-        cmbCategory.setSelectedItem(tblModel.getValueAt(modelRow, 5).toString()); // Col 5: Poet
-        cmbStatus.setSelectedItem(tblModel.getValueAt(modelRow, 6).toString());
-        // 5. Button Logic
+        // ComboBox handling
+        cmbCategory.setSelectedItem(tblModel.getValueAt(modelRow, 5).toString()); // Col 5: Category
+        cmbStatus.setSelectedItem(tblModel.getValueAt(modelRow, 6).toString());   // Col 6: Status
+
+        // 6. UI State
+        unlockFields(); // Using your existing method to enable text boxes
+        
         addNewBtn.setEnabled(false);
         updateBtn.setEnabled(true);
         deleteBtn.setEnabled(true);
