@@ -851,7 +851,7 @@ public void showIssuedBooksInTable() {
 
     private void userBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_userBtnActionPerformed
 
-        if ("Admin".equals(userRole)) {
+        /*if ("Admin".equals(userRole)) {
 
             new user_management().setVisible(true);
             this.dispose();
@@ -862,7 +862,11 @@ public void showIssuedBooksInTable() {
         }
         this.revalidate();
 
-        this.repaint();
+        this.repaint();*/
+        
+        this.dispose();
+        user_management w = new user_management();
+        w.setVisible(true);
 
     }//GEN-LAST:event_userBtnActionPerformed
 

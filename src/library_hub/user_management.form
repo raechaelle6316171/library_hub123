@@ -224,7 +224,7 @@
               <StringArray count="3">
                 <StringItem index="0" value="~Select User Type~"/>
                 <StringItem index="1" value="Librarian"/>
-                <StringItem index="2" value="Library Staff"/>
+                <StringItem index="2" value="Staff"/>
               </StringArray>
             </Property>
           </Properties>

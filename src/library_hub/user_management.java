@@ -225,7 +225,7 @@ public class user_management extends javax.swing.JFrame {
         jLabel6.setForeground(new java.awt.Color(255, 255, 255));
         jLabel6.setText("USER TYPE");
 
-        cmbUserType.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "~Select User Type~", "Librarian", "Library Staff" }));
+        cmbUserType.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "~Select User Type~", "Librarian", "Staff" }));
         cmbUserType.addActionListener(this::cmbUserTypeActionPerformed);
 
         closeBtn.setText("CANCEL");
