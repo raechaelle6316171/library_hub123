@@ -444,6 +444,7 @@ public class issuebook_management extends javax.swing.JFrame {
             // 1. Insert into Report Table
             String insertReportSql = "INSERT INTO issue_report (fullname, usertype, course, year, book_acq_no, book_title, author, issue_date, due_date, actual_return_date, penalty_paid, status) " +
                                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Returned')";
+            
             PreparedStatement pstReport = conn.prepareStatement(insertReportSql);
             pstReport.setString(1, model.getValueAt(row, 1).toString()); 
             pstReport.setString(2, utype);   

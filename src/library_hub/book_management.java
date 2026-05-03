@@ -152,13 +152,15 @@ public class book_management extends javax.swing.JFrame {
         System.out.println("Error: " + e.getMessage());
     }
 }
-     private void unlockFields() {
+    private void unlockFields() {
     txtAcq.setEnabled(true);
     txtTitle.setEnabled(true);
     txtAuthor.setEnabled(true);
     txtDate.setEnabled(true);
     cmbCategory.setEnabled(true);
     cmbStatus.setEnabled(true);
+    txtAuthor.setEnabled(true);
+    txtBookPrice.setEnabled(true);
     }
     public void lockFields() {
      txtAcq.setEnabled(false);
@@ -172,7 +174,9 @@ public class book_management extends javax.swing.JFrame {
         saveBtn.setEnabled(false);
         updateBtn.setEnabled(false);
         deleteBtn.setEnabled(false);
- }
+        txtBookPrice.setText("0.00");
+        txtBookPrice.setEnabled(false);
+    }
     
     private void resetButtons() {
     addNewBtn.setEnabled(true);
@@ -190,12 +194,13 @@ public class book_management extends javax.swing.JFrame {
         txtTotalCount.setText(String.valueOf(count));
 }
     
-   public void search(String str) {
+   /*public void search(String str) {
     DefaultTableModel model = (DefaultTableModel) jTable2.getModel();
     model.setRowCount(0); 
 
     try {
         Connection conn = MySQLConnect.getConnection();
+        
         String selectedStatus = cmbStatusBook.getSelectedItem().toString();
         String selectedCat = cmbCategoryTbl.getSelectedItem().toString();
         
@@ -242,7 +247,66 @@ public class book_management extends javax.swing.JFrame {
         JOptionPane.showMessageDialog(null, "Search Error: " + e.getMessage());
     }
     updateBookCount();
-}
+}*/
+   
+   
+   
+   
+   public void search(String str) {
+        DefaultTableModel model = (DefaultTableModel) jTable2.getModel();
+        model.setRowCount(0); 
+
+        try {
+            Connection conn = MySQLConnect.getConnection();
+
+            String selectedStatus = cmbStatusBook.getSelectedItem().toString();
+            String sql;
+
+            if (selectedStatus.equals("All")) {
+                sql = "SELECT * FROM books WHERE (acquisition_no LIKE ? OR title LIKE ? OR author LIKE ?)";
+            } else {
+                sql = "SELECT * FROM books WHERE (acquisition_no LIKE ? OR title LIKE ? OR author LIKE ?) AND status = ?";
+            }
+
+            PreparedStatement pst = conn.prepareStatement(sql);
+            String searchData = "%" + str + "%";
+
+            pst.setString(1, searchData);
+            pst.setString(2, searchData);
+            pst.setString(3, searchData);
+
+            if (!selectedStatus.equals("All")) {
+                pst.setString(4, selectedStatus);
+            }
+
+            ResultSet rs = pst.executeQuery();
+
+            while(rs.next()) {
+            java.sql.Date dbDate = rs.getDate("date_published");
+            String formattedDate = (dbDate != null) ? new java.text.SimpleDateFormat("MM/dd/yyyy").format(dbDate) : "";
+                model.addRow(new Object[]{
+                rs.getInt("id"),
+                rs.getString("acquisition_no"),
+                rs.getString("title"),
+                rs.getString("author"),
+                formattedDate,
+                rs.getString("category"),
+                rs.getString("price"),
+                rs.getString("status")
+            });
+            }
+            updateBookCount();
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Search Error: " + e.getMessage());
+        }
+        int count = jTable2.getRowSorter() == null ? jTable2.getRowCount() : jTable2.getRowSorter().getViewRowCount();
+        txtTotalCount.setText(String.valueOf(count));
+    }
+   
+   
+   
+   
    
     public void populateTable() {
     try {
@@ -865,6 +929,7 @@ public class book_management extends javax.swing.JFrame {
         txtTitle.setEnabled(true);
         txtAuthor.setEnabled(true);
         txtDate.setEnabled(true);
+        txtBookPrice.setEnabled(true);
         
         addNewBtn.setEnabled(false);
 
@@ -874,8 +939,12 @@ public class book_management extends javax.swing.JFrame {
 
         cmbStatus.setEnabled(true);
         saveBtn.setEnabled(true);
+        
+        txtBookPrice.setText("");
 
         txtAcq.requestFocus();
+        
+        
     }//GEN-LAST:event_addNewBtnActionPerformed
 
     private void updateBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_updateBtnActionPerformed
@@ -972,7 +1041,8 @@ public class book_management extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, "Book Updated Successfully!");
             originalAcqNo = newAcqNo; // Update reference for subsequent edits
             
-            fillAllCategoryComboBoxes(); 
+            fillAllCategoryComboBoxes();
+            lockFields();
             populateTable(); 
             setDefault(); 
         } else {
@@ -1123,6 +1193,7 @@ public class book_management extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, "Book Added Successfully!");
             
             fillAllCategoryComboBoxes(); 
+            lockFields();
             populateTable(); 
             setDefault(); 
         }
@@ -1195,16 +1266,28 @@ public class book_management extends javax.swing.JFrame {
     }//GEN-LAST:event_jTable2MouseClicked
 
     private void closeBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_closeBtnActionPerformed
-        setDefault();
+        // 1. CALL THE LOCK METHOD YOU JUST UPDATED
+    lockFields(); 
     
-        txtSearch.setText(""); 
-        cmbStatusBook.setSelectedIndex(0); 
+    // 2. RESET THE UI STATE
+    setDefault();
+    txtSearch.setText(""); 
+    txtBookPrice.setText("0.00"); // Reset price text
+    cmbStatusBook.setSelectedIndex(0); 
 
-        btnAddCategory.setEnabled(false);
-        btnDeleteCategory.setEnabled(false);
+    // These are already in your lockFields(), 
+    // but keeping them here doesn't hurt.
+    btnAddCategory.setEnabled(false);
+    btnDeleteCategory.setEnabled(false);
 
-        jTable2.clearSelection();
-        search("");
+    jTable2.clearSelection();
+    search("");
+       
+        //pariha sa close btn
+        txtSearch.setText("");
+        cmbCategoryTbl.setSelectedIndex(0); // Reset to "All"
+        cmbStatusBook.setSelectedIndex(0);  // Reset to "All"
+        filterTable();
     }//GEN-LAST:event_closeBtnActionPerformed
 
     private void cancelBtn1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelBtn1ActionPerformed
@@ -1252,7 +1335,7 @@ public class book_management extends javax.swing.JFrame {
             String categoryToDelete = selectedItem.toString();
 
             int confirm = JOptionPane.showConfirmDialog(this, 
-                "Are you sure you want to delete the category: " + categoryToDelete + "?", 
+                "Delete Category: " + categoryToDelete + "?", 
                 "Confirm Deletion", JOptionPane.YES_NO_OPTION);
 
             if (confirm == JOptionPane.YES_OPTION) {
@@ -1364,6 +1447,7 @@ public class book_management extends javax.swing.JFrame {
 
     private void cmbCategoryTblActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbCategoryTblActionPerformed
         filterTable();
+        
     }//GEN-LAST:event_cmbCategoryTblActionPerformed
     
     public static void main(String args[]) {

@@ -29,6 +29,7 @@ public class frontpage extends javax.swing.JFrame {
         addBookBtn.setVisible(false);
         inventoryBtn.setVisible(false);
         userBtn.setVisible(false);
+        penaltyBtn.setVisible(false);
         
         // Debugging: This will print to your NetBeans console so you can verify it's working
         System.out.println("Permissions Applied: Librarian buttons hidden.");
@@ -54,6 +55,7 @@ public class frontpage extends javax.swing.JFrame {
         addBookBtn.setVisible(true);
         inventoryBtn.setVisible(true);
         userBtn.setVisible(true);
+        penaltyBtn.setVisible(true);
     } 
     else if ("Staff".equalsIgnoreCase(frontpage.userRole)) {
         // STAFF only see the basics (as seen in image_d73338.png)
@@ -66,6 +68,8 @@ public class frontpage extends javax.swing.JFrame {
         addBookBtn.setVisible(false);
         inventoryBtn.setVisible(false);
         userBtn.setVisible(false);
+        penaltyBtn.setVisible(false);
+        
     }
     
     // 3. Refresh the Sidebar
@@ -213,6 +217,7 @@ public void showIssuedBooksInTable() {
         addMemberBtn = new javax.swing.JButton();
         addBookBtn = new javax.swing.JButton();
         inventoryBtn = new javax.swing.JButton();
+        penaltyBtn = new javax.swing.JButton();
         jLabel2 = new javax.swing.JLabel();
         jPanel4 = new javax.swing.JPanel();
         jPanel3 = new javax.swing.JPanel();
@@ -301,6 +306,12 @@ public void showIssuedBooksInTable() {
         inventoryBtn.setText("INVENTORY");
         inventoryBtn.addActionListener(this::inventoryBtnActionPerformed);
 
+        penaltyBtn.setBackground(new java.awt.Color(0, 153, 0));
+        penaltyBtn.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        penaltyBtn.setForeground(new java.awt.Color(255, 255, 255));
+        penaltyBtn.setText("PENALTY");
+        penaltyBtn.addActionListener(this::penaltyBtnActionPerformed);
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
@@ -317,7 +328,8 @@ public void showIssuedBooksInTable() {
                     .addComponent(userBtn, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 143, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(addMemberBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(addBookBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(inventoryBtn, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(inventoryBtn, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(penaltyBtn, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addGap(21, 21, 21))
         );
         jPanel2Layout.setVerticalGroup(
@@ -335,6 +347,8 @@ public void showIssuedBooksInTable() {
                 .addComponent(issueBookBtn)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(issueReportBtn)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(penaltyBtn)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(addBookBtn)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -708,7 +722,7 @@ public void showIssuedBooksInTable() {
                     .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                     .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 202, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(73, Short.MAX_VALUE))
+                .addContainerGap(110, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
@@ -751,23 +765,26 @@ public void showIssuedBooksInTable() {
                 .addGap(14, 14, 14)
                 .addComponent(jLabel2)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
             .addGroup(jPanel5Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                .addContainerGap())
+                .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, 560, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 12, Short.MAX_VALUE))
         );
 
         pack();
@@ -870,6 +887,12 @@ public void showIssuedBooksInTable() {
 
     }//GEN-LAST:event_userBtnActionPerformed
 
+    private void penaltyBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_penaltyBtnActionPerformed
+        this.dispose();
+        penalty w = new penalty();
+        w.setVisible(true);
+    }//GEN-LAST:event_penaltyBtnActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -932,6 +955,7 @@ public void showIssuedBooksInTable() {
     private javax.swing.JTable jTableBook;
     private javax.swing.JTable jTableMember;
     private javax.swing.JButton logoutBtn;
+    private javax.swing.JButton penaltyBtn;
     private javax.swing.JTextField txtTotalBook;
     private javax.swing.JTextField txtTotalBorrowed;
     private javax.swing.JTextField txtTotalMember;
