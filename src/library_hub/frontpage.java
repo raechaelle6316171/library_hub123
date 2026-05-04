@@ -39,42 +39,39 @@ public class frontpage extends javax.swing.JFrame {
     this.repaint();
 }
     
-    private void handleRoleAndPermissions(String role) {
-    // 1. Sync the Role
+    
+    
+    public void handleRoleAndPermissions(String role) {
+    // 1. Sync the Role to your global variable
     if (role != null && !role.isEmpty()) {
         frontpage.userRole = role; 
     }
 
-    // 2. Apply Visibility
-    if ("Librarian".equalsIgnoreCase(frontpage.userRole)) {
-        // LIBRARIANS see everything (as seen in image_d7329e.png)
-        addMemberBtn.setVisible(true);
-        borrowBookBtn.setVisible(true);
-        issueBookBtn.setVisible(true);
-        issueReportBtn.setVisible(true);
-        addBookBtn.setVisible(true);
-        inventoryBtn.setVisible(true);
-        userBtn.setVisible(true);
-        penaltyBtn.setVisible(true);
-    } 
-    else if ("Staff".equalsIgnoreCase(frontpage.userRole)) {
-        // STAFF only see the basics (as seen in image_d73338.png)
-        addMemberBtn.setVisible(true);
-        borrowBookBtn.setVisible(true);
-        issueBookBtn.setVisible(true);
-        
-        // Hide management tools
-        issueReportBtn.setVisible(false);
-        addBookBtn.setVisible(false);
-        inventoryBtn.setVisible(false);
-        userBtn.setVisible(false);
-        penaltyBtn.setVisible(false);
-        
-    }
-    
-    // 3. Refresh the Sidebar
+    // 2. Set Visibility based on Role
+    boolean isLibrarian = "Librarian".equalsIgnoreCase(frontpage.userRole);
+
+    // LIBRARIANS see everything; STAFF only sees basic buttons
+    // Management Buttons (Hidden for Staff)
+    issueReportBtn.setVisible(isLibrarian);
+    addBookBtn.setVisible(isLibrarian);
+    inventoryBtn.setVisible(isLibrarian);
+    userBtn.setVisible(isLibrarian);
+    penaltyBtn.setVisible(isLibrarian);
+
+    // Basic Buttons (Always visible for both)
+    addMemberBtn.setVisible(true);
+    borrowBookBtn.setVisible(true);
+    issueBookBtn.setVisible(true);
+
+    // 3. Debugging Output
+    System.out.println("Permissions Sync: Role is " + frontpage.userRole);
+
+    // 4. Refresh the UI
     this.revalidate();
     this.repaint();
+    
+    
+    
 }
     
 public frontpage() {
@@ -776,15 +773,12 @@ public void showIssuedBooksInTable() {
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 12, Short.MAX_VALUE))
+            .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
 
         pack();

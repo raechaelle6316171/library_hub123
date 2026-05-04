@@ -179,17 +179,59 @@ public class librarian_login extends javax.swing.JFrame {
     }//GEN-LAST:event_resetBtnActionPerformed
 
     private void loginBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loginBtnActionPerformed
-        String user = txtUsername.getText();
+        /*String user = txtUsername.getText();
         String pass = new String(txtPassword.getPassword());
 
-        if (user.equals("librarian@wlc.edu") && pass.equals("lib123")) {
+        if (user.equals("librarian") && pass.equals("lib123")) {
             JOptionPane.showMessageDialog(this, "Librarian Login Successful!");
             // Pass "Librarian" role to your Library Hub dashboard
             new frontpage("Librarian").setVisible(true); 
             this.dispose();
         } else {
             JOptionPane.showMessageDialog(this, "Invalid Librarian Credentials");
+        }*/
+        
+        
+        String user = txtUsername.getText();
+        String pass = new String(txtPassword.getPassword());
+
+        if (user.isEmpty() || pass.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please enter both Username and Password.");
+            return;
         }
+
+        try {
+            Connection conn = MySQLConnect.getConnection();
+
+            // This SQL query is the "lock" — it strictly requires 'Librarian' as the User Type
+            String sql = "SELECT * FROM user WHERE username = ? AND password = ? AND TRIM(category) = 'Librarian'";
+            PreparedStatement pst = conn.prepareStatement(sql);
+            pst.setString(1, user);
+            pst.setString(2, pass);
+
+            ResultSet rs = pst.executeQuery();
+
+            if (rs.next()) {
+            // 1. Get the actual role from the database column 'user_type'
+            String userType = rs.getString("category"); 
+
+            // 2. Create the dashboard instance
+            JOptionPane.showMessageDialog(this, "Librarian Login Successful! Welcome, " + rs.getString("fullname") + ("!"));
+            frontpage main = new frontpage();
+
+            // 3. Pass the role to the dashboard to hide/show buttons
+            main.handleRoleAndPermissions(userType); 
+
+            // 4. Show the dashboard and close the login window
+            main.setVisible(true);
+            this.dispose();
+        } else {
+            JOptionPane.showMessageDialog(this, "Only the Librarian can login here.");
+        }
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, "Database Error: " + e.getMessage());
+        }
+        
     }//GEN-LAST:event_loginBtnActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed

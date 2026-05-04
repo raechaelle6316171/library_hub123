@@ -179,17 +179,56 @@ public class librarystaff_login extends javax.swing.JFrame {
     }//GEN-LAST:event_resetBtnActionPerformed
 
     private void loginBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loginBtnActionPerformed
-        String user = txtUsername.getText();
+        /*String user = txtUsername.getText();
         String pass = new String(txtPassword.getPassword());
 
-        if (user.equals("staff@wlc.edu") && pass.equals("staff123")) {
+        if (user.equals("staff") && pass.equals("staff123")) {
             JOptionPane.showMessageDialog(this, "Staff Login Successful!");
             // Pass "Staff" role to the dashboard
             new frontpage("Staff").setVisible(true); 
             this.dispose();
         } else {
             JOptionPane.showMessageDialog(this, "Invalid Staff Credentials");
+        }*/
+        
+        
+        String user = txtUsername.getText();
+        String pass = new String(txtPassword.getPassword());
+
+        if (user.isEmpty() || pass.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please enter both Username and Password.");
+            return;
         }
+
+        try {
+            Connection conn = MySQLConnect.getConnection();
+
+            // This SQL query strictly requires 'Staff' as the User Type
+            String sql = "SELECT * FROM user WHERE username = ? AND password = ? AND TRIM(category) = 'Staff'";
+            PreparedStatement pst = conn.prepareStatement(sql);
+            pst.setString(1, user);
+            pst.setString(2, pass);
+
+            ResultSet rs = pst.executeQuery();
+
+            if (rs.next()) {
+            String userType = rs.getString("category"); 
+            
+            JOptionPane.showMessageDialog(this, "Staff Login Successful! Welcome, " + rs.getString("fullname") + ("!"));
+            frontpage main = new frontpage();
+
+            // This is the most important part—it tells the Dashboard to hide the management buttons
+            main.handleRoleAndPermissions(userType); 
+
+            main.setVisible(true);
+            this.dispose();
+        } else {
+            JOptionPane.showMessageDialog(this, "Only the Staff can login here.");
+        }
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, "Database Error: " + e.getMessage());
+            }
+        
     }//GEN-LAST:event_loginBtnActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
@@ -239,4 +278,5 @@ public class librarystaff_login extends javax.swing.JFrame {
     private javax.swing.JPasswordField txtPassword;
     private javax.swing.JTextField txtUsername;
     // End of variables declaration//GEN-END:variables
+
 }

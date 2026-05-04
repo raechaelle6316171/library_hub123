@@ -9,6 +9,7 @@ import javax.swing.table.DefaultTableModel;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+
 public class borrow_management extends javax.swing.JFrame {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(borrow_management.class.getName());
@@ -17,19 +18,49 @@ public class borrow_management extends javax.swing.JFrame {
         initComponents();
         populateMemberTable("");
         populateBookTable("");
+        //String memberContact = "";
     }
+    String selectedMemberContact = "";
+    
+    private boolean hasOverdue(String borrowerName) {
+    boolean isBlocked = false;
+    try {
+        Connection conn = MySQLConnect.getConnection();
+        // This query checks if the borrower has any active 'Overdue' status in your records
+        String sql = "SELECT * FROM issued_books WHERE fullname = ? AND status = 'Overdue'";
+        PreparedStatement pst = conn.prepareStatement(sql);
+        pst.setString(1, borrowerName);
+        ResultSet rs = pst.executeQuery();
+
+        if (rs.next()) {
+            isBlocked = true;
+        }
+    } catch (Exception e) {
+        System.out.println("Error checking overdue: " + e.getMessage());
+    }
+    return isBlocked;
+}
+    
     
     public void setAutomaticDates() {
-
+    // 1. Get current date and time for the Issue Date
     LocalDateTime now = LocalDateTime.now();
     
-    LocalDateTime deadline = now.plusHours(24);
+    // 2. Set the Due Date: Tomorrow (plus 1 day) at exactly 5:00 PM (17:00)
+    LocalDateTime tomorrowAtFive = now.plusDays(1)
+                                      .withHour(17)
+                                      .withMinute(0)
+                                      .withSecond(0)
+                                      .withNano(0);     
     
+    // 3. Create the formatter to match your UI display
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm");
     
+    // 4. Update the text fields
     txtIssueDate.setText(now.format(formatter));
-    txtDueDate.setText(deadline.format(formatter));
+    txtDueDate.setText(tomorrowAtFive.format(formatter));
     
+    // 5. Keep them non-editable so students can't change the deadline
     txtIssueDate.setEditable(false);
     txtDueDate.setEditable(false);
 }
@@ -71,25 +102,25 @@ public class borrow_management extends javax.swing.JFrame {
 }
     
     public void populateBookTable(String query) {
-
-    DefaultTableModel model = (DefaultTableModel) jTableBooks.getModel();
+DefaultTableModel model = (DefaultTableModel) jTableBooks.getModel();
     model.setRowCount(0); 
 
     try {
         Connection conn = MySQLConnect.getConnection();
         String sql;
         
+        // Changed condition to ONLY show 'Available' books
         if (query.isEmpty()) {
-            sql = "SELECT acquisition_no, title, author, status FROM books WHERE status != 'Unavailable'";
+            sql = "SELECT acquisition_no, title, author, status FROM books WHERE status = 'Available'";
         } else {
             sql = "SELECT acquisition_no, title, author, status FROM books " +
-                  "WHERE (acquisition_no LIKE ? OR title LIKE ?) AND status != 'Unavailable'";
+                  "WHERE (acquisition_no LIKE ? OR title LIKE ?) AND status = 'Available'";
         }
 
         PreparedStatement pst = conn.prepareStatement(sql);
         if (!query.isEmpty()) {
             pst.setString(1, "%" + query + "%");
-            pst.setString(2, "%" + query + "%"); // This handles the title search
+            pst.setString(2, "%" + query + "%"); 
         }
 
         ResultSet rs = pst.executeQuery();
@@ -104,7 +135,7 @@ public class borrow_management extends javax.swing.JFrame {
             model.addRow(row);
         }
     } catch (SQLException e) {
-        JOptionPane.showMessageDialog(this, "Error loading books: " + e.getMessage());
+        JOptionPane.showMessageDialog(this, "Error loading available books: " + e.getMessage());
     }
 }
     private void clearTransactionFields() {
@@ -418,7 +449,7 @@ public class borrow_management extends javax.swing.JFrame {
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(txtFullName, javax.swing.GroupLayout.PREFERRED_SIZE, 228, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(txtUserType, javax.swing.GroupLayout.PREFERRED_SIZE, 228, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 104, Short.MAX_VALUE)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(jLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
@@ -431,25 +462,24 @@ public class borrow_management extends javax.swing.JFrame {
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                                .addComponent(jLabel5)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jLabel10))
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                                .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 103, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jLabel11)))
-                        .addGap(18, 18, 18)
-                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(txtDueDate, javax.swing.GroupLayout.PREFERRED_SIZE, 232, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(txtIssueDate, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 232, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(237, 237, 237))
+                        .addComponent(jLabel5)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel10))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                        .addComponent(IssueBookBtn)
-                        .addGap(38, 38, 38)
-                        .addComponent(cancelBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 91, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(350, 350, 350))))
+                        .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 103, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel11)))
+                .addGap(18, 18, 18)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(txtDueDate, javax.swing.GroupLayout.PREFERRED_SIZE, 232, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(txtIssueDate, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 232, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(237, 237, 237))
+            .addGroup(jPanel3Layout.createSequentialGroup()
+                .addGap(343, 343, 343)
+                .addComponent(IssueBookBtn)
+                .addGap(38, 38, 38)
+                .addComponent(cancelBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 91, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -490,26 +520,24 @@ public class borrow_management extends javax.swing.JFrame {
                         .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel10)
                             .addComponent(jLabel5))))
-                .addGap(18, 18, 18)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 34, Short.MAX_VALUE)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(IssueBookBtn)
                     .addComponent(cancelBtn))
-                .addContainerGap(26, Short.MAX_VALUE))
+                .addGap(16, 16, 16))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                    .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanel2, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, 456, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, 476, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addGap(0, 0, Short.MAX_VALUE))
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                .addComponent(jPanel2, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(layout.createSequentialGroup()
+                    .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, 456, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, 476, javax.swing.GroupLayout.PREFERRED_SIZE)))
+            .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -519,8 +547,8 @@ public class borrow_management extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, 262, Short.MAX_VALUE)
                     .addComponent(jPanel5, javax.swing.GroupLayout.DEFAULT_SIZE, 262, Short.MAX_VALUE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         pack();
@@ -529,10 +557,33 @@ public class borrow_management extends javax.swing.JFrame {
 
     private void jTableMembersMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTableMembersMouseClicked
         int row = jTableMembers.getSelectedRow();
-        DefaultTableModel model = (DefaultTableModel) jTableMembers.getModel();
+    DefaultTableModel model = (DefaultTableModel) jTableMembers.getModel();
 
-        txtFullName.setText(model.getValueAt(row, 0).toString());
-        txtUserType.setText(model.getValueAt(row, 1).toString());
+    // Index 0 is Member Name in your Borrow Management table
+    String name = model.getValueAt(row, 0).toString();
+    txtFullName.setText(name);
+    
+    // Index 1 is User Type
+    txtUserType.setText(model.getValueAt(row, 1).toString());
+    
+    // FETCH CONTACT AUTOMATICALLY:
+    try {
+        java.sql.Connection conn = MySQLConnect.getConnection();
+        // Adjust "full_name" if your registration table uses a different column name
+        String sql = "SELECT contact_number FROM member_records WHERE fullname = ?";
+        java.sql.PreparedStatement pst = conn.prepareStatement(sql);
+        pst.setString(1, name);
+        java.sql.ResultSet rs = pst.executeQuery();
+
+        if (rs.next()) {
+            // This fills the hidden variable so the Issue Book button can see it
+            selectedMemberContact = rs.getString("contact_number"); 
+        } else {
+            selectedMemberContact = ""; 
+        }
+    } catch (Exception e) {
+        System.out.println("Error fetching contact: " + e.getMessage());
+    }
     }//GEN-LAST:event_jTableMembersMouseClicked
 
     private void txtSearchMemberActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtSearchMemberActionPerformed
@@ -562,11 +613,12 @@ public class borrow_management extends javax.swing.JFrame {
         int row = jTableBooks.getSelectedRow();
         DefaultTableModel model = (DefaultTableModel) jTableBooks.getModel();
 
+        // Fill the text fields with book info
         txtAcq.setText(model.getValueAt(row, 0).toString());
         txtTitle.setText(model.getValueAt(row, 1).toString());
 
+        // Calculate and display the 1-day/5 PM deadline
         setAutomaticDates();
-
     }//GEN-LAST:event_jTableBooksMouseClicked
 
     private void jTableBooksKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTableBooksKeyReleased
@@ -607,103 +659,98 @@ public class borrow_management extends javax.swing.JFrame {
 
     private void IssueBookBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_IssueBookBtnActionPerformed
         String name = txtFullName.getText().trim();
-        String userType = txtUserType.getText().trim();
-        String acqNo = txtAcq.getText().trim();
-        String title = txtTitle.getText().trim();
-        String iDate = txtIssueDate.getText().trim();
-        String dDate = txtDueDate.getText().trim();
+    String userType = txtUserType.getText().trim();
+    String acqNo = txtAcq.getText().trim();
+    String title = txtTitle.getText().trim();
+    String iDate = txtIssueDate.getText().trim();
+    String dDate = txtDueDate.getText().trim();
+    
+    // Uses the hidden variable instead of a text field
+    String contact = selectedMemberContact; 
+    
+    if (hasOverdue(name)) {
+        JOptionPane.showMessageDialog(this, 
+            "BORROWING BLOCKED: This user has an outstanding overdue book. " +
+            "\nPlease settle penalties in the Penalty module first.", 
+            "Account Restriction", 
+            JOptionPane.ERROR_MESSAGE);
+        return;
+    }
 
-        // 1. Basic validation
-        if (name.isEmpty() || acqNo.isEmpty() || iDate.isEmpty() || dDate.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please select a member, a book, and fill in the dates!");
-            return;
+    if (name.isEmpty() || contact.isEmpty() || acqNo.isEmpty() || iDate.isEmpty() || dDate.isEmpty()) {
+        JOptionPane.showMessageDialog(this, "Please select a member, a book, and fill in the dates!");
+        return;
+    }
+
+    Connection conn = null;
+    try {
+        conn = MySQLConnect.getConnection();
+        conn.setAutoCommit(false);
+
+        // Student Borrowing Limit Check
+        if (userType.equalsIgnoreCase("Student")) {
+            String countSql = "SELECT COUNT(*) FROM issued_books WHERE fullname = ? AND status = 'Issued'"; 
+            PreparedStatement countPst = conn.prepareStatement(countSql);
+            countPst.setString(1, name);
+            ResultSet rsCount = countPst.executeQuery();
+            if (rsCount.next() && rsCount.getInt(1) >= 3) {
+                JOptionPane.showMessageDialog(this, "Student Limit Reached: " + name + " already has 3 books.", "Borrowing Limit", JOptionPane.WARNING_MESSAGE);
+                return; 
+            }
         }
 
-        try {
-            Connection conn = MySQLConnect.getConnection();
-
-            if (userType.equalsIgnoreCase("Student")) {
-                String countSql = "SELECT COUNT(*) FROM issued_books WHERE fullname = ? AND status = 'Issued'"; 
-                PreparedStatement countPst = conn.prepareStatement(countSql);
-                countPst.setString(1, name);
-                ResultSet rsCount = countPst.executeQuery();
-
-
-                if (rsCount.next()) {
-                    int borrowedCount = rsCount.getInt(1);
-                    if (borrowedCount >= 3) {
-                        JOptionPane.showMessageDialog(this, 
-                            "Student Limit Reached: " + name + " already has " + borrowedCount + " books borrowed.", 
-                            "Borrowing Limit", JOptionPane.WARNING_MESSAGE);
-                        return; 
-                    }
-                }
-            }
-
-            String duplicateSql = "SELECT COUNT(*) FROM issued_books WHERE fullname = ? AND book_title = ? AND status = 'Issued'";
-            PreparedStatement duplicatePst = conn.prepareStatement(duplicateSql);
-            duplicatePst.setString(1, name);
-            duplicatePst.setString(2, title);
-            ResultSet rsDuplicate = duplicatePst.executeQuery();
-
-            if (rsDuplicate.next()) {
-                if (rsDuplicate.getInt(1) > 0) {
-                    JOptionPane.showMessageDialog(this, 
-                        "DUPLICATE DETECTED: " + name + " already has an active copy of '" + title + "'.\n" +
-                        "They must return the existing copy before borrowing another one.", 
-                        "Borrowing Denied", JOptionPane.ERROR_MESSAGE);
-                    return; 
-                }
-            }
-
-            String checkSql = "SELECT status FROM books WHERE acquisition_no = ?";
-            PreparedStatement checkPst = conn.prepareStatement(checkSql);
-            checkPst.setString(1, acqNo);
-            ResultSet rsBook = checkPst.executeQuery();
-
-            if (rsBook.next()) {
-                if (rsBook.getString("status").equalsIgnoreCase("Unavailable")) {
-                    JOptionPane.showMessageDialog(this, "This book is currently unavailable/borrowed!");
-                    return;
-                }
-            }
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm");
-            LocalDateTime issueLDT = LocalDateTime.parse(txtIssueDate.getText(), formatter);
-            java.sql.Timestamp issueTS = java.sql.Timestamp.valueOf(issueLDT);
-            LocalDateTime dueLDT = LocalDateTime.parse(txtDueDate.getText(), formatter);
-            java.sql.Timestamp dueTS = java.sql.Timestamp.valueOf(dueLDT);
-
-
-            String issueSql = "INSERT INTO issued_books (fullname, usertype, book_acq_no, book_title, issue_date, due_date, penalty_paid, status) "
-                            + "VALUES (?, ?, ?, ?, ?, ?, ?, 'Issued')";
-
-            PreparedStatement issuePst = conn.prepareStatement(issueSql);
-            issuePst.setString(1, name);
-            issuePst.setString(2, userType);
-            issuePst.setString(3, acqNo);
-            issuePst.setString(4, title);
-            issuePst.setTimestamp(5, issueTS);
-            issuePst.setTimestamp(6, dueTS);        
-            issuePst.setString(7, "0"); 
-
-            int result = issuePst.executeUpdate();
-
-            if (result > 0) {
-                String updateBookSql = "UPDATE books SET status = 'Unavailable' WHERE acquisition_no = ?";
-                PreparedStatement updatePst = conn.prepareStatement(updateBookSql);
-                updatePst.setString(1, acqNo);
-                updatePst.executeUpdate();
-
-                JOptionPane.showMessageDialog(this, "Book Issued Successfully!");
-
-                populateBookTable(""); 
-                clearTransactionFields();
-            }
-
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Database Error: " + e.getMessage());
-            e.printStackTrace();
+        // Duplicate Book Check
+        String duplicateSql = "SELECT COUNT(*) FROM issued_books WHERE fullname = ? AND book_title = ? AND status = 'Issued'";
+        PreparedStatement duplicatePst = conn.prepareStatement(duplicateSql);
+        duplicatePst.setString(1, name);
+        duplicatePst.setString(2, title);
+        ResultSet rsDuplicate = duplicatePst.executeQuery();
+        if (rsDuplicate.next() && rsDuplicate.getInt(1) > 0) {
+            JOptionPane.showMessageDialog(this, "DUPLICATE DETECTED: " + name + " already has an active copy of '" + title + "'.", "Borrowing Denied", JOptionPane.ERROR_MESSAGE);
+            return; 
         }
+
+        // Date Parsing
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm");
+        java.sql.Timestamp issueTS = java.sql.Timestamp.valueOf(LocalDateTime.parse(iDate, formatter));
+        java.sql.Timestamp dueTS = java.sql.Timestamp.valueOf(LocalDateTime.parse(dDate, formatter));
+
+        // UPDATED INSERT: Includes contact_no
+        // DO NOT put a real phone number here. Use a '?' so it's dynamic.
+        String issueSql = "INSERT INTO issued_books (fullname, contact_no, usertype, book_acq_no, book_title, issue_date, due_date, penalty_paid, status) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Issued')";
+
+        PreparedStatement issuePst = conn.prepareStatement(issueSql);
+        issuePst.setString(1, name);
+        issuePst.setString(2, contact); // Variable from registration data
+        issuePst.setString(3, userType);
+        issuePst.setString(4, acqNo);
+        issuePst.setString(5, title);
+        issuePst.setTimestamp(6, issueTS);
+        issuePst.setTimestamp(7, dueTS);        
+        issuePst.setString(8, "0"); 
+
+        int result = issuePst.executeUpdate();
+
+        if (result > 0) {
+            String updateBookSql = "UPDATE books SET status = 'Unavailable' WHERE acquisition_no = ?";
+            PreparedStatement updatePst = conn.prepareStatement(updateBookSql);
+            updatePst.setString(1, acqNo);
+            updatePst.executeUpdate();
+
+            conn.commit();
+            JOptionPane.showMessageDialog(this, "Book Issued Successfully!");
+            populateBookTable(""); 
+            clearTransactionFields();
+            selectedMemberContact = ""; // Reset for next transaction
+        }
+
+    } catch (Exception e) {
+        if (conn != null) try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+        JOptionPane.showMessageDialog(this, "Database Error: " + e.getMessage());
+    } finally {
+        if (conn != null) try { conn.setAutoCommit(true); } catch (SQLException e) { e.printStackTrace(); }
+    }
     }//GEN-LAST:event_IssueBookBtnActionPerformed
 
     /**
