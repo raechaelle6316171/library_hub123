@@ -9,11 +9,11 @@ import javax.swing.table.DefaultTableModel;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-public class borrow_management_123 extends javax.swing.JFrame {
+public class borrow_management extends javax.swing.JFrame {
     
-    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(borrow_management_123.class.getName());
+    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(borrow_management.class.getName());
 
-    public borrow_management_123() {
+    public borrow_management() {
         initComponents();
         populateMemberTable("");
         populateBookTable("");
@@ -538,7 +538,7 @@ public class borrow_management_123 extends javax.swing.JFrame {
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, 456, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, 479, Short.MAX_VALUE))
+                .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, 518, Short.MAX_VALUE))
             .addComponent(jPanel3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
@@ -637,103 +637,103 @@ public class borrow_management_123 extends javax.swing.JFrame {
 
     private void IssueBookBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_IssueBookBtnActionPerformed
         String name = txtFullName.getText().trim();
-    String userType = txtUserType.getText().trim();
-    String acqNo = txtAcq.getText().trim();
-    String title = txtTitle.getText().trim();
-    String iDate = txtIssueDate.getText().trim();
-    String dDate = txtDueDate.getText().trim();
+        String userType = txtUserType.getText().trim();
+        String acqNo = txtAcq.getText().trim();
+        String title = txtTitle.getText().trim();
+        String iDate = txtIssueDate.getText().trim();
+        String dDate = txtDueDate.getText().trim();
 
-    // 1. Basic validation
-    if (name.isEmpty() || acqNo.isEmpty() || iDate.isEmpty() || dDate.isEmpty()) {
-        JOptionPane.showMessageDialog(this, "Please select a member, a book, and fill in the dates!");
-        return;
-    }
+        // 1. Basic validation
+        if (name.isEmpty() || acqNo.isEmpty() || iDate.isEmpty() || dDate.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please select a member, a book, and fill in the dates!");
+            return;
+        }
 
-    try {
-        Connection conn = MySQLConnect.getConnection();
+        try {
+            Connection conn = MySQLConnect.getConnection();
 
-        if (userType.equalsIgnoreCase("Student")) {
-            String countSql = "SELECT COUNT(*) FROM issued_books WHERE fullname = ? AND status = 'Issued'"; 
-            PreparedStatement countPst = conn.prepareStatement(countSql);
-            countPst.setString(1, name);
-            ResultSet rsCount = countPst.executeQuery();
-            
+            if (userType.equalsIgnoreCase("Student")) {
+                String countSql = "SELECT COUNT(*) FROM issued_books WHERE fullname = ? AND status = 'Issued'"; 
+                PreparedStatement countPst = conn.prepareStatement(countSql);
+                countPst.setString(1, name);
+                ResultSet rsCount = countPst.executeQuery();
 
-            if (rsCount.next()) {
-                int borrowedCount = rsCount.getInt(1);
-                if (borrowedCount >= 3) {
+
+                if (rsCount.next()) {
+                    int borrowedCount = rsCount.getInt(1);
+                    if (borrowedCount >= 3) {
+                        JOptionPane.showMessageDialog(this, 
+                            "Student Limit Reached: " + name + " already has " + borrowedCount + " books borrowed.", 
+                            "Borrowing Limit", JOptionPane.WARNING_MESSAGE);
+                        return; 
+                    }
+                }
+            }
+
+            String duplicateSql = "SELECT COUNT(*) FROM issued_books WHERE fullname = ? AND book_title = ? AND status = 'Issued'";
+            PreparedStatement duplicatePst = conn.prepareStatement(duplicateSql);
+            duplicatePst.setString(1, name);
+            duplicatePst.setString(2, title);
+            ResultSet rsDuplicate = duplicatePst.executeQuery();
+
+            if (rsDuplicate.next()) {
+                if (rsDuplicate.getInt(1) > 0) {
                     JOptionPane.showMessageDialog(this, 
-                        "Student Limit Reached: " + name + " already has " + borrowedCount + " books borrowed.", 
-                        "Borrowing Limit", JOptionPane.WARNING_MESSAGE);
+                        "DUPLICATE DETECTED: " + name + " already has an active copy of '" + title + "'.\n" +
+                        "They must return the existing copy before borrowing another one.", 
+                        "Borrowing Denied", JOptionPane.ERROR_MESSAGE);
                     return; 
                 }
             }
-        }
-        
-        String duplicateSql = "SELECT COUNT(*) FROM issued_books WHERE fullname = ? AND book_title = ? AND status = 'Issued'";
-        PreparedStatement duplicatePst = conn.prepareStatement(duplicateSql);
-        duplicatePst.setString(1, name);
-        duplicatePst.setString(2, title);
-        ResultSet rsDuplicate = duplicatePst.executeQuery();
 
-        if (rsDuplicate.next()) {
-            if (rsDuplicate.getInt(1) > 0) {
-                JOptionPane.showMessageDialog(this, 
-                    "DUPLICATE DETECTED: " + name + " already has an active copy of '" + title + "'.\n" +
-                    "They must return the existing copy before borrowing another one.", 
-                    "Borrowing Denied", JOptionPane.ERROR_MESSAGE);
-                return; 
+            String checkSql = "SELECT status FROM books WHERE acquisition_no = ?";
+            PreparedStatement checkPst = conn.prepareStatement(checkSql);
+            checkPst.setString(1, acqNo);
+            ResultSet rsBook = checkPst.executeQuery();
+
+            if (rsBook.next()) {
+                if (rsBook.getString("status").equalsIgnoreCase("Unavailable")) {
+                    JOptionPane.showMessageDialog(this, "This book is currently unavailable/borrowed!");
+                    return;
+                }
             }
-        }
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm");
+            LocalDateTime issueLDT = LocalDateTime.parse(txtIssueDate.getText(), formatter);
+            java.sql.Timestamp issueTS = java.sql.Timestamp.valueOf(issueLDT);
+            LocalDateTime dueLDT = LocalDateTime.parse(txtDueDate.getText(), formatter);
+            java.sql.Timestamp dueTS = java.sql.Timestamp.valueOf(dueLDT);
 
-        String checkSql = "SELECT status FROM books WHERE acquisition_no = ?";
-        PreparedStatement checkPst = conn.prepareStatement(checkSql);
-        checkPst.setString(1, acqNo);
-        ResultSet rsBook = checkPst.executeQuery();
 
-        if (rsBook.next()) {
-            if (rsBook.getString("status").equalsIgnoreCase("Unavailable")) {
-                JOptionPane.showMessageDialog(this, "This book is currently unavailable/borrowed!");
-                return;
+            String issueSql = "INSERT INTO issued_books (fullname, usertype, book_acq_no, book_title, issue_date, due_date, penalty_paid, status) "
+                            + "VALUES (?, ?, ?, ?, ?, ?, ?, 'Issued')";
+
+            PreparedStatement issuePst = conn.prepareStatement(issueSql);
+            issuePst.setString(1, name);
+            issuePst.setString(2, userType);
+            issuePst.setString(3, acqNo);
+            issuePst.setString(4, title);
+            issuePst.setTimestamp(5, issueTS);
+            issuePst.setTimestamp(6, dueTS);        
+            issuePst.setString(7, "0"); 
+
+            int result = issuePst.executeUpdate();
+
+            if (result > 0) {
+                String updateBookSql = "UPDATE books SET status = 'Unavailable' WHERE acquisition_no = ?";
+                PreparedStatement updatePst = conn.prepareStatement(updateBookSql);
+                updatePst.setString(1, acqNo);
+                updatePst.executeUpdate();
+
+                JOptionPane.showMessageDialog(this, "Book Issued Successfully!");
+
+                populateBookTable(""); 
+                clearTransactionFields();
             }
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Database Error: " + e.getMessage());
+            e.printStackTrace();
         }
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm");
-        LocalDateTime issueLDT = LocalDateTime.parse(txtIssueDate.getText(), formatter);
-        java.sql.Timestamp issueTS = java.sql.Timestamp.valueOf(issueLDT);
-        LocalDateTime dueLDT = LocalDateTime.parse(txtDueDate.getText(), formatter);
-        java.sql.Timestamp dueTS = java.sql.Timestamp.valueOf(dueLDT);
-        
-        
-        String issueSql = "INSERT INTO issued_books (fullname, usertype, book_acq_no, book_title, issue_date, due_date, penalty_paid, status) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, 'Issued')";
-
-        PreparedStatement issuePst = conn.prepareStatement(issueSql);
-        issuePst.setString(1, name);
-        issuePst.setString(2, userType);
-        issuePst.setString(3, acqNo);
-        issuePst.setString(4, title);
-        issuePst.setTimestamp(5, issueTS);
-        issuePst.setTimestamp(6, dueTS);        
-        issuePst.setString(7, "0"); // Manually setting initial penalty to 0 to avoid DB errors
-
-        int result = issuePst.executeUpdate();
-
-        if (result > 0) {
-            String updateBookSql = "UPDATE books SET status = 'Unavailable' WHERE acquisition_no = ?";
-            PreparedStatement updatePst = conn.prepareStatement(updateBookSql);
-            updatePst.setString(1, acqNo);
-            updatePst.executeUpdate();
-
-            JOptionPane.showMessageDialog(this, "Book Issued Successfully!");
-
-            populateBookTable(""); 
-            clearTransactionFields();
-        }
-
-    } catch (SQLException e) {
-        JOptionPane.showMessageDialog(this, "Database Error: " + e.getMessage());
-        e.printStackTrace();
-    }
     }//GEN-LAST:event_IssueBookBtnActionPerformed
 
     private void IssueBookBtn1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_IssueBookBtn1ActionPerformed
@@ -744,7 +744,7 @@ public class borrow_management_123 extends javax.swing.JFrame {
 
     private void IssueBookBtn2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_IssueBookBtn2ActionPerformed
         this.dispose();
-        book_management_copy w = new book_management_copy();
+        book_management w = new book_management();
         w.setVisible(true);
     }//GEN-LAST:event_IssueBookBtn2ActionPerformed
 
@@ -776,7 +776,7 @@ public class borrow_management_123 extends javax.swing.JFrame {
         //</editor-fold>
 
         /* Create and display the form */
-        java.awt.EventQueue.invokeLater(() -> new borrow_management_123().setVisible(true));
+        java.awt.EventQueue.invokeLater(() -> new borrow_management().setVisible(true));
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

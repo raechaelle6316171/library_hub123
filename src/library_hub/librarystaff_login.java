@@ -3,11 +3,11 @@ package library_hub;
 import java.sql.*;
 import javax.swing.JOptionPane;
 
-public class librarian_login_1 extends javax.swing.JFrame {
+public class librarystaff_login extends javax.swing.JFrame {
     
-    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(librarian_login_1.class.getName());
+    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(librarystaff_login.class.getName());
 
-    public librarian_login_1() {
+    public librarystaff_login() {
         initComponents();
     }
 
@@ -21,11 +21,11 @@ public class librarian_login_1 extends javax.swing.JFrame {
         jPanel3 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
-        enterUsername = new javax.swing.JTextField();
+        txtUsername = new javax.swing.JTextField();
         showPassword = new javax.swing.JCheckBox();
         loginBtn = new javax.swing.JButton();
         resetBtn = new javax.swing.JButton();
-        enterPassword = new javax.swing.JPasswordField();
+        txtPassword = new javax.swing.JPasswordField();
         jPanel2 = new javax.swing.JPanel();
         jLabel3 = new javax.swing.JLabel();
         jButton1 = new javax.swing.JButton();
@@ -51,7 +51,7 @@ public class librarian_login_1 extends javax.swing.JFrame {
         jLabel2.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
         jLabel2.setText("PASSWORD");
 
-        enterUsername.addActionListener(this::enterUsernameActionPerformed);
+        txtUsername.addActionListener(this::txtUsernameActionPerformed);
 
         showPassword.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         showPassword.setText("Show Password");
@@ -69,7 +69,7 @@ public class librarian_login_1 extends javax.swing.JFrame {
 
         jLabel3.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
         jLabel3.setForeground(new java.awt.Color(0, 0, 0));
-        jLabel3.setText("LIBRARIAN LOGIN FORM");
+        jLabel3.setText("LIBRARY STAFF");
 
         jButton1.setText("X");
         jButton1.addActionListener(this::jButton1ActionPerformed);
@@ -111,11 +111,11 @@ public class librarian_login_1 extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(showPassword, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(enterPassword, javax.swing.GroupLayout.PREFERRED_SIZE, 161, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                            .addComponent(txtPassword, javax.swing.GroupLayout.PREFERRED_SIZE, 161, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 126, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(enterUsername, javax.swing.GroupLayout.PREFERRED_SIZE, 161, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(txtUsername, javax.swing.GroupLayout.PREFERRED_SIZE, 161, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addGap(22, 22, 22))
             .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
@@ -126,11 +126,11 @@ public class librarian_login_1 extends javax.swing.JFrame {
                 .addGap(32, 32, 32)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
-                    .addComponent(enterUsername, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(txtUsername, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(enterPassword))
+                    .addComponent(txtPassword))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(showPassword)
                 .addGap(28, 28, 28)
@@ -155,51 +155,41 @@ public class librarian_login_1 extends javax.swing.JFrame {
         setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
 
-    private void enterUsernameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_enterUsernameActionPerformed
+    private void txtUsernameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtUsernameActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_enterUsernameActionPerformed
+    }//GEN-LAST:event_txtUsernameActionPerformed
 
     private void showPasswordActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_showPasswordActionPerformed
     if (showPassword.isSelected()) {
-        enterPassword.setEchoChar((char) 0);
+        txtPassword.setEchoChar((char) 0);
     } else {
-        enterPassword.setEchoChar('\u2022'); 
+        txtPassword.setEchoChar('\u2022'); 
     }
     }//GEN-LAST:event_showPasswordActionPerformed
 
     private void resetBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_resetBtnActionPerformed
-        char defaultChar = enterPassword.getEchoChar();
+        char defaultChar = txtPassword.getEchoChar();
         
-        enterUsername.setText("");
-        enterPassword.setText("");
+        txtUsername.setText("");
+        txtPassword.setText("");
         resetBtn.setSelected(false);
     
-        enterPassword.setEchoChar(defaultChar);
-        enterUsername.requestFocus();
+        txtPassword.setEchoChar(defaultChar);
+        txtUsername.requestFocus();
     }//GEN-LAST:event_resetBtnActionPerformed
 
     private void loginBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loginBtnActionPerformed
-        try {
-    Connection conn = MySQLConnect.getConnection();
+        String user = txtUsername.getText();
+        String pass = new String(txtPassword.getPassword());
 
-    String sql = "SELECT * FROM user WHERE username=? AND password=? AND category='Librarian'";
-    PreparedStatement pst = conn.prepareStatement(sql);
-    pst.setString(1, enterUsername.getText());
-    pst.setString(2, new String(enterPassword.getPassword()));
-    
-    ResultSet rs = pst.executeQuery();
-    if (rs.next()) {
-    JOptionPane.showMessageDialog(this, "Librarian Login Successful");
-    this.dispose();
-    new frontpage("Librarian").setVisible(true);
-
-    } else {
-
-        JOptionPane.showMessageDialog(this, "Access Denied: Librarian credentials required.");
-    }
-} catch (Exception e) {
-    JOptionPane.showMessageDialog(this, e.getMessage());
-}
+        if (user.equals("staff@wlc.edu") && pass.equals("staff123")) {
+            JOptionPane.showMessageDialog(this, "Staff Login Successful!");
+            // Pass "Staff" role to the dashboard
+            new frontpage("Staff").setVisible(true); 
+            this.dispose();
+        } else {
+            JOptionPane.showMessageDialog(this, "Invalid Staff Credentials");
+        }
     }//GEN-LAST:event_loginBtnActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
@@ -230,13 +220,11 @@ public class librarian_login_1 extends javax.swing.JFrame {
         //</editor-fold>
 
         /* Create and display the form */
-        java.awt.EventQueue.invokeLater(() -> new librarian_login_1().setVisible(true));
+        java.awt.EventQueue.invokeLater(() -> new librarystaff_login().setVisible(true));
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private java.awt.Checkbox checkbox1;
-    private javax.swing.JPasswordField enterPassword;
-    private javax.swing.JTextField enterUsername;
     private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
@@ -248,5 +236,7 @@ public class librarian_login_1 extends javax.swing.JFrame {
     private javax.swing.JButton loginBtn;
     private javax.swing.JButton resetBtn;
     private javax.swing.JCheckBox showPassword;
+    private javax.swing.JPasswordField txtPassword;
+    private javax.swing.JTextField txtUsername;
     // End of variables declaration//GEN-END:variables
 }

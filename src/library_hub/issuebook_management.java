@@ -151,6 +151,9 @@ public class issuebook_management extends javax.swing.JFrame {
         deleteBtn = new javax.swing.JButton();
         jLabel2 = new javax.swing.JLabel();
         sort = new javax.swing.JComboBox<>();
+        close = new javax.swing.JButton();
+        btnMarkAsDamage = new javax.swing.JButton();
+        btnMarkAsLost = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -172,7 +175,7 @@ public class issuebook_management extends javax.swing.JFrame {
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jLabel8)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 551, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(jButton5)
                 .addContainerGap())
         );
@@ -192,18 +195,25 @@ public class issuebook_management extends javax.swing.JFrame {
 
         jTableIssuedBooks.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null}
+                {null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null}
             },
             new String [] {
-                "Id", "Member Name", "Book Title", "Acq No", "Issued Date", "Due Date", "Penalty Paid", "Status"
+                "Id", "Member Name", "Book Title", "Acq No", "Issued Date", "Due Date", "Penalty Paid", "Status", "Select"
             }
         ) {
-            boolean[] canEdit = new boolean [] {
-                false, false, false, false, false, false, false, false
+            Class[] types = new Class [] {
+                java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Boolean.class
             };
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false, false, false, false, false, true
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
@@ -240,28 +250,51 @@ public class issuebook_management extends javax.swing.JFrame {
         sort.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "All", "Issued", "Overdue", "Returned" }));
         sort.addActionListener(this::sortActionPerformed);
 
+        close.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        close.setText("x");
+        close.addActionListener(this::closeActionPerformed);
+
+        btnMarkAsDamage.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        btnMarkAsDamage.setForeground(new java.awt.Color(0, 0, 0));
+        btnMarkAsDamage.setText("MARK AS DAMAGE");
+        btnMarkAsDamage.addActionListener(this::btnMarkAsDamageActionPerformed);
+
+        btnMarkAsLost.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        btnMarkAsLost.setForeground(new java.awt.Color(0, 0, 0));
+        btnMarkAsLost.setText("MARK AS LOST");
+        btnMarkAsLost.addActionListener(this::btnMarkAsLostActionPerformed);
+
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
-                .addContainerGap(24, Short.MAX_VALUE)
+            .addGroup(jPanel4Layout.createSequentialGroup()
+                .addContainerGap()
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel4Layout.createSequentialGroup()
-                        .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 160, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txtSearchMember, javax.swing.GroupLayout.PREFERRED_SIZE, 164, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel2)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(sort, javax.swing.GroupLayout.PREFERRED_SIZE, 162, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                        .addGroup(jPanel4Layout.createSequentialGroup()
-                            .addComponent(deleteBtn)
-                            .addGap(18, 18, 18)
-                            .addComponent(btnMarkAsReturned))
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 855, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addGap(22, 22, 22))
+                        .addGap(0, 46, Short.MAX_VALUE)
+                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanel4Layout.createSequentialGroup()
+                                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 160, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(txtSearchMember, javax.swing.GroupLayout.PREFERRED_SIZE, 164, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(close)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jLabel2)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(sort, javax.swing.GroupLayout.PREFERRED_SIZE, 162, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(436, 436, 436))
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
+                                .addComponent(deleteBtn)
+                                .addGap(18, 18, 18)
+                                .addComponent(btnMarkAsReturned)
+                                .addGap(18, 18, 18)
+                                .addComponent(btnMarkAsDamage)
+                                .addGap(18, 18, 18)
+                                .addComponent(btnMarkAsLost)
+                                .addContainerGap())))
+                    .addComponent(jScrollPane1)))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -271,22 +304,25 @@ public class issuebook_management extends javax.swing.JFrame {
                     .addComponent(txtSearchMember, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel1)
                     .addComponent(jLabel2)
-                    .addComponent(sort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18)
+                    .addComponent(sort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(close))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 33, Short.MAX_VALUE)
+                .addGap(18, 32, Short.MAX_VALUE)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(deleteBtn)
-                    .addComponent(btnMarkAsReturned))
-                .addGap(20, 20, 20))
+                    .addComponent(btnMarkAsLost)
+                    .addComponent(btnMarkAsDamage)
+                    .addComponent(btnMarkAsReturned)
+                    .addComponent(deleteBtn))
+                .addGap(26, 26, 26))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, 911, javax.swing.GroupLayout.PREFERRED_SIZE)
-            .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, 911, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, 1095, Short.MAX_VALUE)
+            .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, 1095, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -496,6 +532,107 @@ public class issuebook_management extends javax.swing.JFrame {
         
     }//GEN-LAST:event_sortActionPerformed
 
+    private void closeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_closeActionPerformed
+        txtSearchMember.setText("");
+        sort.setSelectedIndex(0); // Reset to "All"
+    }//GEN-LAST:event_closeActionPerformed
+
+    private void btnMarkAsDamageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMarkAsDamageActionPerformed
+        int row = jTableIssuedBooks.getSelectedRow();
+
+    if (row == -1) {
+        JOptionPane.showMessageDialog(this, "Please select a record from the table first!");
+        return;
+    }
+
+    DefaultTableModel model = (DefaultTableModel) jTableIssuedBooks.getModel();
+    int issueId = Integer.parseInt(model.getValueAt(row, 0).toString());
+    String acqNo = model.getValueAt(row, 3).toString();
+    String currentStatus = model.getValueAt(row, 7).toString();
+
+    if (currentStatus.equalsIgnoreCase("Returned") || currentStatus.equalsIgnoreCase("Lost")) {
+        JOptionPane.showMessageDialog(this, "Cannot mark as damaged. Book is already " + currentStatus);
+        return;
+    }
+
+    int confirm = JOptionPane.showConfirmDialog(this, "Mark Book " + acqNo + " as DAMAGED? \nPenalty: ₱100.00", "Confirm Damage", JOptionPane.YES_NO_OPTION);
+
+    if (confirm == JOptionPane.YES_OPTION) {
+        try {
+            Connection conn = MySQLConnect.getConnection();
+            
+            // 1. Update Issued Books status and set fixed penalty
+            String updateActiveSql = "UPDATE issued_books SET status = 'Damage', penalty_paid = '100' WHERE issue_id = ?";
+            PreparedStatement pstUpdateActive = conn.prepareStatement(updateActiveSql);
+            pstUpdateActive.setInt(1, issueId);
+            pstUpdateActive.executeUpdate();
+
+            // 2. Update Book Status to 'Damaged' (Optional: or keep 'Available' if it's still usable)
+            String updateBookSql = "UPDATE books SET status = 'Damaged' WHERE acquisition_no = ?";
+            PreparedStatement pstBook = conn.prepareStatement(updateBookSql);
+            pstBook.setString(1, acqNo);
+            pstBook.executeUpdate();
+
+            JOptionPane.showMessageDialog(this, "Book marked as Damaged. Penalty of ₱100 recorded.");
+            populateIssuedTable(""); 
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
+        }
+    }
+    }//GEN-LAST:event_btnMarkAsDamageActionPerformed
+
+    private void btnMarkAsLostActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMarkAsLostActionPerformed
+        int row = jTableIssuedBooks.getSelectedRow();
+
+    if (row == -1) {
+        JOptionPane.showMessageDialog(this, "Please select a record from the table first!");
+        return;
+    }
+
+    DefaultTableModel model = (DefaultTableModel) jTableIssuedBooks.getModel();
+    int issueId = Integer.parseInt(model.getValueAt(row, 0).toString());
+    String acqNo = model.getValueAt(row, 3).toString();
+
+    try {
+        Connection conn = MySQLConnect.getConnection();
+        
+        // 1. FETCH THE BOOK PRICE
+        String priceSql = "SELECT price FROM books WHERE acquisition_no = ?";
+        PreparedStatement pstPrice = conn.prepareStatement(priceSql);
+        pstPrice.setString(1, acqNo);
+        ResultSet rs = pstPrice.executeQuery();
+        
+        double bookPrice = 0;
+        if (rs.next()) {
+            bookPrice = rs.getDouble("price");
+        }
+
+        int confirm = JOptionPane.showConfirmDialog(this, "Mark Book " + acqNo + " as LOST? \nUser must pay Book Price: ₱" + bookPrice, "Confirm Lost", JOptionPane.YES_NO_OPTION);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            // 2. Update Issued Books with the price as penalty
+            String updateActiveSql = "UPDATE issued_books SET status = 'Lost', penalty_paid = ? WHERE issue_id = ?";
+            PreparedStatement pstUpdateActive = conn.prepareStatement(updateActiveSql);
+            pstUpdateActive.setString(1, String.valueOf(bookPrice));
+            pstUpdateActive.setInt(2, issueId);
+            pstUpdateActive.executeUpdate();
+
+            // 3. Update Book status to 'Lost' (so it cannot be borrowed)
+            String updateBookSql = "UPDATE books SET status = 'Lost' WHERE acquisition_no = ?";
+            PreparedStatement pstBook = conn.prepareStatement(updateBookSql);
+            pstBook.setString(1, acqNo);
+            pstBook.executeUpdate();
+
+            JOptionPane.showMessageDialog(this, "Book marked as Lost. Penalty of ₱" + bookPrice + " recorded.");
+            populateIssuedTable(""); 
+        }
+
+    } catch (Exception e) {
+        JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
+    }
+    }//GEN-LAST:event_btnMarkAsLostActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -532,7 +669,10 @@ public class issuebook_management extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnMarkAsDamage;
+    private javax.swing.JButton btnMarkAsLost;
     private javax.swing.JButton btnMarkAsReturned;
+    private javax.swing.JButton close;
     private javax.swing.JButton deleteBtn;
     private javax.swing.JButton jButton5;
     private javax.swing.JLabel jLabel1;

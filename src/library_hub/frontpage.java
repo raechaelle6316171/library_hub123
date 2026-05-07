@@ -16,49 +16,77 @@ public class frontpage extends javax.swing.JFrame {
     public static String userRole = "";
     
     public frontpage(String role) {
-    initComponents();
-    this.userRole = role; // Set the role first
-
-    // Explicitly handle button visibility based on role
-    if ("Librarian".equals(userRole)) {
+        initComponents();
+        handleRoleAndPermissions(role); // Use the helper method below
+        loadDashboardData();
+}
+    
+    private void applyPermissions() {
+    // We check the static variable to see if the user is a Librarian
+    if ("Librarian".equalsIgnoreCase(frontpage.userRole) || "Staff".equalsIgnoreCase(frontpage.userRole)) {
+        // These MUST match the 'Variable Name' in your NetBeans Design properties
+        issueReportBtn.setVisible(false);
+        addBookBtn.setVisible(false);
+        inventoryBtn.setVisible(false);
         userBtn.setVisible(false);
-    } else {
-        userBtn.setVisible(true); // Ensure it shows for Admin
+        
+        // Debugging: This will print to your NetBeans console so you can verify it's working
+        System.out.println("Permissions Applied: Librarian buttons hidden.");
+    }
+    
+    this.revalidate();
+    this.repaint();
+}
+    
+    private void handleRoleAndPermissions(String role) {
+    // 1. Sync the Role
+    if (role != null && !role.isEmpty()) {
+        frontpage.userRole = role; 
     }
 
-    loadDashboardData();
-    showMembersInTable(); 
-    showBooksInTable();
-    showIssuedBooksInTable();
+    // 2. Apply Visibility
+    if ("Librarian".equalsIgnoreCase(frontpage.userRole)) {
+        // LIBRARIANS see everything (as seen in image_d7329e.png)
+        addMemberBtn.setVisible(true);
+        borrowBookBtn.setVisible(true);
+        issueBookBtn.setVisible(true);
+        issueReportBtn.setVisible(true);
+        addBookBtn.setVisible(true);
+        inventoryBtn.setVisible(true);
+        userBtn.setVisible(true);
+    } 
+    else if ("Staff".equalsIgnoreCase(frontpage.userRole)) {
+        // STAFF only see the basics (as seen in image_d73338.png)
+        addMemberBtn.setVisible(true);
+        borrowBookBtn.setVisible(true);
+        issueBookBtn.setVisible(true);
+        
+        // Hide management tools
+        issueReportBtn.setVisible(false);
+        addBookBtn.setVisible(false);
+        inventoryBtn.setVisible(false);
+        userBtn.setVisible(false);
+    }
     
-    displayTotalMembers();
-    displayTotalBooks();
-    updateTotalBorrowed();
-    //displayTotalUnreturned();
-    displayTotalOverdue();
+    // 3. Refresh the Sidebar
+    this.revalidate();
+    this.repaint();
 }
-
+    
 public frontpage() {
     initComponents();
-    
-    // Default safety check for the no-argument constructor
-    if ("Librarian".equals(userRole)) {
-        userBtn.setVisible(false);
-    } else {
-        userBtn.setVisible(true); // Default to visible for Admin
-    }
-
+    handleRoleAndPermissions(null); 
     loadDashboardData();
+    
+    // Remove the individual if("Librarian") checks from here
     displayTotalMembers();
     displayTotalBooks();
     updateTotalBorrowed();
-    //displayTotalUnreturned();
     displayTotalOverdue();
 }
     
     
     public void loadDashboardData() {
-
     showMembersInTable();
     showBooksInTable();
     showIssuedBooksInTable();
@@ -66,11 +94,8 @@ public frontpage() {
     displayTotalMembers();
     displayTotalBooks();
     updateTotalBorrowed();
-    //displayTotalUnreturned();
-    
-    if ("Librarian".equals(userRole)) {
-        userBtn.setVisible(false);
-    }
+    displayTotalOverdue();
+    // No setVisible code should be in here
 }
 
 public void showMembersInTable() {
@@ -179,14 +204,15 @@ public void showIssuedBooksInTable() {
         jPanel5 = new javax.swing.JPanel();
         jPanel2 = new javax.swing.JPanel();
         dashboardBtn = new javax.swing.JButton();
-        bookBtn = new javax.swing.JButton();
-        borrowBtn = new javax.swing.JButton();
+        borrowBookBtn = new javax.swing.JButton();
         issueBookBtn = new javax.swing.JButton();
         issueReportBtn = new javax.swing.JButton();
         logoutBtn = new javax.swing.JButton();
         userBtn = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
-        registerBtn = new javax.swing.JButton();
+        addMemberBtn = new javax.swing.JButton();
+        addBookBtn = new javax.swing.JButton();
+        inventoryBtn = new javax.swing.JButton();
         jLabel2 = new javax.swing.JLabel();
         jPanel4 = new javax.swing.JPanel();
         jPanel3 = new javax.swing.JPanel();
@@ -208,10 +234,6 @@ public void showIssuedBooksInTable() {
         jLabel7 = new javax.swing.JLabel();
         jLabel4 = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
-        jButton1 = new javax.swing.JButton();
-        jButton2 = new javax.swing.JButton();
-        jButton3 = new javax.swing.JButton();
-        jButton4 = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         jTableMember = new javax.swing.JTable();
         jScrollPane2 = new javax.swing.JScrollPane();
@@ -229,17 +251,11 @@ public void showIssuedBooksInTable() {
         dashboardBtn.setText("DASHBOARD");
         dashboardBtn.addActionListener(this::dashboardBtnActionPerformed);
 
-        bookBtn.setBackground(new java.awt.Color(0, 153, 0));
-        bookBtn.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-        bookBtn.setForeground(new java.awt.Color(255, 255, 255));
-        bookBtn.setText("ADD BOOK");
-        bookBtn.addActionListener(this::bookBtnActionPerformed);
-
-        borrowBtn.setBackground(new java.awt.Color(0, 153, 0));
-        borrowBtn.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-        borrowBtn.setForeground(new java.awt.Color(255, 255, 255));
-        borrowBtn.setText("BORROW BOOK");
-        borrowBtn.addActionListener(this::borrowBtnActionPerformed);
+        borrowBookBtn.setBackground(new java.awt.Color(0, 153, 0));
+        borrowBookBtn.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        borrowBookBtn.setForeground(new java.awt.Color(255, 255, 255));
+        borrowBookBtn.setText("BORROW BOOK");
+        borrowBookBtn.addActionListener(this::borrowBookBtnActionPerformed);
 
         issueBookBtn.setBackground(new java.awt.Color(0, 153, 0));
         issueBookBtn.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
@@ -267,53 +283,67 @@ public void showIssuedBooksInTable() {
 
         jLabel1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/newpackage/wlclogo.png1.png"))); // NOI18N
 
-        registerBtn.setBackground(new java.awt.Color(0, 153, 0));
-        registerBtn.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-        registerBtn.setForeground(new java.awt.Color(255, 255, 255));
-        registerBtn.setText("ADD MEMBER");
-        registerBtn.addActionListener(this::registerBtnActionPerformed);
+        addMemberBtn.setBackground(new java.awt.Color(0, 153, 0));
+        addMemberBtn.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        addMemberBtn.setForeground(new java.awt.Color(255, 255, 255));
+        addMemberBtn.setText("ADD MEMBER");
+        addMemberBtn.addActionListener(this::addMemberBtnActionPerformed);
+
+        addBookBtn.setBackground(new java.awt.Color(0, 153, 0));
+        addBookBtn.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        addBookBtn.setForeground(new java.awt.Color(255, 255, 255));
+        addBookBtn.setText("ADD BOOK");
+        addBookBtn.addActionListener(this::addBookBtnActionPerformed);
+
+        inventoryBtn.setBackground(new java.awt.Color(0, 153, 0));
+        inventoryBtn.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        inventoryBtn.setForeground(new java.awt.Color(255, 255, 255));
+        inventoryBtn.setText("INVENTORY");
+        inventoryBtn.addActionListener(this::inventoryBtnActionPerformed);
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
-                .addContainerGap(27, Short.MAX_VALUE)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                        .addComponent(registerBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(logoutBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(dashboardBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(bookBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(borrowBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(issueBookBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(issueReportBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(userBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 143, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(jLabel1))
-                .addGap(25, 25, 25))
+                .addContainerGap(25, Short.MAX_VALUE)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                    .addComponent(jLabel1)
+                    .addComponent(logoutBtn, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(dashboardBtn, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(borrowBookBtn, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(issueBookBtn, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(issueReportBtn, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(userBtn, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 143, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(addMemberBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(addBookBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(inventoryBtn, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(21, 21, 21))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
-                .addGap(39, 39, 39)
+                .addGap(19, 19, 19)
                 .addComponent(jLabel1)
                 .addGap(18, 18, 18)
                 .addComponent(dashboardBtn)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(registerBtn)
+                .addComponent(addMemberBtn)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(bookBtn)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(borrowBtn)
+                .addComponent(borrowBookBtn)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(issueBookBtn)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(issueReportBtn)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(addBookBtn)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(inventoryBtn)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(userBtn)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(logoutBtn)
-                .addContainerGap(22, Short.MAX_VALUE))
+                .addGap(66, 66, 66))
         );
 
         jLabel2.setFont(new java.awt.Font("STKaiti", 1, 24)); // NOI18N
@@ -338,14 +368,14 @@ public void showIssuedBooksInTable() {
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jLabel8)
-                .addContainerGap(552, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jLabel8)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(10, Short.MAX_VALUE))
         );
 
         jPanel10.setBackground(new java.awt.Color(204, 204, 204));
@@ -532,22 +562,6 @@ public void showIssuedBooksInTable() {
         jLabel3.setForeground(new java.awt.Color(255, 255, 255));
         jLabel3.setText("Total Member");
 
-        jButton1.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
-        jButton1.setText("View");
-        jButton1.addActionListener(this::jButton1ActionPerformed);
-
-        jButton2.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
-        jButton2.setText("View");
-        jButton2.addActionListener(this::jButton2ActionPerformed);
-
-        jButton3.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
-        jButton3.setText("View");
-        jButton3.addActionListener(this::jButton3ActionPerformed);
-
-        jButton4.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
-        jButton4.setText("View");
-        jButton4.addActionListener(this::jButton4ActionPerformed);
-
         jTableMember.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null},
@@ -654,11 +668,9 @@ public void showIssuedBooksInTable() {
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                     .addComponent(jPanel10, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jLabel3)
-                    .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 66, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jLabel3))
                 .addGap(30, 30, 30)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 66, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jPanel11, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel4)
                     .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 134, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -666,16 +678,14 @@ public void showIssuedBooksInTable() {
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 66, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(jPanel15, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(jLabel6))
                         .addGap(32, 32, 32)
                         .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jButton4, javax.swing.GroupLayout.PREFERRED_SIZE, 66, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(jLabel7)
                             .addComponent(jPanel17, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(24, Short.MAX_VALUE))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -693,27 +703,19 @@ public void showIssuedBooksInTable() {
                     .addComponent(jPanel11, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jPanel10, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jPanel17, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 19, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 19, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(jButton4, javax.swing.GroupLayout.PREFERRED_SIZE, 19, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 19, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addGap(31, 31, 31)
+                .addGap(29, 29, 29)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 202, Short.MAX_VALUE)
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                    .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
-                .addContainerGap(28, Short.MAX_VALUE))
+                    .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 202, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(73, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel4Layout.createSequentialGroup()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addContainerGap())
@@ -733,38 +735,35 @@ public void showIssuedBooksInTable() {
             .addGroup(jPanel5Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel5Layout.createSequentialGroup()
-                        .addGap(72, 72, 72)
-                        .addComponent(jLabel2)
-                        .addContainerGap(138, Short.MAX_VALUE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 7, Short.MAX_VALUE)
+                        .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addContainerGap())
                     .addGroup(jPanel5Layout.createSequentialGroup()
-                        .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addContainerGap())))
+                        .addGap(86, 86, 86)
+                        .addComponent(jLabel2)
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
         );
         jPanel5Layout.setVerticalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel5Layout.createSequentialGroup()
-                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addGroup(jPanel5Layout.createSequentialGroup()
-                        .addGap(14, 14, 14)
-                        .addComponent(jLabel2)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addGroup(jPanel5Layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addGap(14, 14, 14)
+                .addComponent(jLabel2)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addGroup(jPanel5Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                .addContainerGap())
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 0, Short.MAX_VALUE))
+            .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -776,20 +775,22 @@ public void showIssuedBooksInTable() {
     }// </editor-fold>//GEN-END:initComponents
 
     private void dashboardBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dashboardBtnActionPerformed
-        
+        frontpage dashboard = new frontpage(frontpage.userRole); 
+        dashboard.setVisible(true);
+        this.dispose();
     }//GEN-LAST:event_dashboardBtnActionPerformed
 
-    private void bookBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bookBtnActionPerformed
+    private void addBookBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addBookBtnActionPerformed
         this.dispose();
-        book_management_copy w = new book_management_copy();
+        book_management w = new book_management();
         w.setVisible(true);
-    }//GEN-LAST:event_bookBtnActionPerformed
+    }//GEN-LAST:event_addBookBtnActionPerformed
 
-    private void borrowBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_borrowBtnActionPerformed
+    private void borrowBookBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_borrowBookBtnActionPerformed
         this.dispose();
-        borrow_management_123 w = new borrow_management_123();
+        borrow_management w = new borrow_management();
         w.setVisible(true);
-    }//GEN-LAST:event_borrowBtnActionPerformed
+    }//GEN-LAST:event_borrowBookBtnActionPerformed
 
     private void issueBookBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_issueBookBtnActionPerformed
         this.dispose();
@@ -799,7 +800,7 @@ public void showIssuedBooksInTable() {
 
     private void issueReportBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_issueReportBtnActionPerformed
         this.dispose(); 
-        issuereport_management1 w = new issuereport_management1();
+        issuereport_management w = new issuereport_management();
         w.setVisible(true);
     }//GEN-LAST:event_issueReportBtnActionPerformed
 
@@ -818,38 +819,21 @@ public void showIssuedBooksInTable() {
     
     }//GEN-LAST:event_logoutBtnActionPerformed
 
-    private void userBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_userBtnActionPerformed
-
-    if ("Admin".equals(userRole)) {
-
-        new user_management().setVisible(true); 
-        this.dispose();
-    } else {
-        userBtn.setVisible(false);
-
-        javax.swing.JOptionPane.showMessageDialog(this, "Access Denied.");
-    }
-    this.revalidate();
-
-this.repaint();
-    
-    }//GEN-LAST:event_userBtnActionPerformed
-
     private void txtTotalMemberActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtTotalMemberActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_txtTotalMemberActionPerformed
 
     private void txtTotalBookActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtTotalBookActionPerformed
         //this.dispose();
-        //book_management_copy w = new book_management_copy();
+        //book_management_copy w = new book_management();
         //w.setVisible(true);
     }//GEN-LAST:event_txtTotalBookActionPerformed
 
-    private void registerBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_registerBtnActionPerformed
+    private void addMemberBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addMemberBtnActionPerformed
         this.dispose();
         register_member_try w = new register_member_try();
         w.setVisible(true);
-    }//GEN-LAST:event_registerBtnActionPerformed
+    }//GEN-LAST:event_addMemberBtnActionPerformed
 
     private void txtTotalBorrowedActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtTotalBorrowedActionPerformed
         // TODO add your handling code here:
@@ -859,29 +843,28 @@ this.repaint();
         // TODO add your handling code here:
     }//GEN-LAST:event_txtTotalOverdueActionPerformed
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+    private void inventoryBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inventoryBtnActionPerformed
         this.dispose();
-        register_member_try w = new register_member_try();
+        INVENTORY w = new INVENTORY();
         w.setVisible(true);
-    }//GEN-LAST:event_jButton1ActionPerformed
+    }//GEN-LAST:event_inventoryBtnActionPerformed
 
-    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-        this.dispose();
-        book_management_copy w = new book_management_copy();
-        w.setVisible(true);
-    }//GEN-LAST:event_jButton2ActionPerformed
+    private void userBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_userBtnActionPerformed
 
-    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
-        this.dispose();
-        issuebook_management w = new issuebook_management();
-        w.setVisible(true);
-    }//GEN-LAST:event_jButton3ActionPerformed
+        if ("Admin".equals(userRole)) {
 
-    private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
-        this.dispose();
-        issuebook_management w = new issuebook_management();
-        w.setVisible(true);
-    }//GEN-LAST:event_jButton4ActionPerformed
+            new user_management().setVisible(true);
+            this.dispose();
+        } else {
+            userBtn.setVisible(false);
+
+            javax.swing.JOptionPane.showMessageDialog(this, "Access Denied.");
+        }
+        this.revalidate();
+
+        this.repaint();
+
+    }//GEN-LAST:event_userBtnActionPerformed
 
     /**
      * @param args the command line arguments
@@ -910,16 +893,14 @@ this.repaint();
     
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton bookBtn;
-    private javax.swing.JButton borrowBtn;
+    private javax.swing.JButton addBookBtn;
+    private javax.swing.JButton addMemberBtn;
+    private javax.swing.JButton borrowBookBtn;
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.JButton dashboardBtn;
+    private javax.swing.JButton inventoryBtn;
     private javax.swing.JButton issueBookBtn;
     private javax.swing.JButton issueReportBtn;
-    private javax.swing.JButton jButton1;
-    private javax.swing.JButton jButton2;
-    private javax.swing.JButton jButton3;
-    private javax.swing.JButton jButton4;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
@@ -947,7 +928,6 @@ this.repaint();
     private javax.swing.JTable jTableBook;
     private javax.swing.JTable jTableMember;
     private javax.swing.JButton logoutBtn;
-    private javax.swing.JButton registerBtn;
     private javax.swing.JTextField txtTotalBook;
     private javax.swing.JTextField txtTotalBorrowed;
     private javax.swing.JTextField txtTotalMember;
@@ -958,7 +938,7 @@ this.repaint();
     
     public void displayTotalMembers() {
         try {
-        Connection con = MySQLConnect.getConnection(); // Use your helper class!
+        Connection con = MySQLConnect.getConnection(); 
         String sql = "SELECT COUNT(*) FROM member_records";
         PreparedStatement pst = con.prepareStatement(sql);
         ResultSet rs = pst.executeQuery();
@@ -972,7 +952,7 @@ this.repaint();
     }
 public void displayTotalBooks() {
         try {
-        Connection conn = MySQLConnect.getConnection(); // Use your helper class!
+        Connection conn = MySQLConnect.getConnection(); 
         String sql = "SELECT COUNT(*) FROM books";
         PreparedStatement pst = conn.prepareStatement(sql);
         ResultSet rs = pst.executeQuery();
@@ -989,7 +969,6 @@ public void displayTotalOverdue() {
     try {
         Connection conn = MySQLConnect.getConnection();
         
-        // This targets any book that isn't returned and is past the due date
         String sql = "SELECT COUNT(*) FROM issued_books WHERE status != 'Returned' AND due_date < NOW()";
         
         PreparedStatement pst = conn.prepareStatement(sql);

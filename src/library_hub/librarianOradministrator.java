@@ -36,12 +36,12 @@ public class librarianOradministrator extends javax.swing.JFrame {
 
         adminBtn.setBackground(new java.awt.Color(0, 153, 255));
         adminBtn.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
-        adminBtn.setText("Admin Login");
+        adminBtn.setText("Librarian");
         adminBtn.addActionListener(this::adminBtnActionPerformed);
 
         librarianBtn.setBackground(new java.awt.Color(102, 255, 102));
         librarianBtn.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
-        librarianBtn.setText("Librarian Login");
+        librarianBtn.setText("Library Staff");
         librarianBtn.addActionListener(this::librarianBtnActionPerformed);
 
         jPanel1.setBackground(new java.awt.Color(255, 102, 102));
@@ -95,13 +95,13 @@ public class librarianOradministrator extends javax.swing.JFrame {
 
     private void adminBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_adminBtnActionPerformed
         this.dispose();
-        login1 w = new login1();
+        librarian_login w = new librarian_login();
         w.setVisible(true);
     }//GEN-LAST:event_adminBtnActionPerformed
 
     private void librarianBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_librarianBtnActionPerformed
         this.dispose();
-        librarian_login_1 w = new librarian_login_1();
+        librarystaff_login w = new librarystaff_login();
         w.setVisible(true);
     }//GEN-LAST:event_librarianBtnActionPerformed
 

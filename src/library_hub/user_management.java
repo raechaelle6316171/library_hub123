@@ -225,7 +225,7 @@ public class user_management extends javax.swing.JFrame {
         jLabel6.setForeground(new java.awt.Color(255, 255, 255));
         jLabel6.setText("USER TYPE");
 
-        cmbUserType.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "~Select User Type~", "Admin", "Librarian" }));
+        cmbUserType.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "~Select User Type~", "Librarian", "Library Staff" }));
         cmbUserType.addActionListener(this::cmbUserTypeActionPerformed);
 
         closeBtn.setText("CANCEL");
@@ -510,78 +510,74 @@ public class user_management extends javax.swing.JFrame {
 
     private void saveBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveBtnActionPerformed
         String fullName = txtFullName.getText().trim();
-    String userName = txtUsername.getText().trim();
-    String password = txtPassword.getText();
-    String confirmPass = txtConfirmPassword.getText();
-    String userType = cmbUserType.getSelectedItem().toString();
+        String userName = txtUsername.getText().trim();
+        String password = txtPassword.getText();
+        String confirmPass = txtConfirmPassword.getText();
+        String userType = cmbUserType.getSelectedItem().toString();
 
-    // 1. Basic Validation for empty fields
-    if (fullName.isEmpty() || userName.isEmpty() || password.isEmpty()) {
-        JOptionPane.showMessageDialog(this, "Please fill in all fields before saving!");
-        return; 
-    }
-    
-    if (!password.equals(confirmPass)) {
-        JOptionPane.showMessageDialog(this, "Passwords do not match!");
-        txtPassword.requestFocus();
-        return; 
-    }
-    
-    // INSERTED BLOCK: Check for valid selection first
-    if (cmbUserType.getSelectedIndex() == 0) {
-        JOptionPane.showMessageDialog(this, "Select a User Type!");
-        cmbUserType.requestFocus();
-        return;
-    }
-
-    try {
-        Connection conn = MySQLConnect.getConnection();
-
-        // 2. Check if EITHER Username OR Full Name already exists
-        String checkSql = "SELECT * FROM user WHERE userName = ? OR fullName = ?";
-        PreparedStatement checkPst = conn.prepareStatement(checkSql);
-        checkPst.setString(1, userName);
-        checkPst.setString(2, fullName);
-        ResultSet rs = checkPst.executeQuery();
-
-        if (rs.next()) {
-            String existingUser = rs.getString("userName");
-            String existingName = rs.getString("fullName");
-
-            if (existingUser.equalsIgnoreCase(userName)) {
-                JOptionPane.showMessageDialog(this, "The username '" + userName + "' is already taken!");
-                txtUsername.requestFocus();
-            } else if (existingName.equalsIgnoreCase(fullName)) {
-                JOptionPane.showMessageDialog(this, "The full name '" + fullName + "' is already registered!");
-                txtFullName.requestFocus();
-            }
+        if (fullName.isEmpty() || userName.isEmpty() || password.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please fill in all fields before saving!");
             return; 
         }
 
-        // 3. Perform the INSERT
-        String sql = "INSERT INTO user (fullName, userName, password, category) VALUES (?, ?, ?, ?)";
-        PreparedStatement pst = conn.prepareStatement(sql);
-
-        pst.setString(1, fullName);
-        pst.setString(2, userName);
-        pst.setString(3, password);
-        pst.setString(4, userType);
-
-        int result = pst.executeUpdate();
-
-        if (result > 0) {
-            JOptionPane.showMessageDialog(this, "User Created Successfully!");
-            populateTable(); 
-            clearFields();       
+        if (!password.equals(confirmPass)) {
+            JOptionPane.showMessageDialog(this, "Passwords do not match!");
+            txtPassword.requestFocus();
+            return; 
         }
 
-    } catch (SQLException e) {
-        JOptionPane.showMessageDialog(this, "Database Error: " + e.getMessage());
-    }
+        if (cmbUserType.getSelectedIndex() == 0) {
+            JOptionPane.showMessageDialog(this, "Select a User Type!");
+            cmbUserType.requestFocus();
+            return;
+        }
+
+        try {
+            Connection conn = MySQLConnect.getConnection();
+
+            String checkSql = "SELECT * FROM user WHERE userName = ? OR fullName = ?";
+            PreparedStatement checkPst = conn.prepareStatement(checkSql);
+            checkPst.setString(1, userName);
+            checkPst.setString(2, fullName);
+            ResultSet rs = checkPst.executeQuery();
+
+            if (rs.next()) {
+                String existingUser = rs.getString("userName");
+                String existingName = rs.getString("fullName");
+
+                if (existingUser.equalsIgnoreCase(userName)) {
+                    JOptionPane.showMessageDialog(this, "The username '" + userName + "' is already taken!");
+                    txtUsername.requestFocus();
+                } else if (existingName.equalsIgnoreCase(fullName)) {
+                    JOptionPane.showMessageDialog(this, "The full name '" + fullName + "' is already registered!");
+                    txtFullName.requestFocus();
+                }
+                return; 
+            }
+
+            // 3. Perform the INSERT
+            String sql = "INSERT INTO user (fullName, userName, password, category) VALUES (?, ?, ?, ?)";
+            PreparedStatement pst = conn.prepareStatement(sql);
+
+            pst.setString(1, fullName);
+            pst.setString(2, userName);
+            pst.setString(3, password);
+            pst.setString(4, userType);
+
+            int result = pst.executeUpdate();
+
+            if (result > 0) {
+                JOptionPane.showMessageDialog(this, "User Created Successfully!");
+                populateTable(); 
+                clearFields();       
+            }
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Database Error: " + e.getMessage());
+        }
     }//GEN-LAST:event_saveBtnActionPerformed
 
     private void deleteBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteBtnActionPerformed
-
         if (userId == -1) {
             JOptionPane.showMessageDialog(this, "Please select a user from the table first!");
             return;
@@ -613,82 +609,77 @@ public class user_management extends javax.swing.JFrame {
 
     private void updateBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_updateBtnActionPerformed
         String fullName = txtFullName.getText().trim();
-    String userName = txtUsername.getText().trim();
-    String password = txtPassword.getText();
-    String confirmPass = txtConfirmPassword.getText();
-    String userType = cmbUserType.getSelectedItem().toString();
+        String userName = txtUsername.getText().trim();
+        String password = txtPassword.getText();
+        String confirmPass = txtConfirmPassword.getText();
+        String userType = cmbUserType.getSelectedItem().toString();
 
-    // 1. Check if a user is selected from the table
-    if (userId == -1) {
-        JOptionPane.showMessageDialog(this, "Please select a user from the table first!");
-        return;
-    }
+        if (userId == -1) {
+            JOptionPane.showMessageDialog(this, "Please select a user from the table first!");
+            return;
+        }
 
-    // 2. Basic Validation for empty fields
-    if (fullName.isEmpty() || userName.isEmpty() || password.isEmpty()) {
-        JOptionPane.showMessageDialog(this, "Please fill in all fields before updating!");
-        return;
-    }
+        if (fullName.isEmpty() || userName.isEmpty() || password.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please fill in all fields before updating!");
+            return;
+        }
 
-    if (!password.equals(confirmPass)) {
-        JOptionPane.showMessageDialog(this, "Passwords do not match! Update cancelled.");
-        txtPassword.requestFocus();
-        return; 
-    }
-
-    // 3. User Type Validation - Matches your Save logic
-    if (cmbUserType.getSelectedIndex() == 0) {
-        JOptionPane.showMessageDialog(this, "Select a User Type!");
-        cmbUserType.requestFocus();
-        return; // Stops execution so "~Select User Type~" isn't saved
-    }
-
-    try {
-        Connection conn = MySQLConnect.getConnection();
-
-        // 4. Check for duplicates excluding the CURRENT userId
-        String checkSql = "SELECT * FROM user WHERE (userName = ? OR fullName = ?) AND id != ?";
-        PreparedStatement checkPst = conn.prepareStatement(checkSql);
-        checkPst.setString(1, userName);
-        checkPst.setString(2, fullName);
-        checkPst.setInt(3, userId);
-        ResultSet rs = checkPst.executeQuery();
-
-        if (rs.next()) {
-            String existingUser = rs.getString("userName");
-            String existingName = rs.getString("fullName");
-
-            if (existingUser.equalsIgnoreCase(userName)) {
-                JOptionPane.showMessageDialog(this, "The username '" + userName + "' is already taken by another user!");
-                txtUsername.requestFocus();
-            } else if (existingName.equalsIgnoreCase(fullName)) {
-                JOptionPane.showMessageDialog(this, "The full name '" + fullName + "' is already registered to another user!");
-                txtFullName.requestFocus();
-            }
+        if (!password.equals(confirmPass)) {
+            JOptionPane.showMessageDialog(this, "Passwords do not match! Update cancelled.");
+            txtPassword.requestFocus();
             return; 
         }
 
-        // 5. Perform the UPDATE if no duplicates found
-        String sql = "UPDATE user SET fullName=?, userName=?, password=?, category=? WHERE id=?";
-        PreparedStatement pst = conn.prepareStatement(sql);
-
-        pst.setString(1, fullName);   
-        pst.setString(2, userName);   
-        pst.setString(3, password); 
-        pst.setString(4, userType); 
-        pst.setInt(5, userId);                     
-
-        int updated = pst.executeUpdate();
-
-        if (updated > 0) {
-            JOptionPane.showMessageDialog(this, "User updated successfully!");
-            populateTable(); 
-            clearFields();   
+        if (cmbUserType.getSelectedIndex() == 0) {
+            JOptionPane.showMessageDialog(this, "Select a User Type!");
+            cmbUserType.requestFocus();
+            return; 
         }
 
-    } catch (SQLException e) {
-        JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
-    }
+        try {
+            Connection conn = MySQLConnect.getConnection();
+
+            String checkSql = "SELECT * FROM user WHERE (userName = ? OR fullName = ?) AND id != ?";
+            PreparedStatement checkPst = conn.prepareStatement(checkSql);
+            checkPst.setString(1, userName);
+            checkPst.setString(2, fullName);
+            checkPst.setInt(3, userId);
+            ResultSet rs = checkPst.executeQuery();
+
+            if (rs.next()) {
+                String existingUser = rs.getString("userName");
+                String existingName = rs.getString("fullName");
+
+                if (existingUser.equalsIgnoreCase(userName)) {
+                    JOptionPane.showMessageDialog(this, "The username '" + userName + "' is already taken by another user!");
+                    txtUsername.requestFocus();
+                } else if (existingName.equalsIgnoreCase(fullName)) {
+                    JOptionPane.showMessageDialog(this, "The full name '" + fullName + "' is already registered to another user!");
+                    txtFullName.requestFocus();
+                }
+                return; 
+            }
+
+            String sql = "UPDATE user SET fullName=?, userName=?, password=?, category=? WHERE id=?";
+            PreparedStatement pst = conn.prepareStatement(sql);
+
+            pst.setString(1, fullName);   
+            pst.setString(2, userName);   
+            pst.setString(3, password); 
+            pst.setString(4, userType); 
+            pst.setInt(5, userId);                     
+
+            int updated = pst.executeUpdate();
+
+            if (updated > 0) {
+                JOptionPane.showMessageDialog(this, "User updated successfully!");
+                populateTable(); 
+                clearFields();   
+            }
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
+        }
     }//GEN-LAST:event_updateBtnActionPerformed
 
     private void addNewBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addNewBtnActionPerformed

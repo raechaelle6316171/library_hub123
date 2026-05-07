@@ -9,34 +9,26 @@ import javax.swing.RowFilter;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 
-public class book_management_copy extends javax.swing.JFrame {
+public class book_management extends javax.swing.JFrame {
     
     
-    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(book_management_copy.class.getName());
-    private String originalAcqNo = ""; // Add this at the top of the file
+    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(book_management.class.getName());
+    private String originalAcqNo = ""; 
     private int id;
     private String check;
-    public book_management_copy() {
+    public book_management() {
     initComponents();
 
-    // 1. Sync and Fill all dropdowns first
     fillAllCategoryComboBoxes();
 
-    // 2. Initial Data Load
     populateTable();
 
-    // 3. Set the default filter state
-    // We set status to "Available" so only available books show on startup
     cmbStatusBook.setSelectedItem("Available");
     
-    // Updated to match your new category label
     cmbCategoryTbl.setSelectedItem("~Select Category~");
 
-    // 4. Force the filter to run immediately
-    // This applies the "Available" filter right when the window opens
     filterTable();
 
-    // 5. Initial UI State
     lockFields();
     
     addNewBtn.setEnabled(true);
@@ -45,7 +37,6 @@ public class book_management_copy extends javax.swing.JFrame {
     deleteBtn.setEnabled(false);
     saveBtn.setEnabled(false);
 
-    // 6. Set Date Mask
     try {
         javax.swing.text.MaskFormatter dateMask = new javax.swing.text.MaskFormatter("##/##/####");
         dateMask.setPlaceholderCharacter('_');
@@ -56,30 +47,26 @@ public class book_management_copy extends javax.swing.JFrame {
 }
     
     private boolean isValidDate(String dateStr) {
-    // Check if the mask is completely filled
-    //dateStr = dateStr.trim();
+
     if (dateStr.contains("_") || dateStr.length() < 10) return false;
 
     try {
-        // STRICT mode prevents impossible dates like Feb 30
+
         java.time.format.DateTimeFormatter dtf = 
         java.time.format.DateTimeFormatter.ofPattern("MM/dd/uuuu")
         .withResolverStyle(java.time.format.ResolverStyle.STRICT);
             
         java.time.LocalDate inputDate = java.time.LocalDate.parse(dateStr, dtf);
-        java.time.LocalDate today = java.time.LocalDate.now(); // This is April 25, 2026
+        java.time.LocalDate today = java.time.LocalDate.now(); 
 
-        // RULE: The date must be today or in the past
-        // If the date is after today (e.g., May 2026), it returns false
         if (inputDate.isAfter(today)) {
             return false;
         }
 
-        // Sets a reasonable historical limit (e.g., year 1450)
         return inputDate.getYear() >= 1450;
         
     } catch (java.time.format.DateTimeParseException e) {
-        return false; // Blocks invalid calendar dates
+        return false; 
     } catch (Exception e) {
         return false;
     }
@@ -92,18 +79,16 @@ public class book_management_copy extends javax.swing.JFrame {
         PreparedStatement pst = conn.prepareStatement(sql);
         ResultSet rs = pst.executeQuery();
 
-        // Must clear BOTH to keep them in sync
-        cmbCategory.removeAllItems();    // The dropdown on the left side
-        cmbCategoryTbl.removeAllItems(); // The filter dropdown above the table
+        cmbCategory.removeAllItems();    
+        cmbCategoryTbl.removeAllItems(); 
 
-        // Setting both to the same default text
         cmbCategory.addItem("~Select Category~");
         cmbCategoryTbl.addItem("~Select Category~"); 
 
         while (rs.next()) {
             String catName = rs.getString("category_name");
             cmbCategory.addItem(catName);
-            cmbCategoryTbl.addItem(catName); // Adds it to the filter dropdown
+            cmbCategoryTbl.addItem(catName); 
         }
     } catch (SQLException e) {
         System.out.println("Error: " + e.getMessage());
@@ -111,40 +96,33 @@ public class book_management_copy extends javax.swing.JFrame {
 }
     
     private void filterTable() {
-    // 1. GUARD: Prevent NullPointerException during initialization
+        
     if (cmbCategoryTbl.getSelectedItem() == null || cmbStatusBook.getSelectedItem() == null) {
         return; 
     }
 
-    // 2. Get Selections
     String selectedCategory = cmbCategoryTbl.getSelectedItem().toString();
     String selectedStatus = cmbStatusBook.getSelectedItem().toString();
     String searchText = txtSearch.getText().toLowerCase().trim();
 
-    // 3. Setup Sorter
     DefaultTableModel model = (DefaultTableModel) jTable2.getModel();
     TableRowSorter<DefaultTableModel> trs = new TableRowSorter<>(model);
     jTable2.setRowSorter(trs);
 
     java.util.List<RowFilter<Object, Object>> filters = new java.util.ArrayList<>();
 
-    // A. Category Filter (Column index 5)
     if (!selectedCategory.equals("~Select Category~")) {
         filters.add(RowFilter.regexFilter("(?i)" + selectedCategory, 5));
     }
 
-    // B. Status Filter (Column index 6)
-    // This handles your requirement to toggle between Available and Unavailable
     if (!selectedStatus.equals("All")) {
         filters.add(RowFilter.regexFilter("(?i)^" + selectedStatus + "$", 6));
     }
 
-    // C. Search Text Filter
     if (!searchText.isEmpty()) {
         filters.add(RowFilter.regexFilter("(?i)" + searchText));
     }
 
-    // 4. Apply combined filters
     if (filters.isEmpty()) {
         trs.setRowFilter(null);
     } else {
@@ -155,10 +133,9 @@ public class book_management_copy extends javax.swing.JFrame {
 }
 
     public void fillCategoryCombo() {
-    // 1. Clear the old "Item 1, Item 2" or empty space
+        
     cmbCategory.removeAllItems();
     
-    // 2. Add a default hint
     cmbCategory.addItem("~Select Category~");
     
     try {
@@ -168,7 +145,7 @@ public class book_management_copy extends javax.swing.JFrame {
         ResultSet rs = pst.executeQuery();
         
         while(rs.next()) {
-            // 3. Add each name from your database into the box
+      
             cmbCategory.addItem(rs.getString("category_name"));
         }
     } catch (SQLException e) {
@@ -220,15 +197,13 @@ public class book_management_copy extends javax.swing.JFrame {
     try {
         Connection conn = MySQLConnect.getConnection();
         
-        // 1. Get the current status from the ComboBox
         String selectedStatus = cmbStatusBook.getSelectedItem().toString();
         String sql;
 
-        // 2. Build the SQL based on whether "All" is selected or a specific status
         if (selectedStatus.equals("All")) {
             sql = "SELECT * FROM books WHERE (acquisition_no LIKE ? OR title LIKE ? OR author LIKE ?)";
         } else {
-            // This ensures it matches the Search text AND the Status
+           
             sql = "SELECT * FROM books WHERE (acquisition_no LIKE ? OR title LIKE ? OR author LIKE ?) AND status = ?";
         }
 
@@ -239,7 +214,6 @@ public class book_management_copy extends javax.swing.JFrame {
         pst.setString(2, searchData);
         pst.setString(3, searchData);
 
-        // 3. Only set the 4th parameter if we are filtering by a specific status
         if (!selectedStatus.equals("All")) {
             pst.setString(4, selectedStatus);
         }
@@ -271,7 +245,7 @@ public class book_management_copy extends javax.swing.JFrame {
     public void populateTable() {
         try {
             Connection conn = MySQLConnect.getConnection();
-            String query = "SELECT * FROM books"; // Removed hardcoded 'Available' to allow filtering
+            String query = "SELECT * FROM books"; 
             Statement st = conn.createStatement();
             ResultSet rs = st.executeQuery(query);
 
@@ -290,7 +264,7 @@ public class book_management_copy extends javax.swing.JFrame {
                 String formattedDate = "";
 
                 if (dbDate != null) {
-                    // This matches your ##/##/#### mask exactly!
+                   
                     formattedDate = new java.text.SimpleDateFormat("MM/dd/yyyy").format(dbDate);
                 }
                 colData.add(formattedDate);
@@ -302,7 +276,6 @@ public class book_management_copy extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(null, e);
         }
         
-        // Hide ID Column
         jTable2.getColumnModel().getColumn(0).setMinWidth(0);
         jTable2.getColumnModel().getColumn(0).setMaxWidth(0);
         jTable2.getColumnModel().getColumn(0).setWidth(0);
@@ -343,9 +316,9 @@ public class book_management_copy extends javax.swing.JFrame {
         txtSearch = new javax.swing.JTextField();
         jLabel7 = new javax.swing.JLabel();
         jPanel6 = new javax.swing.JPanel();
-        jLabel1 = new javax.swing.JLabel();
         jPanel5 = new javax.swing.JPanel();
         txtTotalCount = new javax.swing.JTextField();
+        jLabel1 = new javax.swing.JLabel();
         jScrollPane2 = new javax.swing.JScrollPane();
         jTable2 = new javax.swing.JTable();
         cancelBtn1 = new javax.swing.JButton();
@@ -578,7 +551,7 @@ public class book_management_copy extends javax.swing.JFrame {
                     .addComponent(saveBtn))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(closeBtn)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(15, Short.MAX_VALUE))
         );
 
         cmbCategory.getAccessibleContext().setAccessibleName("");
@@ -599,9 +572,6 @@ public class book_management_copy extends javax.swing.JFrame {
         jPanel6.setBackground(new java.awt.Color(255, 102, 0));
         jPanel6.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
 
-        jLabel1.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
-        jLabel1.setText("TOTAL BOOK No");
-
         jPanel5.setBackground(new java.awt.Color(204, 204, 204));
         jPanel5.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
 
@@ -621,35 +591,34 @@ public class book_management_copy extends javax.swing.JFrame {
         txtTotalCount.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
         txtTotalCount.addActionListener(this::txtTotalCountActionPerformed);
 
+        jLabel1.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        jLabel1.setText("TOTAL BOOK No");
+
         javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
         jPanel6.setLayout(jPanel6Layout);
         jPanel6Layout.setHorizontalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel6Layout.createSequentialGroup()
+                .addGap(8, 8, 8)
+                .addComponent(txtTotalCount, javax.swing.GroupLayout.PREFERRED_SIZE, 96, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jPanel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addGroup(jPanel6Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel6Layout.createSequentialGroup()
-                        .addComponent(txtTotalCount, javax.swing.GroupLayout.PREFERRED_SIZE, 96, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
-                    .addGroup(jPanel6Layout.createSequentialGroup()
-                        .addComponent(jLabel1)
-                        .addGap(0, 0, Short.MAX_VALUE))))
+                .addComponent(jLabel1)
+                .addGap(0, 0, Short.MAX_VALUE))
         );
         jPanel6Layout.setVerticalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel6Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jLabel1)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel6Layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addGroup(jPanel6Layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(jPanel5, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel6Layout.createSequentialGroup()
                         .addComponent(txtTotalCount, javax.swing.GroupLayout.PREFERRED_SIZE, 44, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                        .addContainerGap())))
         );
 
         jTable2.setModel(new javax.swing.table.DefaultTableModel(
@@ -724,57 +693,60 @@ public class book_management_copy extends javax.swing.JFrame {
         closeBtnn.setLayout(closeBtnnLayout);
         closeBtnnLayout.setHorizontalGroup(
             closeBtnnLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, closeBtnnLayout.createSequentialGroup()
-                .addContainerGap(21, Short.MAX_VALUE)
-                .addComponent(jLabel7)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(closeBtnnLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+            .addGroup(closeBtnnLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(closeBtnnLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(closeBtnnLayout.createSequentialGroup()
-                        .addComponent(jLabel13)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 126, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(close)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(STATUS1)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(cmbCategoryTbl, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(STATUS)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(cmbStatusBook, javax.swing.GroupLayout.PREFERRED_SIZE, 108, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGroup(closeBtnnLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(closeBtnnLayout.createSequentialGroup()
+                                .addComponent(jLabel13)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(close)
+                                .addGap(12, 12, 12)
+                                .addComponent(STATUS1)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(cmbCategoryTbl, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(STATUS)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(cmbStatusBook, javax.swing.GroupLayout.PREFERRED_SIZE, 108, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED))
+                            .addGroup(closeBtnnLayout.createSequentialGroup()
+                                .addComponent(jLabel7)
+                                .addGap(0, 0, Short.MAX_VALUE)))
+                        .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, 114, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(19, 19, 19))
                     .addGroup(closeBtnnLayout.createSequentialGroup()
                         .addGroup(closeBtnnLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                             .addComponent(cancelBtn1, javax.swing.GroupLayout.PREFERRED_SIZE, 195, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 793, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(3, 3, 3)))
-                .addGap(31, 31, 31))
+                        .addGap(0, 11, Short.MAX_VALUE))))
         );
         closeBtnnLayout.setVerticalGroup(
             closeBtnnLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(closeBtnnLayout.createSequentialGroup()
-                .addContainerGap(19, Short.MAX_VALUE)
+                .addContainerGap(15, Short.MAX_VALUE)
                 .addComponent(jLabel7)
-                .addGap(455, 455, 455))
-            .addGroup(closeBtnnLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(closeBtnnLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(closeBtnnLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jLabel13)
-                        .addComponent(STATUS)
-                        .addComponent(cmbStatusBook, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(close)
-                        .addComponent(STATUS1)
-                        .addComponent(cmbCategoryTbl, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(closeBtnnLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, closeBtnnLayout.createSequentialGroup()
+                        .addGap(40, 40, 40)
+                        .addGroup(closeBtnnLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel13)
+                            .addComponent(STATUS)
+                            .addComponent(cmbStatusBook, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(close)
+                            .addComponent(STATUS1)
+                            .addComponent(cmbCategoryTbl, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addComponent(jPanel6, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 250, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(47, 47, 47)
+                .addGap(40, 40, 40)
                 .addComponent(cancelBtn1, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(36, 36, 36))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -786,8 +758,7 @@ public class book_management_copy extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(closeBtnn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, 864, Short.MAX_VALUE))
-                .addContainerGap())
+                    .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, 820, Short.MAX_VALUE)))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -795,7 +766,7 @@ public class book_management_copy extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(closeBtnn, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(closeBtnn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         pack();
@@ -881,33 +852,28 @@ public class book_management_copy extends javax.swing.JFrame {
         
         addNewBtn.setEnabled(false);
 
-        // Enable the category selection and management buttons
         cmbCategory.setEnabled(true);
         btnAddCategory.setEnabled(true);    // Unlock the '+'
         btnDeleteCategory.setEnabled(true); // Unlock the '-'
 
-        // Enable status and save
         cmbStatus.setEnabled(true);
         saveBtn.setEnabled(true);
 
-        // Set focus to the first field
         txtAcq.requestFocus();
     }//GEN-LAST:event_addNewBtnActionPerformed
 
     private void updateBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_updateBtnActionPerformed
-        // 1. Collect and Trim Data
+       
     String newAcqNo = txtAcq.getText().trim();
     String title = txtTitle.getText().trim();
     String author = txtAuthor.getText().trim();
     String dateInput = txtDate.getText(); 
     
-    // Null safety for ComboBox selections
     Object selectedCatObj = cmbCategory.getSelectedItem();
     String category = (selectedCatObj != null) ? selectedCatObj.toString() : "";
     
     Object selectedStatusObj = cmbStatus.getSelectedItem();
 
-    // 2. Validation Checks
     if (newAcqNo.isEmpty()) {
         JOptionPane.showMessageDialog(this, "Select a book from the table first!");
         return;
@@ -922,7 +888,7 @@ public class book_management_copy extends javax.swing.JFrame {
     if (!isValidDate(dateInput)) {
     JOptionPane.showMessageDialog(this, 
         "Invalid Date Published!\n" +
-        "- Date must exist (No Feb 30).\n" +
+        "- Date must exist.\n" +
         "- Date cannot be in the future.", 
         "Date Error", JOptionPane.ERROR_MESSAGE);
     txtDate.requestFocus();
@@ -935,12 +901,10 @@ public class book_management_copy extends javax.swing.JFrame {
         return;
     }
 
-    // 3. Handle Anonymous Author
     if (author.isEmpty()) {
         author = "Anonymous";
     }
 
-    // 4. Database Operations
     try {
         Connection conn = MySQLConnect.getConnection();
         
@@ -983,7 +947,7 @@ public class book_management_copy extends javax.swing.JFrame {
         if (updatedRows > 0) {
             JOptionPane.showMessageDialog(this, "Book Updated Successfully!");
             originalAcqNo = newAcqNo;
-            // 5. Refresh UI, Filters, and Reset
+            
             fillAllCategoryComboBoxes(); 
             populateTable(); 
             setDefault(); 
@@ -991,7 +955,7 @@ public class book_management_copy extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, "Error: Book with Acquisition No " + newAcqNo + " not found.");
         }
     } catch (java.text.ParseException e) {
-        // This catch block was missing!
+        
         JOptionPane.showMessageDialog(this, "Date Error: Please use the format MM/dd/yyyy");
 
     } catch (SQLException e) {
@@ -1036,97 +1000,90 @@ public class book_management_copy extends javax.swing.JFrame {
     }//GEN-LAST:event_deleteBtnActionPerformed
 
     private void saveBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveBtnActionPerformed
-        // 1. Collect and Trim Data
-    String acqNo = txtAcq.getText().trim();
-    String title = txtTitle.getText().trim();
-    String author = txtAuthor.getText().trim();
-    String dateInput = txtDate.getText().trim(); // Contains slashes from mask
-    
-    // Null safety for ComboBox selections
-    Object selectedCatObj = cmbCategory.getSelectedItem();
-    String category = (selectedCatObj != null) ? selectedCatObj.toString() : "";
-    Object selectedStatusObj = cmbStatus.getSelectedItem();
+        String acqNo = txtAcq.getText().trim();
+        String title = txtTitle.getText().trim();
+        String author = txtAuthor.getText().trim();
+        String dateInput = txtDate.getText().trim(); 
 
-    // 2. Validation Checks
-    if (acqNo.isEmpty()) {
-        JOptionPane.showMessageDialog(this, "Acquisition No is required!");
-        txtAcq.requestFocus();
-        return;
-    }
-    
-    if (title.isEmpty()) {
-        JOptionPane.showMessageDialog(this, "Book Title is required!");
-        txtTitle.requestFocus();
-        return;
-    }
+        // Null safety for ComboBox selections
+        Object selectedCatObj = cmbCategory.getSelectedItem();
+        String category = (selectedCatObj != null) ? selectedCatObj.toString() : "";
+        Object selectedStatusObj = cmbStatus.getSelectedItem();
 
-    if (!isValidDate(dateInput)) {
-    JOptionPane.showMessageDialog(this, 
-        "Invalid Date Published!\n" +
-        "- Date must exist.\n" +
-        "- Date cannot be in the future.", 
-        "Date Error", JOptionPane.ERROR_MESSAGE);
-    txtDate.requestFocus();
-    return;
-}
-    String mysqlDate;
-    try {
-        java.time.format.DateTimeFormatter inputFormatter = java.time.format.DateTimeFormatter.ofPattern("MM/dd/yyyy");
-        java.time.LocalDate date = java.time.LocalDate.parse(dateInput.trim(), inputFormatter);
-        mysqlDate = date.toString(); // Result: "2026-04-25"
-    } catch (Exception e) {
-        mysqlDate = "0000-00-00"; // Fallback
-    }
-
-    if (category.equals("~Select Category~") || category.isEmpty()) {
-        JOptionPane.showMessageDialog(this, "Please select a valid Book Category!");
-        cmbCategory.requestFocus();
-        return;
-    }
-
-    // 3. Handle Anonymous Author
-    if (author.isEmpty()) {
-        author = "Anonymous";
-    }
-
-    // 4. Database Operations
-    try {
-        Connection conn = MySQLConnect.getConnection();
-
-        // DUPLICATE CHECK
-        String checkQuery = "SELECT * FROM books WHERE acquisition_no = ?";
-        PreparedStatement checkPst = conn.prepareStatement(checkQuery);
-        checkPst.setString(1, acqNo);
-        ResultSet rs = checkPst.executeQuery();
-
-        if (rs.next()) {
-            JOptionPane.showMessageDialog(this, "Error: Acquisition No " + acqNo + " already exists!", "Duplicate Entry", JOptionPane.ERROR_MESSAGE);
+        if (acqNo.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Acquisition No is required!");
             txtAcq.requestFocus();
-            return; 
+            return;
         }
 
-        // INSERT DATA
-        String sql = "INSERT INTO books (acquisition_no, title, author, date_published, category, status) VALUES (?,?,?,?,?,?)";
-        PreparedStatement pst = conn.prepareStatement(sql);
+        if (title.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Book Title is required!");
+            txtTitle.requestFocus();
+            return;
+        }
 
-        pst.setString(1, acqNo);
-        pst.setString(2, title);
-        pst.setString(3, author);
-        pst.setString(4, mysqlDate); 
-        pst.setString(5, category);
-        pst.setObject(6, selectedStatusObj);
-
-        pst.executeUpdate();
-        JOptionPane.showMessageDialog(this, "Book Added Successfully!");
-
-        // 5. Refresh UI and Reset
-        fillAllCategoryComboBoxes(); 
-        populateTable(); 
-        setDefault(); 
-
-    } catch (SQLException e) {
-        JOptionPane.showMessageDialog(this, "Database Error: " + e.getMessage());
+        if (!isValidDate(dateInput)) {
+        JOptionPane.showMessageDialog(this, 
+            "Invalid Date Published!\n" +
+            "- Date must exist.\n" +
+            "- Date cannot be in the future.", 
+            "Date Error", JOptionPane.ERROR_MESSAGE);
+        txtDate.requestFocus();
+        return;
     }
+        String mysqlDate;
+        try {
+            java.time.format.DateTimeFormatter inputFormatter = java.time.format.DateTimeFormatter.ofPattern("MM/dd/yyyy");
+            java.time.LocalDate date = java.time.LocalDate.parse(dateInput.trim(), inputFormatter);
+            mysqlDate = date.toString(); 
+        } catch (Exception e) {
+            mysqlDate = "0000-00-00";
+        }
+
+        if (category.equals("~Select Category~") || category.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please select a valid Book Category!");
+            cmbCategory.requestFocus();
+            return;
+        }
+
+        if (author.isEmpty()) {
+            author = "Anonymous";
+        }
+
+        try {
+            Connection conn = MySQLConnect.getConnection();
+
+            String checkQuery = "SELECT * FROM books WHERE acquisition_no = ?";
+            PreparedStatement checkPst = conn.prepareStatement(checkQuery);
+            checkPst.setString(1, acqNo);
+            ResultSet rs = checkPst.executeQuery();
+
+            if (rs.next()) {
+                JOptionPane.showMessageDialog(this, "Error: Acquisition No " + acqNo + " already exists!", "Duplicate Entry", JOptionPane.ERROR_MESSAGE);
+                txtAcq.requestFocus();
+                return; 
+            }
+
+            String sql = "INSERT INTO books (acquisition_no, title, author, date_published, category, status) VALUES (?,?,?,?,?,?)";
+            PreparedStatement pst = conn.prepareStatement(sql);
+
+            pst.setString(1, acqNo);
+            pst.setString(2, title);
+            pst.setString(3, author);
+            pst.setString(4, mysqlDate); 
+            pst.setString(5, category);
+            pst.setObject(6, selectedStatusObj);
+
+            pst.executeUpdate();
+            JOptionPane.showMessageDialog(this, "Book Added Successfully!");
+
+            fillAllCategoryComboBoxes(); 
+            populateTable(); 
+            setDefault(); 
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Database Error: " + e.getMessage());
+        }
     }//GEN-LAST:event_saveBtnActionPerformed
 
     private void cmbStatusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbStatusActionPerformed
@@ -1151,66 +1108,55 @@ public class book_management_copy extends javax.swing.JFrame {
     }//GEN-LAST:event_txtTotalCountActionPerformed
 
     private void jTable2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable2MouseClicked
-    int viewRow = jTable2.getSelectedRow();
-    
-    if (viewRow != -1) {
-        // 2. Convert view index to model index (Crucial for filtered/sorted tables)
-        int modelRow = jTable2.convertRowIndexToModel(viewRow);
-        DefaultTableModel tblModel = (DefaultTableModel) jTable2.getModel();
+        int viewRow = jTable2.getSelectedRow();
 
-        // 3. Save the ORIGINAL Acquisition Number (Column 1)
-        // We use this in the Update Button to find the record even if you rename the ID
-        originalAcqNo = tblModel.getValueAt(modelRow, 1).toString(); 
-        
-        // 4. Capture the Database ID (Column 0) for internal use
-        id = Integer.parseInt(tblModel.getValueAt(modelRow, 0).toString());
+        if (viewRow != -1) {
 
-        // 5. Fill the Text Fields (Matching your table columns)
-        txtAcq.setText(tblModel.getValueAt(modelRow, 1).toString());      // Col 1: Acq No
-        txtTitle.setText(tblModel.getValueAt(modelRow, 2).toString());    // Col 2: Title
-        txtAuthor.setText(tblModel.getValueAt(modelRow, 3).toString());   // Col 3: Author
-        
-        // Date handling
-        txtDate.setValue(null); 
-        txtDate.setText(tblModel.getValueAt(modelRow, 4).toString());     // Col 4: Date
-        
-        // ComboBox handling
-        cmbCategory.setSelectedItem(tblModel.getValueAt(modelRow, 5).toString()); // Col 5: Category
-        cmbStatus.setSelectedItem(tblModel.getValueAt(modelRow, 6).toString());   // Col 6: Status
+            int modelRow = jTable2.convertRowIndexToModel(viewRow);
+            DefaultTableModel tblModel = (DefaultTableModel) jTable2.getModel();
 
-        // 6. UI State
-        unlockFields(); // Using your existing method to enable text boxes
-        
-        addNewBtn.setEnabled(false);
-        updateBtn.setEnabled(true);
-        deleteBtn.setEnabled(true);
-        saveBtn.setEnabled(false);
-        
-        btnAddCategory.setEnabled(true);
-        btnDeleteCategory.setEnabled(true);
-    }
+            originalAcqNo = tblModel.getValueAt(modelRow, 1).toString(); 
+
+            id = Integer.parseInt(tblModel.getValueAt(modelRow, 0).toString());
+
+            txtAcq.setText(tblModel.getValueAt(modelRow, 1).toString());      // Col 1: Acq No
+            txtTitle.setText(tblModel.getValueAt(modelRow, 2).toString());    // Col 2: Title
+            txtAuthor.setText(tblModel.getValueAt(modelRow, 3).toString());   // Col 3: Author
+
+            txtDate.setValue(null); 
+            txtDate.setText(tblModel.getValueAt(modelRow, 4).toString());     // Col 4: Date
+
+            cmbCategory.setSelectedItem(tblModel.getValueAt(modelRow, 5).toString()); // Col 5: Category
+            cmbStatus.setSelectedItem(tblModel.getValueAt(modelRow, 6).toString());   // Col 6: Status
+
+            unlockFields(); 
+
+            addNewBtn.setEnabled(false);
+            updateBtn.setEnabled(true);
+            deleteBtn.setEnabled(true);
+            saveBtn.setEnabled(false);
+
+            btnAddCategory.setEnabled(true);
+            btnDeleteCategory.setEnabled(true);
+        }
     }//GEN-LAST:event_jTable2MouseClicked
 
     private void closeBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_closeBtnActionPerformed
-        // 1. Run your existing default settings
-    setDefault();
+        setDefault();
     
-    // 2. Clear the search field and reset status to Available
-    txtSearch.setText(""); 
-    cmbStatusBook.setSelectedIndex(0); // Sets selection to "Available"
-    
-    // 3. Disable category buttons as per your current logic
-    btnAddCategory.setEnabled(false);
-    btnDeleteCategory.setEnabled(false);
+        txtSearch.setText(""); 
+        cmbStatusBook.setSelectedIndex(0); 
 
-    // 4. Clear table selection and refresh data based on the empty search
-    jTable2.clearSelection();
-    search("");
+        btnAddCategory.setEnabled(false);
+        btnDeleteCategory.setEnabled(false);
+
+        jTable2.clearSelection();
+        search("");
     }//GEN-LAST:event_closeBtnActionPerformed
 
     private void cancelBtn1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelBtn1ActionPerformed
         this.dispose();
-        borrow_management_123 w = new borrow_management_123();
+        borrow_management w = new borrow_management();
         w.setVisible(true);                        
     }//GEN-LAST:event_cancelBtn1ActionPerformed
 
@@ -1218,60 +1164,66 @@ public class book_management_copy extends javax.swing.JFrame {
         String newCat = JOptionPane.showInputDialog(this, "Enter New Category Name:");
 
         if (newCat != null && !newCat.trim().isEmpty()) {
+            String trimmedCat = newCat.trim();
             try {
                 Connection conn = MySQLConnect.getConnection();
-                String sql = "INSERT INTO categories (category_name) VALUES (?)";
-                PreparedStatement pst = conn.prepareStatement(sql);
-                pst.setString(1, newCat.trim());
 
-                pst.executeUpdate();
-                JOptionPane.showMessageDialog(this, "Category Added!");
+                String checkSql = "SELECT COUNT(*) FROM categories WHERE category_name = ?";
+                PreparedStatement checkPst = conn.prepareStatement(checkSql);
+                checkPst.setString(1, trimmedCat);
+                ResultSet rs = checkPst.executeQuery();
 
-                // Use the method that clears and reloads BOTH dropdowns
-                fillAllCategoryComboBoxes(); 
+                if (rs.next() && rs.getInt(1) > 0) {
+                    JOptionPane.showMessageDialog(this, "The category '" + trimmedCat + "' already exists!", "Duplicate Entry", JOptionPane.WARNING_MESSAGE);
+                } else {
+                    String sql = "INSERT INTO categories (category_name) VALUES (?)";
+                    PreparedStatement pst = conn.prepareStatement(sql);
+                    pst.setString(1, trimmedCat);
+
+                    pst.executeUpdate();
+                    JOptionPane.showMessageDialog(this, "Category Added!");
+
+                    fillAllCategoryComboBoxes(); 
+                }
 
             } catch (SQLException e) {
-                // If the category name is a unique key in your DB, this catches duplicates
-                JOptionPane.showMessageDialog(this, "Category already exists or Database Error: " + e.getMessage());
+                JOptionPane.showMessageDialog(this, "Database Error: " + e.getMessage());
             }
         }
     }//GEN-LAST:event_btnAddCategoryActionPerformed
 
     private void btnDeleteCategoryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteCategoryActionPerformed
-        // 1. Get the currently selected category from the dropdown
-Object selectedItem = cmbCategory.getSelectedItem();
+        Object selectedItem = cmbCategory.getSelectedItem();
 
-if (selectedItem != null && !selectedItem.toString().equals("~Select Category~")) {
-    String categoryToDelete = selectedItem.toString();
-    
-    // 2. Confirmation Dialog (Professional UI practice)
-    int confirm = JOptionPane.showConfirmDialog(this, 
-        "Are you sure you want to delete the category: " + categoryToDelete + "?", 
-        "Confirm Deletion", JOptionPane.YES_NO_OPTION);
+        if (selectedItem != null && !selectedItem.toString().equals("~Select Category~")) {
+            String categoryToDelete = selectedItem.toString();
 
-    if (confirm == JOptionPane.YES_OPTION) {
-        try {
-            Connection conn = MySQLConnect.getConnection();
-            String sql = "DELETE FROM categories WHERE category_name = ?";
-            PreparedStatement pst = conn.prepareStatement(sql);
-            pst.setString(1, categoryToDelete);
+            int confirm = JOptionPane.showConfirmDialog(this, 
+                "Are you sure you want to delete the category: " + categoryToDelete + "?", 
+                "Confirm Deletion", JOptionPane.YES_NO_OPTION);
 
-            int result = pst.executeUpdate();
-            
-            if (result > 0) {
-                JOptionPane.showMessageDialog(this, "Category Deleted Successfully!");
-                
-                // 3. REFRESH: This updates both cmbCategory and cmbCategoryTbl
-                fillAllCategoryComboBoxes(); 
+            if (confirm == JOptionPane.YES_OPTION) {
+                try {
+                    Connection conn = MySQLConnect.getConnection();
+                    String sql = "DELETE FROM categories WHERE category_name = ?";
+                    PreparedStatement pst = conn.prepareStatement(sql);
+                    pst.setString(1, categoryToDelete);
+
+                    int result = pst.executeUpdate();
+
+                    if (result > 0) {
+                        JOptionPane.showMessageDialog(this, "Category Deleted Successfully!");
+
+                        fillAllCategoryComboBoxes(); 
+                    }
+
+                } catch (SQLException e) {
+                    JOptionPane.showMessageDialog(this, "Database Error: " + e.getMessage());
+                }
             }
-
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Database Error: " + e.getMessage());
+        } else {
+            JOptionPane.showMessageDialog(this, "Please select a valid category to delete.");
         }
-    }
-} else {
-    JOptionPane.showMessageDialog(this, "Please select a valid category to delete.");
-}
     }//GEN-LAST:event_btnDeleteCategoryActionPerformed
 
     private void txtDateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtDateActionPerformed
@@ -1279,7 +1231,6 @@ if (selectedItem != null && !selectedItem.toString().equals("~Select Category~")
     }//GEN-LAST:event_txtDateActionPerformed
 
     private void btnAddCopyActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddCopyActionPerformed
-        // 1. Get the current details of the book you want to copy
         String title = txtTitle.getText();
         String author = txtAuthor.getText();
         String date = txtDate.getText();
@@ -1290,19 +1241,15 @@ if (selectedItem != null && !selectedItem.toString().equals("~Select Category~")
             return;
         }
 
-        // 2. Clear the Acquisition No so a new, unique one can be entered
         txtAcq.setText("");
-        txtAcq.requestFocus(); // Put cursor here so user can type the new Acq No
+        txtAcq.requestFocus(); 
 
-        // 3. Keep the other details the same
         txtTitle.setText(title);
         txtAuthor.setText(author);
         txtDate.setText(date);
         cmbCategory.setSelectedItem(category);
-        cmbStatus.setSelectedItem("Available"); // New copies should start as Available
+        cmbStatus.setSelectedItem("Available"); 
 
-        // 4. Disable Update/Delete and Enable "SAVE" or "ADD NEW" 
-        // This prevents you from accidentally overwriting the original book
         updateBtn.setEnabled(false);
         deleteBtn.setEnabled(false);
         saveBtn.setEnabled(true); 
@@ -1318,7 +1265,6 @@ if (selectedItem != null && !selectedItem.toString().equals("~Select Category~")
         if (selectedStatus.equals("All")) {
             sql = "SELECT * FROM books";
         } else {
-            // This handles 'Available' or 'Unavailable' dynamically
             sql = "SELECT * FROM books WHERE status = ?";
         }
 
@@ -1347,7 +1293,7 @@ if (selectedItem != null && !selectedItem.toString().equals("~Select Category~")
                 rs.getString("status")
             });
         }
-        updateBookCount(); // Update the orange counter box
+        updateBookCount(); 
         
     } catch (Exception e) {
         JOptionPane.showMessageDialog(null, e);
@@ -1386,7 +1332,7 @@ if (selectedItem != null && !selectedItem.toString().equals("~Select Category~")
         //</editor-fold>
 
         /* Create and display the form */
-        java.awt.EventQueue.invokeLater(() -> new book_management_copy().setVisible(true));
+        java.awt.EventQueue.invokeLater(() -> new book_management().setVisible(true));
     }
    
     // Variables declaration - do not modify//GEN-BEGIN:variables

@@ -24,12 +24,16 @@ import java.io.FileOutputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import javax.swing.JFileChooser;
+import java.io.File;
+import java.io.IOException;
+import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.pdf.PdfPTable;
 
-public class issuereport_management1 extends javax.swing.JFrame {
+public class issuereport_management extends javax.swing.JFrame {
     
-    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(issuereport_management1.class.getName());
+    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(issuereport_management.class.getName());
 
-    public issuereport_management1() {
+    public issuereport_management() {
         initComponents();
         populateIssuedTable(""); 
         updateTotalPaid();
@@ -58,7 +62,6 @@ public class issuereport_management1 extends javax.swing.JFrame {
             java.sql.Timestamp dueTs = rs.getTimestamp("due_date");
             java.sql.Timestamp returnTs = rs.getTimestamp("actual_return_date");
 
-            // Convert to clean Strings
             String issueStr = (issueTs != null) ? displayFormat.format(issueTs) : "N/A";
             String dueStr = (dueTs != null) ? displayFormat.format(dueTs) : "N/A";
             String returnStr = (returnTs != null) ? displayFormat.format(returnTs) : "N/A";
@@ -91,20 +94,20 @@ public class issuereport_management1 extends javax.swing.JFrame {
     double totalUnpaid = 0.0;
     for (int i = 0; i < jTableIssueReport.getRowCount(); i++) {
         try {
-            // Index 12 is Status, Index 11 is the Penalty amount
+
             Object statusObj = jTableIssueReport.getValueAt(i, 12);
             Object penaltyObj = jTableIssueReport.getValueAt(i, 11);
             
             if (statusObj != null && penaltyObj != null) {
                 String status = statusObj.toString();
-                // We sum it up if it is Overdue OR if there is a penalty but it hasn't been "Paid" yet
+
                 if (status.equalsIgnoreCase("Overdue")) {
                     double amount = Double.parseDouble(penaltyObj.toString());
                     totalUnpaid += amount;
                 }
             }
         } catch (Exception e) {
-            // This catches "N/A" or empty strings so the loop doesn't crash
+
         }
     }
     txtTotalUnpaid.setText(String.format("%.2f", totalUnpaid));
@@ -131,7 +134,6 @@ public class issuereport_management1 extends javax.swing.JFrame {
     try {
         Connection conn = MySQLConnect.getConnection();
         
-        // Sums up penalty_paid from issued_books where it is Overdue
         String sql = "SELECT SUM(penalty_paid) AS total_fine FROM issued_books WHERE status = 'Overdue'";
         
         PreparedStatement pst = conn.prepareStatement(sql);
@@ -145,7 +147,7 @@ public class issuereport_management1 extends javax.swing.JFrame {
         }
         
     } catch (SQLException e) {
-        // If there is an error, this will physically pop up on your screen
+
         JOptionPane.showMessageDialog(this, "Database Error in Unpaid Calculation:\n" + e.getMessage(), "SQL Error", JOptionPane.ERROR_MESSAGE);
     }
 }
@@ -153,7 +155,7 @@ public class issuereport_management1 extends javax.swing.JFrame {
     public void updateTotalPaid() {
     try {
         Connection conn = MySQLConnect.getConnection();
-        // This sums all penalties from books that have actually been returned/paid
+  
         String sql = "SELECT SUM(penalty_paid) AS total FROM issue_report WHERE status = 'Returned'";
         
         PreparedStatement pst = conn.prepareStatement(sql);
@@ -174,7 +176,6 @@ public class issuereport_management1 extends javax.swing.JFrame {
         jPanel3 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         jTableIssueReport = new javax.swing.JTable();
-        deleteBtn = new javax.swing.JButton();
         printBtn = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
         txtSearch = new javax.swing.JTextField();
@@ -199,45 +200,47 @@ public class issuereport_management1 extends javax.swing.JFrame {
 
         jTableIssueReport.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null, null}
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null}
             },
             new String [] {
-                "Id", "Member Name", "User Type", "Course", "Year", "Acq No", "Book Title", "Author", "Issued Date", "Due Date", "Actual Return Date", "Penalty Paid", "Status"
+                "Id", "Member Name", "User Type", "Course", "Year", "Acq No", "Book Title", "Author", "Issued Date", "Due Date", "Actual Return Date", "Penalty Paid", "Status", "  Select"
             }
         ) {
-            boolean[] canEdit = new boolean [] {
-                false, false, false, false, false, false, false, false, false, false, false, false, false
+            Class[] types = new Class [] {
+                java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Boolean.class
             };
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false, false, false, false, false, false, false, false, false, false, true
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
             }
         });
         jScrollPane1.setViewportView(jTableIssueReport);
-
-        deleteBtn.setBackground(new java.awt.Color(255, 51, 51));
-        deleteBtn.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
-        deleteBtn.setText("DELETE");
-        deleteBtn.addActionListener(this::deleteBtnActionPerformed);
 
         printBtn.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         printBtn.setText("PRINT TO PDF");
@@ -369,9 +372,7 @@ public class issuereport_management1 extends javax.swing.JFrame {
                         .addGap(0, 472, Short.MAX_VALUE)))
                 .addContainerGap())
             .addGroup(jPanel3Layout.createSequentialGroup()
-                .addGap(566, 566, 566)
-                .addComponent(deleteBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 114, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
+                .addGap(638, 638, 638)
                 .addComponent(printBtn)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
@@ -393,11 +394,9 @@ public class issuereport_management1 extends javax.swing.JFrame {
                             .addComponent(close1))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)))
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 319, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(29, 29, 29)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(deleteBtn)
-                    .addComponent(printBtn))
-                .addGap(43, 43, 43))
+                .addGap(30, 30, 30)
+                .addComponent(printBtn)
+                .addGap(42, 42, 42))
         );
 
         jPanel4.setBackground(new java.awt.Color(102, 51, 0));
@@ -461,12 +460,8 @@ public class issuereport_management1 extends javax.swing.JFrame {
         TableRowSorter<DefaultTableModel> trs = new TableRowSorter<>(model);
         jTableIssueReport.setRowSorter(trs);
 
-        // Indices: 0 (ID), 1 (Member Name), 5 (Acq No), 6 (Book Title)
-        // (?i) makes the search case-insensitive
         trs.setRowFilter(RowFilter.regexFilter("(?i)" + searchStr, 0, 1, 5, 6));
 
-        // Automatically update the Total Paid box based on the filtered results
-        //updateTotalPaid();
     }//GEN-LAST:event_txtSearchKeyReleased
 
     private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
@@ -475,189 +470,135 @@ public class issuereport_management1 extends javax.swing.JFrame {
         w.setVisible(true);
     }//GEN-LAST:event_jButton6ActionPerformed
 
-    private void deleteBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteBtnActionPerformed
-        int row = jTableIssueReport.getSelectedRow();
-
-    if (row == -1) {
-        JOptionPane.showMessageDialog(this, "Select a report record to delete!");
-        return;
-    }
-
-    String reportId = jTableIssueReport.getValueAt(row, 0).toString();
-
-    int confirm = JOptionPane.showConfirmDialog(this, "Permanently delete report ID: " + reportId + "?", "Warning", JOptionPane.YES_NO_OPTION);
-
-    if (confirm == JOptionPane.YES_OPTION) {
-        try {
-            Connection conn = MySQLConnect.getConnection();
-            
-            String sql = "DELETE FROM issue_report WHERE id = ?"; 
-            PreparedStatement pst = conn.prepareStatement(sql);
-            pst.setString(1, reportId);
-
-            pst.executeUpdate();
-            JOptionPane.showMessageDialog(this, "Report entry removed.");
-            populateIssuedTable(""); 
-            
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Error deleting report: " + e.getMessage());
-        }
-        updateTotalPaid();
-        updateTotalUnpaid();
-    }
-    }//GEN-LAST:event_deleteBtnActionPerformed
-
     private void printBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_printBtnActionPerformed
         try {
-    // 1. Get selected row index
-    int row = jTableIssueReport.getSelectedRow();
-    if (row == -1) {
-        javax.swing.JOptionPane.showMessageDialog(null, "Please select a record from the table first!");
-        return;
+        int rowCount = jTableIssueReport.getRowCount();
+        int selectColumnIndex = 13; 
+        
+        java.util.Map<String, java.util.List<Object[]>> groupedMembers = new java.util.LinkedHashMap<>();
+        for (int i = 0; i < rowCount; i++) {
+            Object isChecked = jTableIssueReport.getValueAt(i, selectColumnIndex);
+            if (isChecked != null && (boolean) isChecked) {
+                String memberName = jTableIssueReport.getValueAt(i, 1).toString();
+                Object[] rowData = new Object[jTableIssueReport.getColumnCount()];
+                for(int col = 0; col < jTableIssueReport.getColumnCount(); col++){
+                    rowData[col] = jTableIssueReport.getValueAt(i, col);
+                }
+                groupedMembers.computeIfAbsent(memberName, k -> new java.util.ArrayList<>()).add(rowData);
+            }
+        }
+
+        if (groupedMembers.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please check the 'Select' boxes first!");
+            return;
+        }
+
+        String path = System.getProperty("user.home") + "/Desktop/Library_Receipt.pdf";
+        com.itextpdf.text.Rectangle envelope = new com.itextpdf.text.Rectangle(226, 850); 
+        com.itextpdf.text.Document doc = new com.itextpdf.text.Document(envelope, 10, 10, 10, 10); 
+        com.itextpdf.text.pdf.PdfWriter.getInstance(doc, new java.io.FileOutputStream(path));
+        doc.open();
+
+        // Fonts to match your edit
+        com.itextpdf.text.Font boldTitle = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12);
+        com.itextpdf.text.Font boldLabel = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9);
+        com.itextpdf.text.Font normal = FontFactory.getFont(FontFactory.HELVETICA, 9);
+        com.itextpdf.text.Font tiny = FontFactory.getFont(FontFactory.HELVETICA, 8);
+
+        for (String name : groupedMembers.keySet()) {
+            doc.newPage();
+            java.util.List<Object[]> books = groupedMembers.get(name);
+            Object[] info = books.get(0); 
+
+            // --- HEADER ---
+            Paragraph header = new Paragraph("WESTERN LEYTE COLLEGE\nLIBRARY HUB SYSTEM", boldTitle);
+            header.setAlignment(Element.ALIGN_CENTER);
+            doc.add(header);
+            
+            Paragraph subHeader = new Paragraph("\nTransaction Receipt", normal);
+            subHeader.setAlignment(Element.ALIGN_CENTER);
+            doc.add(subHeader);
+            doc.add(new Paragraph("-----------------------------------------------------------------------------", tiny));
+
+            // --- MEMBER DETAILS ---
+            doc.add(new Paragraph("NAME: " + name, boldLabel));
+            doc.add(new Paragraph("TYPE: " + info[2].toString().toUpperCase() + " | COURSE " + info[3] + " " + info[4], normal));
+            doc.add(new Paragraph("PRINTED: " + java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("MM/dd/yyyy")), normal));
+            doc.add(new Paragraph(" "));
+
+            double totalPaid = 0;
+            for (Object[] row : books) {
+                // Book Info Table (3 Columns: Acq, Title, Penalty)
+                com.itextpdf.text.pdf.PdfPTable bookTable = new com.itextpdf.text.pdf.PdfPTable(new float[]{30, 40, 30});
+                bookTable.setWidthPercentage(100);
+
+                // Column 1: Acq No
+                PdfPCell c1 = new PdfPCell();
+                c1.addElement(new Phrase("Acq No:", normal));
+                c1.addElement(new Phrase(row[5].toString(), normal));
+                c1.setBorder(Rectangle.NO_BORDER);
+                
+                // Column 2: Book Title
+                PdfPCell c2 = new PdfPCell();
+                c2.addElement(new Phrase("Book Title:", normal));
+                c2.addElement(new Phrase(row[6].toString().toUpperCase(), boldLabel));
+                c2.setBorder(Rectangle.NO_BORDER);
+                
+                // Column 3: Penalty
+                PdfPCell c3 = new PdfPCell();
+                c3.addElement(new Phrase("Penalty", normal));
+                c3.addElement(new Phrase("P" + row[11].toString(), normal));
+                c3.setBorder(Rectangle.NO_BORDER);
+                c3.setHorizontalAlignment(Element.ALIGN_RIGHT);
+
+                bookTable.addCell(c1);
+                bookTable.addCell(c2);
+                bookTable.addCell(c3);
+                doc.add(bookTable);
+
+                // Date Details
+                Paragraph dateDetails = new Paragraph(
+                    "Issued: " + row[8].toString() + "\n" +
+                    "Due: " + row[9].toString() + "\n" +
+                    "Returned: " + row[10].toString() + " | Status: " + row[12].toString(), 
+                    tiny
+                );
+                doc.add(dateDetails);
+                doc.add(new Paragraph("-----------------------------------------------------------------------------", tiny));
+
+                try { totalPaid += Double.parseDouble(row[11].toString()); } catch (Exception e) {}
+            }
+
+            // --- FOOTER ---
+            Paragraph total = new Paragraph("TOTAL PAID: P" + String.format("%.2f", totalPaid), boldTitle);
+            total.setAlignment(Element.ALIGN_RIGHT);
+            doc.add(total);
+            
+            doc.add(new Paragraph("\n\n"));
+            Paragraph ty = new Paragraph("Thank you for returning\n: )", normal);
+            ty.setAlignment(Element.ALIGN_CENTER);
+            doc.add(ty);
+        }
+
+        doc.close();
+        java.awt.Desktop.getDesktop().open(new java.io.File(path));
+
+    } catch (Exception e) {
+        javax.swing.JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
     }
-
-    // 2. Set path to desktop for easy access
-    String memberName = jTableIssueReport.getValueAt(row, 1).toString().replace(" ", "_");
-    String fileName = memberName + "_Receipt.pdf";
-    String path = System.getProperty("user.home") + "/Desktop/" + fileName;
-
-    // 3. Create a narrow "Receipt" page size (80mm wide is standard thermal printer width)
-    com.itextpdf.text.Rectangle envelope = new com.itextpdf.text.Rectangle(226, 600); 
-    com.itextpdf.text.Document doc = new com.itextpdf.text.Document(envelope, 15, 15, 10, 10); // slightly wider left margin
-    com.itextpdf.text.pdf.PdfWriter.getInstance(doc, new java.io.FileOutputStream(path));
-    doc.open();
-
-    // 4. Set Fonts
-    com.itextpdf.text.Font boldTitle = com.itextpdf.text.FontFactory.getFont(com.itextpdf.text.FontFactory.HELVETICA_BOLD, 12);
-    com.itextpdf.text.Font normalTitle = com.itextpdf.text.FontFactory.getFont(com.itextpdf.text.FontFactory.HELVETICA_BOLD, 10);
-    com.itextpdf.text.Font bold = com.itextpdf.text.FontFactory.getFont(com.itextpdf.text.FontFactory.HELVETICA_BOLD, 10);
-    com.itextpdf.text.Font normal = com.itextpdf.text.FontFactory.getFont(com.itextpdf.text.FontFactory.HELVETICA, 10);
-    com.itextpdf.text.Font small = com.itextpdf.text.FontFactory.getFont(com.itextpdf.text.FontFactory.HELVETICA, 8);
-
-    // Dotted Line Helper (iText dynamic dotted line)
-    com.itextpdf.text.pdf.draw.DottedLineSeparator dottedLine = new com.itextpdf.text.pdf.draw.DottedLineSeparator();
-    dottedLine.setLineColor(com.itextpdf.text.BaseColor.LIGHT_GRAY);
-    dottedLine.setGap(2f);
-    doc.add(new com.itextpdf.text.Chunk(dottedLine));
-    
-    doc.add(new com.itextpdf.text.Paragraph(" ")); // spacing
-
-    // 5. Centered Header
-    com.itextpdf.text.Paragraph collegeName = new com.itextpdf.text.Paragraph("WESTERN LEYTE COLLEGE\n", boldTitle);
-    collegeName.setAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
-    collegeName.setLeading(15f); // spacing
-    doc.add(collegeName);
-
-    com.itextpdf.text.Paragraph hubName = new com.itextpdf.text.Paragraph("LIBRARY HUB\n", normalTitle);
-    hubName.setAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
-    hubName.setLeading(12f);
-    doc.add(hubName);
-    
-    doc.add(new com.itextpdf.text.Paragraph(" ")); // spacing
-    com.itextpdf.text.Paragraph transaction = new com.itextpdf.text.Paragraph("Transaction Receipt\n\n", small);
-    transaction.setAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
-    transaction.setLeading(10f);
-    doc.add(transaction);
-
-    doc.add(new com.itextpdf.text.Chunk(dottedLine)); // separator
-    doc.add(new com.itextpdf.text.Paragraph(" ")); // spacing
-
-    // 6. Centered Transaction/Member Details
-    com.itextpdf.text.Paragraph datePara = new com.itextpdf.text.Paragraph("Date: " + java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm")), small);
-    datePara.setAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
-    datePara.setLeading(15f);
-    doc.add(datePara);
-
-    com.itextpdf.text.Paragraph memberPara = new com.itextpdf.text.Paragraph("Member: " + jTableIssueReport.getValueAt(row, 1).toString(), normal);
-    memberPara.setAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
-    memberPara.setLeading(15f);
-    doc.add(memberPara);
-
-    com.itextpdf.text.Paragraph typePara = new com.itextpdf.text.Paragraph("Type: " + jTableIssueReport.getValueAt(row, 2).toString(), small);
-    typePara.setAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
-    typePara.setLeading(15f);
-    doc.add(typePara);
-
-    doc.add(new com.itextpdf.text.Paragraph(" ")); // spacing
-    doc.add(new com.itextpdf.text.Chunk(dottedLine)); // separator
-    doc.add(new com.itextpdf.text.Paragraph(" ")); // spacing
-
-    // 7. Centered Book Details
-    com.itextpdf.text.Paragraph bookTitleLabel = new com.itextpdf.text.Paragraph("BOOK TITLE:", small);
-    bookTitleLabel.setAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
-    doc.add(bookTitleLabel);
-
-    com.itextpdf.text.Paragraph bookTitlePara = new com.itextpdf.text.Paragraph(jTableIssueReport.getValueAt(row, 6).toString(), normal);
-    bookTitlePara.setAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
-    bookTitlePara.setLeading(15f);
-    doc.add(bookTitlePara);
-
-    com.itextpdf.text.Paragraph acqNoPara = new com.itextpdf.text.Paragraph("Acq No: " + jTableIssueReport.getValueAt(row, 5).toString(), small);
-    acqNoPara.setAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
-    acqNoPara.setLeading(12f);
-    doc.add(acqNoPara);
-
-    com.itextpdf.text.Paragraph issuedPara = new com.itextpdf.text.Paragraph("Issued: " + jTableIssueReport.getValueAt(row, 8).toString(), small);
-    issuedPara.setAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
-    issuedPara.setLeading(12f);
-    doc.add(issuedPara);
-
-    com.itextpdf.text.Paragraph returnedPara = new com.itextpdf.text.Paragraph("Returned: " + jTableIssueReport.getValueAt(row, 10).toString(), small);
-    returnedPara.setAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
-    returnedPara.setLeading(12f);
-    doc.add(returnedPara);
-    
-    doc.add(new com.itextpdf.text.Paragraph(" ")); // spacing
-    doc.add(new com.itextpdf.text.Chunk(dottedLine)); // separator
-    doc.add(new com.itextpdf.text.Paragraph(" ")); // spacing
-
-    // 8. Centered Footer / Penalty
-    com.itextpdf.text.Paragraph penaltyLabel = new com.itextpdf.text.Paragraph("Penalty details:", small);
-    penaltyLabel.setAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
-    doc.add(penaltyLabel);
-
-    com.itextpdf.text.Paragraph penaltyAmount = new com.itextpdf.text.Paragraph("PENALTY PAID: ₱" + jTableIssueReport.getValueAt(row, 11).toString(), bold);
-    penaltyAmount.setAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
-    penaltyAmount.setLeading(15f);
-    doc.add(penaltyAmount);
-
-    com.itextpdf.text.Paragraph statusPara = new com.itextpdf.text.Paragraph("Status: " + jTableIssueReport.getValueAt(row, 12).toString(), small);
-    statusPara.setAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
-    statusPara.setLeading(12f);
-    doc.add(statusPara);
-    
-    com.itextpdf.text.Paragraph thankYouPara = new com.itextpdf.text.Paragraph("\nThank you for returning :) ", small);
-    thankYouPara.setAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
-    thankYouPara.setLeading(20f);
-    doc.add(thankYouPara);
-
-    doc.close();
-    javax.swing.JOptionPane.showMessageDialog(null, "Receipt generated to Desktop!");
-
-} catch (Exception e) {
-    javax.swing.JOptionPane.showMessageDialog(null, "Error generating PDF: " + e.getMessage());
-    e.printStackTrace();
-}
     }//GEN-LAST:event_printBtnActionPerformed
 
     private void close1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_close1ActionPerformed
-        // 1. Clear the search text field
-    txtSearch.setText("");
-    
-    // 2. Remove the filter from the table to show all records
-    DefaultTableModel model = (DefaultTableModel) jTableIssueReport.getModel();
-    TableRowSorter<DefaultTableModel> trs = new TableRowSorter<>(model);
-    jTableIssueReport.setRowSorter(trs);
-    trs.setRowFilter(null); 
-    
-    // 3. Update your Total Paid and Total Unpaid displays
-    updateTotalPaid();
-    //updateTotalUnpaid();
-    // If you have a method for unpaid:
-    // updateTotalUnpaid(); 
-    
-    // 4. Return focus to the search bar for convenience
-    txtSearch.requestFocus();
+        txtSearch.setText("");
+
+        DefaultTableModel model = (DefaultTableModel) jTableIssueReport.getModel();
+        TableRowSorter<DefaultTableModel> trs = new TableRowSorter<>(model);
+        jTableIssueReport.setRowSorter(trs);
+        trs.setRowFilter(null); 
+
+        updateTotalPaid();
+
+        txtSearch.requestFocus();
     }//GEN-LAST:event_close1ActionPerformed
 
     /**
@@ -682,12 +623,11 @@ public class issuereport_management1 extends javax.swing.JFrame {
         //</editor-fold>
 
         /* Create and display the form */
-        java.awt.EventQueue.invokeLater(() -> new issuereport_management1().setVisible(true));
+        java.awt.EventQueue.invokeLater(() -> new issuereport_management().setVisible(true));
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton close1;
-    private javax.swing.JButton deleteBtn;
     private javax.swing.JButton jButton6;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
