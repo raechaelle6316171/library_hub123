@@ -27,7 +27,6 @@ public class frontpage extends javax.swing.JFrame {
         // These MUST match the 'Variable Name' in your NetBeans Design properties
         issueReportBtn.setVisible(false);
         addBookBtn.setVisible(false);
-        inventoryBtn.setVisible(false);
         userBtn.setVisible(false);
         penaltyBtn.setVisible(false);
         
@@ -54,7 +53,6 @@ public class frontpage extends javax.swing.JFrame {
     // Management Buttons (Hidden for Staff)
     issueReportBtn.setVisible(isLibrarian);
     addBookBtn.setVisible(isLibrarian);
-    inventoryBtn.setVisible(isLibrarian);
     userBtn.setVisible(isLibrarian);
     penaltyBtn.setVisible(isLibrarian);
 
@@ -213,7 +211,6 @@ public void showIssuedBooksInTable() {
         jLabel1 = new javax.swing.JLabel();
         addMemberBtn = new javax.swing.JButton();
         addBookBtn = new javax.swing.JButton();
-        inventoryBtn = new javax.swing.JButton();
         penaltyBtn = new javax.swing.JButton();
         jLabel2 = new javax.swing.JLabel();
         jPanel4 = new javax.swing.JPanel();
@@ -297,12 +294,6 @@ public void showIssuedBooksInTable() {
         addBookBtn.setText("ADD BOOK");
         addBookBtn.addActionListener(this::addBookBtnActionPerformed);
 
-        inventoryBtn.setBackground(new java.awt.Color(0, 153, 0));
-        inventoryBtn.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-        inventoryBtn.setForeground(new java.awt.Color(255, 255, 255));
-        inventoryBtn.setText("INVENTORY");
-        inventoryBtn.addActionListener(this::inventoryBtnActionPerformed);
-
         penaltyBtn.setBackground(new java.awt.Color(0, 153, 0));
         penaltyBtn.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         penaltyBtn.setForeground(new java.awt.Color(255, 255, 255));
@@ -325,7 +316,6 @@ public void showIssuedBooksInTable() {
                     .addComponent(userBtn, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 143, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(addMemberBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(addBookBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(inventoryBtn, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(penaltyBtn, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addGap(21, 21, 21))
         );
@@ -348,8 +338,6 @@ public void showIssuedBooksInTable() {
                 .addComponent(penaltyBtn)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(addBookBtn)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(inventoryBtn)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(userBtn)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -474,7 +462,7 @@ public void showIssuedBooksInTable() {
         );
 
         jPanel15.setBackground(new java.awt.Color(204, 204, 204));
-        jPanel15.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 255), 2));
+        jPanel15.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 153, 255), 2));
 
         txtTotalBorrowed.setEditable(false);
         txtTotalBorrowed.setBackground(new java.awt.Color(204, 204, 204));
@@ -483,7 +471,7 @@ public void showIssuedBooksInTable() {
         txtTotalBorrowed.setBorder(null);
         txtTotalBorrowed.addActionListener(this::txtTotalBorrowedActionPerformed);
 
-        jPanel13.setBackground(new java.awt.Color(0, 0, 255));
+        jPanel13.setBackground(new java.awt.Color(0, 153, 255));
 
         javax.swing.GroupLayout jPanel13Layout = new javax.swing.GroupLayout(jPanel13);
         jPanel13.setLayout(jPanel13Layout);
@@ -719,7 +707,7 @@ public void showIssuedBooksInTable() {
                     .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                     .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 202, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(110, Short.MAX_VALUE))
+                .addContainerGap(66, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
@@ -736,7 +724,7 @@ public void showIssuedBooksInTable() {
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(50, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
@@ -746,15 +734,13 @@ public void showIssuedBooksInTable() {
             .addGroup(jPanel5Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel5Layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addContainerGap())
+                    .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(jPanel5Layout.createSequentialGroup()
                         .addGap(86, 86, 86)
-                        .addComponent(jLabel2)
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                        .addComponent(jLabel2)))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel5Layout.setVerticalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -765,18 +751,18 @@ public void showIssuedBooksInTable() {
                 .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
             .addGroup(jPanel5Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, 560, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, 513, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel5, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, 528, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
 
         pack();
@@ -852,12 +838,6 @@ public void showIssuedBooksInTable() {
         // TODO add your handling code here:
     }//GEN-LAST:event_txtTotalOverdueActionPerformed
 
-    private void inventoryBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inventoryBtnActionPerformed
-        this.dispose();
-        INVENTORY w = new INVENTORY();
-        w.setVisible(true);
-    }//GEN-LAST:event_inventoryBtnActionPerformed
-
     private void userBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_userBtnActionPerformed
 
         /*if ("Admin".equals(userRole)) {
@@ -917,7 +897,6 @@ public void showIssuedBooksInTable() {
     private javax.swing.JButton borrowBookBtn;
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.JButton dashboardBtn;
-    private javax.swing.JButton inventoryBtn;
     private javax.swing.JButton issueBookBtn;
     private javax.swing.JButton issueReportBtn;
     private javax.swing.JLabel jLabel1;

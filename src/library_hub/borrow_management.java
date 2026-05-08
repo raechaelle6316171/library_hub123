@@ -268,15 +268,13 @@ DefaultTableModel model = (DefaultTableModel) jTableBooks.getModel();
         jPanel5Layout.setHorizontalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel5Layout.createSequentialGroup()
-                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                .addGap(25, 25, 25)
+                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addGroup(jPanel5Layout.createSequentialGroup()
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(jLabel8)
-                        .addGap(18, 18, 18)
-                        .addComponent(txtSearchMember, javax.swing.GroupLayout.PREFERRED_SIZE, 229, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel5Layout.createSequentialGroup()
-                        .addGap(25, 25, 25)
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 401, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtSearchMember))
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 401, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(30, Short.MAX_VALUE))
         );
         jPanel5Layout.setVerticalGroup(
@@ -547,8 +545,9 @@ DefaultTableModel model = (DefaultTableModel) jTableBooks.getModel();
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, 262, Short.MAX_VALUE)
                     .addComponent(jPanel5, javax.swing.GroupLayout.DEFAULT_SIZE, 262, Short.MAX_VALUE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
         );
 
         pack();
@@ -668,14 +667,19 @@ DefaultTableModel model = (DefaultTableModel) jTableBooks.getModel();
     // Uses the hidden variable instead of a text field
     String contact = selectedMemberContact; 
     
+    // --- UPDATED OVERDUE CHECK ---
+    // This will only block the user if they have an overdue AND they are NOT Faculty
     if (hasOverdue(name)) {
-        JOptionPane.showMessageDialog(this, 
-            "BORROWING BLOCKED: This user has an outstanding overdue book. " +
-            "\nPlease settle penalties in the Penalty module first.", 
-            "Account Restriction", 
-            JOptionPane.ERROR_MESSAGE);
-        return;
+        if (!userType.equalsIgnoreCase("Faculty")) {
+            JOptionPane.showMessageDialog(this, 
+                "BORROWING BLOCKED: This user has an outstanding overdue book. " +
+                "\nPlease settle penalties in the Penalty module first.", 
+                "Account Restriction", 
+                JOptionPane.ERROR_MESSAGE);
+            return;
+        }
     }
+    // ------------------------------
 
     if (name.isEmpty() || contact.isEmpty() || acqNo.isEmpty() || iDate.isEmpty() || dDate.isEmpty()) {
         JOptionPane.showMessageDialog(this, "Please select a member, a book, and fill in the dates!");
@@ -715,14 +719,13 @@ DefaultTableModel model = (DefaultTableModel) jTableBooks.getModel();
         java.sql.Timestamp issueTS = java.sql.Timestamp.valueOf(LocalDateTime.parse(iDate, formatter));
         java.sql.Timestamp dueTS = java.sql.Timestamp.valueOf(LocalDateTime.parse(dDate, formatter));
 
-        // UPDATED INSERT: Includes contact_no
-        // DO NOT put a real phone number here. Use a '?' so it's dynamic.
+        // Insert Record
         String issueSql = "INSERT INTO issued_books (fullname, contact_no, usertype, book_acq_no, book_title, issue_date, due_date, penalty_paid, status) "
                         + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Issued')";
 
         PreparedStatement issuePst = conn.prepareStatement(issueSql);
         issuePst.setString(1, name);
-        issuePst.setString(2, contact); // Variable from registration data
+        issuePst.setString(2, contact); 
         issuePst.setString(3, userType);
         issuePst.setString(4, acqNo);
         issuePst.setString(5, title);
