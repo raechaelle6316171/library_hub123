@@ -1,23 +1,62 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
- */
 package library_hub;
 
-/**
- *
- * @author RACHELL
- */
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
+
 public class penalty extends javax.swing.JFrame {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(penalty.class.getName());
 
-    /**
-     * Creates new form penalty
-     */
+ 
     public penalty() {
         initComponents();
+        populatePenaltyTable();
     }
+    
+    public void populatePenaltyTable() {
+    DefaultTableModel model = (DefaultTableModel) jTablePenalty.getModel();
+    model.setRowCount(0); 
+
+    try {
+        Connection conn = MySQLConnect.getConnection();
+        
+        // UPDATED SQL: We added a condition to exclude 'Overdue' and 'Issued' statuses
+        // This ensures they only show up once you mark them as 'Returned', 'Damage', or 'Lost'
+        String sql = "SELECT m.school_id, i.fullname, i.book_title, i.book_acq_no, i.penalty_paid, i.status " +
+                     "FROM issued_books i " +
+                     "JOIN member_records m ON i.fullname = m.fullname " +
+                     "WHERE CAST(NULLIF(i.penalty_paid, '') AS DECIMAL(10,2)) > 0 " +
+                     "AND i.status NOT IN ('Overdue', 'Issued')";
+
+        PreparedStatement pst = conn.prepareStatement(sql);
+        ResultSet rs = pst.executeQuery();
+
+        boolean hasData = false;
+        while (rs.next()) {
+            hasData = true;
+            String id = rs.getString("school_id");
+            String name = rs.getString("fullname");
+            String title = rs.getString("book_title");
+            String acqNo = rs.getString("book_acq_no");
+            String amount = rs.getString("penalty_paid");
+            String reason = rs.getString("status"); 
+
+            model.addRow(new Object[]{id, name, title, acqNo, amount, reason});
+        }
+        
+        if (!hasData) {
+            System.out.println("No finalized records found with a penalty.");
+        }
+        
+    } catch (Exception e) {
+        JOptionPane.showMessageDialog(null, "Database Error: " + e.getMessage());
+        e.printStackTrace();
+    }
+}
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -34,7 +73,7 @@ public class penalty extends javax.swing.JFrame {
         txtSearchUsername = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
-        jTable1 = new javax.swing.JTable();
+        jTablePenalty = new javax.swing.JTable();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -78,42 +117,42 @@ public class penalty extends javax.swing.JFrame {
         jLabel1.setForeground(new java.awt.Color(0, 0, 0));
         jLabel1.setText("History of Payment");
 
-        jTable1.setModel(new javax.swing.table.DefaultTableModel(
+        jTablePenalty.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null}
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null}
             },
             new String [] {
-                "Student/Faculty Id", "Fullname", "Book Title", "Acq No", "Penalty Paid", "Reason"
+                "Student/Faculty Id", "Fullname", "Book Title", "Acq No", "Penalty Paid", "Reason", "Date"
             }
         ) {
             boolean[] canEdit = new boolean [] {
-                false, false, false, false, false, false
+                false, false, false, false, false, false, true
             };
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
             }
         });
-        jScrollPane1.setViewportView(jTable1);
+        jScrollPane1.setViewportView(jTablePenalty);
 
         javax.swing.GroupLayout txtSearchUsernameLayout = new javax.swing.GroupLayout(txtSearchUsername);
         txtSearchUsername.setLayout(txtSearchUsernameLayout);
@@ -132,8 +171,8 @@ public class penalty extends javax.swing.JFrame {
                 .addGap(23, 23, 23)
                 .addComponent(jLabel1)
                 .addGap(18, 18, 18)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 336, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(29, Short.MAX_VALUE))
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 328, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(37, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -192,7 +231,7 @@ public class penalty extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel8;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTable jTable1;
+    private javax.swing.JTable jTablePenalty;
     private javax.swing.JPanel txtSearchUsername;
     // End of variables declaration//GEN-END:variables
 }
