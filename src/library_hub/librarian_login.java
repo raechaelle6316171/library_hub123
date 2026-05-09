@@ -217,7 +217,7 @@ public class librarian_login extends javax.swing.JFrame {
 
             // 2. Create the dashboard instance
             JOptionPane.showMessageDialog(this, "Librarian Login Successful! Welcome, " + rs.getString("fullname") + ("!"));
-            frontpage main = new frontpage();
+            dashboard main = new dashboard();
 
             // 3. Pass the role to the dashboard to hide/show buttons
             main.handleRoleAndPermissions(userType); 
@@ -236,7 +236,7 @@ public class librarian_login extends javax.swing.JFrame {
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         this.dispose();
-        librarianOradministrator w = new librarianOradministrator();
+        libraryOrStaff w = new libraryOrStaff();
         w.setVisible(true);
     }//GEN-LAST:event_jButton1ActionPerformed
 

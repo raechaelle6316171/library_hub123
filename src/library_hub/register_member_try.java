@@ -25,7 +25,7 @@ public class register_member_try extends javax.swing.JFrame {
     
     private void clearFields() {
     // 1. Clear all text
-    txtSchoolFacultyID.setText("");
+    txtSchoolId.setText("");
     txtFullName.setText("");
     txtContactNumber.setText("");
     
@@ -35,7 +35,7 @@ public class register_member_try extends javax.swing.JFrame {
     cmbYear.setSelectedIndex(0);     
 
     // 3. Disable the fields (This makes them look like the others in your screenshot)
-    txtSchoolFacultyID.setEnabled(false);
+    txtSchoolId.setEnabled(false);
     txtFullName.setEnabled(false);
     txtContactNumber.setEnabled(false);
     cmbUserType.setEnabled(false);
@@ -57,14 +57,14 @@ public class register_member_try extends javax.swing.JFrame {
      
      
     public void setDefault() {
-    txtSchoolFacultyID.setText("");
+    txtSchoolId.setText("");
     txtFullName.setText("");
     txtContactNumber.setText("");
     cmbUserType.setSelectedIndex(0);
     cmbCourse.setSelectedIndex(0);
     cmbYear.setSelectedIndex(0);
     
-    txtSchoolFacultyID.setEnabled(false);
+    txtSchoolId.setEnabled(false);
     txtFullName.setEnabled(false);
     txtContactNumber.setEnabled(false);
 
@@ -181,7 +181,7 @@ public class register_member_try extends javax.swing.JFrame {
         jLabel11 = new javax.swing.JLabel();
         cmbYear = new javax.swing.JComboBox<>();
         jLabel3 = new javax.swing.JLabel();
-        txtSchoolFacultyID = new javax.swing.JTextField();
+        txtSchoolId = new javax.swing.JTextField();
         txtContactNumber = new javax.swing.JTextField();
         jLabel4 = new javax.swing.JLabel();
 
@@ -258,9 +258,7 @@ public class register_member_try extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(txtSearchMember, javax.swing.GroupLayout.PREFERRED_SIZE, 146, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(txtSearchUsernameLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                        .addGroup(txtSearchUsernameLayout.createSequentialGroup()
-                            .addGap(95, 95, 95)
-                            .addComponent(cancelBtn1))
+                        .addComponent(cancelBtn1)
                         .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 622, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap(35, Short.MAX_VALUE))
         );
@@ -391,14 +389,12 @@ public class register_member_try extends javax.swing.JFrame {
                         .addComponent(cancelBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 83, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(jLabel11, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                        .addComponent(txtFullName)
-                        .addComponent(jLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, 179, Short.MAX_VALUE))
-                    .addComponent(txtSchoolFacultyID, javax.swing.GroupLayout.PREFERRED_SIZE, 178, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                        .addComponent(cmbCourse, javax.swing.GroupLayout.Alignment.LEADING, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(cmbUserType, javax.swing.GroupLayout.Alignment.LEADING, 0, 179, Short.MAX_VALUE)
-                        .addComponent(jLabel10, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(txtFullName, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jLabel3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(txtSchoolId, javax.swing.GroupLayout.PREFERRED_SIZE, 178, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(cmbCourse, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(cmbUserType, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jLabel10, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(cmbYear, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jLabel2))
                 .addGap(0, 23, Short.MAX_VALUE))
@@ -411,7 +407,7 @@ public class register_member_try extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 12, Short.MAX_VALUE)
                 .addComponent(jLabel2)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(txtSchoolFacultyID, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(txtSchoolId, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel3)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -487,7 +483,7 @@ public class register_member_try extends javax.swing.JFrame {
         
         // Index 1: School/Faculty ID
         Object schoolIdVal = tblModel.getValueAt(selectedRow, 1);
-        txtSchoolFacultyID.setText(schoolIdVal != null ? schoolIdVal.toString() : "");
+        txtSchoolId.setText(schoolIdVal != null ? schoolIdVal.toString() : "");
         
         // Index 2: Full Name
         String name = tblModel.getValueAt(selectedRow, 2).toString();
@@ -519,7 +515,7 @@ public class register_member_try extends javax.swing.JFrame {
         }
 
         // Enable UI for editing
-        txtSchoolFacultyID.setEnabled(true);
+        txtSchoolId.setEnabled(true);
         txtFullName.setEnabled(true);
         cmbUserType.setEnabled(true);
         txtContactNumber.setEnabled(true);
@@ -534,7 +530,7 @@ public class register_member_try extends javax.swing.JFrame {
 
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
         this.dispose();
-        frontpage w = new frontpage();
+        dashboard w = new dashboard();
         w.setVisible(true);
     }//GEN-LAST:event_jButton5ActionPerformed
 
@@ -548,86 +544,101 @@ public class register_member_try extends javax.swing.JFrame {
     }//GEN-LAST:event_cancelBtnActionPerformed
 
     private void saveBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveBtnActionPerformed
-        String schoolId = txtSchoolFacultyID.getText().trim();
-        String name = txtFullName.getText().trim();
-        String type = cmbUserType.getSelectedItem().toString();
-        String course = cmbCourse.getSelectedItem().toString();
-        String year = cmbYear.getSelectedItem().toString();
-        String contact = txtContactNumber.getText().trim();
+        // 1. Capture inputs
+    String schoolId = txtSchoolId.getText().trim();
+    String fullName = txtFullName.getText().trim();
+    String contactNo = txtContactNumber.getText().trim();
+    String userType = cmbUserType.getSelectedItem().toString();
+    String course = cmbCourse.getSelectedItem().toString();
+    String year = cmbYear.getSelectedItem().toString();
 
-        // --- SCHOOL ID VALIDATION ---
-        if (schoolId.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please enter your School/Faculty ID.", "Validation Error", JOptionPane.WARNING_MESSAGE);
-            txtSchoolFacultyID.requestFocus();
-            return;
-        }
-        if (!schoolId.matches("\\d+")) {
-            JOptionPane.showMessageDialog(this, "School/Faculty ID must contain numbers only!", "Input Error", JOptionPane.ERROR_MESSAGE);
-            txtSchoolFacultyID.requestFocus();
-            return;
-        }
-
-        // --- FULL NAME VALIDATION ---
-        if (name.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please enter your Full Name.", "Validation Error", JOptionPane.WARNING_MESSAGE);
-            txtFullName.requestFocus();
+    // 2. Basic Validations
+    if (schoolId.isEmpty()) {
+        JOptionPane.showMessageDialog(this, "Please enter your School/Faculty ID.");
+        txtSchoolId.requestFocus();
+        return;
+    }
+    
+    if (!schoolId.matches("\\d+")) {
+            JOptionPane.showMessageDialog(this, "Invalid ID! School/Faculty ID must contain numbers only.", "Input Error", JOptionPane.ERROR_MESSAGE);
+            txtSchoolId.requestFocus();
             return;
         }
 
-        // --- USER TYPE & STUDENT DETAILS VALIDATION ---
-        if (type.equals("~Select User Type~")) {
-            JOptionPane.showMessageDialog(this, "Please select a User Type.", "Validation Error", JOptionPane.WARNING_MESSAGE);
+    if (fullName.isEmpty()) {
+        JOptionPane.showMessageDialog(this, "Please enter your full name");
+        txtFullName.requestFocus();
+        return;
+    }
+
+    if (userType.equals("~Select User Type~")) {
+        JOptionPane.showMessageDialog(this, "Please select a user type");
+        cmbUserType.requestFocus();
+        return;
+    }
+    
+    // 3. Conditional Validations: Only check Course/Year if it's a Student
+    if (userType.equalsIgnoreCase("Student")) {
+        if (course.equals("~Select Course~")) {
+            JOptionPane.showMessageDialog(this, "Please select a course");
+            cmbCourse.requestFocus();
+            return;
+        }
+        
+        if (year.equals("~Select Year~")) {
+            JOptionPane.showMessageDialog(this, "Please select a year");
+            cmbYear.requestFocus();
+            return;
+        }
+    } else {
+        // If Faculty, set these to "N/A" for the database
+        course = "N/A";
+        year = "N/A";
+    }
+
+    if (contactNo.isEmpty() || contactNo.equals("09")) {
+        JOptionPane.showMessageDialog(this, "Please enter your contact number");
+        txtContactNumber.requestFocus();
+        return;
+    }
+
+    // 4. Database Logic
+    try {
+        Connection conn = MySQLConnect.getConnection();
+        
+        // Duplicate check for ID to prevent primary key errors
+        String checkSql = "SELECT * FROM member_records WHERE school_id = ?";
+        PreparedStatement checkPst = conn.prepareStatement(checkSql);
+        checkPst.setString(1, schoolId);
+        ResultSet rs = checkPst.executeQuery();
+        
+        if (rs.next()) {
+            JOptionPane.showMessageDialog(this, "This School/Faculty ID is already registered!");
             return;
         }
 
-        if (type.equalsIgnoreCase("Student")) {
-            if (course.equals("~Select Course~")) {
-                JOptionPane.showMessageDialog(this, "Please select a Course.", "Validation Error", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-            if (year.equals("~Select Year~")) {
-                JOptionPane.showMessageDialog(this, "Please select a Year.", "Validation Error", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-        } else {
-            course = "N/A";
-            year = "N/A";
-        }
+        // Insert new member record
+        String sql = "INSERT INTO member_records (school_id, fullname, usertype, course, year, contact_number) VALUES (?, ?, ?, ?, ?, ?)";
+        PreparedStatement pst = conn.prepareStatement(sql);
+        pst.setString(1, schoolId);
+        pst.setString(2, fullName);
+        pst.setString(3, userType);
+        pst.setString(4, course);
+        pst.setString(5, year);
+        pst.setString(6, contactNo);
 
-        // --- CONTACT NUMBER VALIDATION ---
-        if (contact.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please enter your Contact Number.", "Validation Error", JOptionPane.WARNING_MESSAGE);
-            txtContactNumber.requestFocus();
-            return;
-        }
-        if (!contact.matches("\\d+")) {
-            JOptionPane.showMessageDialog(this, "Contact Number must contain numbers only!", "Input Error", JOptionPane.ERROR_MESSAGE);
-            txtContactNumber.requestFocus();
-            return;
-        }
-
-        // --- DATABASE INSERT ---
-        try {
-            Connection conn = MySQLConnect.getConnection();
-            String sql = "INSERT INTO member_records (school_id, fullname, usertype, course, year, contact_number) VALUES (?, ?, ?, ?, ?, ?)";
-            PreparedStatement pst = conn.prepareStatement(sql);
-
-            pst.setString(1, schoolId);
-            pst.setString(2, name);
-            pst.setString(3, type);
-            pst.setString(4, course);
-            pst.setString(5, year);
-            pst.setString(6, contact);
-
-            pst.executeUpdate();
-            JOptionPane.showMessageDialog(this, "Member Registered Successfully!");
-
-            populateTable(""); 
-            setDefault();      
-
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
-        }
+        pst.executeUpdate();
+        
+        // Success Message
+        JOptionPane.showMessageDialog(this, "Member Registered Successfully");
+        
+        // Refresh UI components
+        populateTable(); 
+        clearFields();   
+        
+    } catch (Exception e) {
+        JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
+    }
     }//GEN-LAST:event_saveBtnActionPerformed
 
     private void deleteBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteBtnActionPerformed
@@ -672,7 +683,7 @@ public class register_member_try extends javax.swing.JFrame {
 
         // Capture fields from UI
         String id = jTable2.getValueAt(row, 0).toString(); // The hidden primary key ID
-        String schoolId = txtSchoolFacultyID.getText().trim();
+        String schoolId = txtSchoolId.getText().trim();
         String name = txtFullName.getText().trim();
         String type = cmbUserType.getSelectedItem().toString();
         String course = cmbCourse.getSelectedItem().toString();
@@ -682,12 +693,12 @@ public class register_member_try extends javax.swing.JFrame {
         // --- SCHOOL ID VALIDATION ---
         if (schoolId.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Please enter your School/Faculty ID.", "Validation Error", JOptionPane.WARNING_MESSAGE);
-            txtSchoolFacultyID.requestFocus();
+            txtSchoolId.requestFocus();
             return;
         }
         if (!schoolId.matches("\\d+")) {
             JOptionPane.showMessageDialog(this, "Invalid ID! School/Faculty ID must contain numbers only.", "Input Error", JOptionPane.ERROR_MESSAGE);
-            txtSchoolFacultyID.requestFocus();
+            txtSchoolId.requestFocus();
             return;
         }
 
@@ -771,7 +782,7 @@ public class register_member_try extends javax.swing.JFrame {
 
     private void addNewBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addNewBtnActionPerformed
         // 1. Clear all text and reset combo boxes
-        txtSchoolFacultyID.setText("");
+        txtSchoolId.setText("");
         txtFullName.setText("");
 
         cmbUserType.setSelectedIndex(0); 
@@ -779,7 +790,7 @@ public class register_member_try extends javax.swing.JFrame {
         cmbYear.setSelectedIndex(0);     
 
         // 3. Enable the fields so the user can type
-        txtSchoolFacultyID.setEnabled(true);
+        txtSchoolId.setEnabled(true);
         txtFullName.setEnabled(true);
         txtContactNumber.setEnabled(true);
         cmbUserType.setEnabled(true);
@@ -793,7 +804,7 @@ public class register_member_try extends javax.swing.JFrame {
         deleteBtn.setEnabled(false);
 
         // 5. Set focus to the first field
-        txtSchoolFacultyID.requestFocus();
+        txtSchoolId.requestFocus();
     }//GEN-LAST:event_addNewBtnActionPerformed
 
     private void cmbCourseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbCourseActionPerformed
@@ -878,7 +889,7 @@ public class register_member_try extends javax.swing.JFrame {
     private javax.swing.JButton saveBtn;
     private javax.swing.JTextField txtContactNumber;
     private javax.swing.JTextField txtFullName;
-    private javax.swing.JTextField txtSchoolFacultyID;
+    private javax.swing.JTextField txtSchoolId;
     private javax.swing.JTextField txtSearchMember;
     private javax.swing.JPanel txtSearchUsername;
     private javax.swing.JButton updateBtn;

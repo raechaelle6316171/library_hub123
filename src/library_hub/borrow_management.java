@@ -604,7 +604,7 @@ DefaultTableModel model = (DefaultTableModel) jTableBooks.getModel();
 
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
         this.dispose();
-        frontpage w = new frontpage();
+        dashboard w = new dashboard();
         w.setVisible(true);
     }//GEN-LAST:event_jButton5ActionPerformed
 
@@ -627,33 +627,33 @@ DefaultTableModel model = (DefaultTableModel) jTableBooks.getModel();
     private void txtSearchBookKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtSearchBookKeyReleased
         String query = txtSearchBook.getText().trim();
     
-    DefaultTableModel model = (DefaultTableModel) jTableBooks.getModel(); // Make sure this is your book table name
-    model.setRowCount(0); // Clear the table first
+        DefaultTableModel model = (DefaultTableModel) jTableBooks.getModel(); 
+        model.setRowCount(0); 
 
-    try {
-        Connection conn = MySQLConnect.getConnection();
-        
-        String sql = "SELECT * FROM books WHERE acquisition_no LIKE ? OR title LIKE ?";
-        PreparedStatement pst = conn.prepareStatement(sql);
-        
-        pst.setString(1, "%" + query + "%");
-        pst.setString(2, "%" + query + "%");
-        
-        ResultSet rs = pst.executeQuery();
+        try {
+            Connection conn = MySQLConnect.getConnection();
 
-        while (rs.next()) {
+            // Added ( ) around the OR conditions and added the status check
+            String sql = "SELECT * FROM books WHERE (acquisition_no LIKE ? OR title LIKE ?) AND status = 'Available'";
+            PreparedStatement pst = conn.prepareStatement(sql);
 
-            String acq = rs.getString("acquisition_no");
-            String title = rs.getString("title");
-            String author = rs.getString("author");
-            String status = rs.getString("status");
-            
-            model.addRow(new Object[]{acq, title, author, status});
+            pst.setString(1, "%" + query + "%");
+            pst.setString(2, "%" + query + "%");
+
+            ResultSet rs = pst.executeQuery();
+
+            while (rs.next()) {
+                String acq = rs.getString("acquisition_no");
+                String title = rs.getString("title");
+                String author = rs.getString("author");
+                String status = rs.getString("status");
+
+                model.addRow(new Object[]{acq, title, author, status});
+            }
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Search Error: " + e.getMessage());
         }
-
-    } catch (SQLException e) {
-        JOptionPane.showMessageDialog(this, "Search Error: " + e.getMessage());
-    }   
     }//GEN-LAST:event_txtSearchBookKeyReleased
 
     private void IssueBookBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_IssueBookBtnActionPerformed
@@ -667,8 +667,7 @@ DefaultTableModel model = (DefaultTableModel) jTableBooks.getModel();
     // Uses the hidden variable instead of a text field
     String contact = selectedMemberContact; 
     
-    // --- UPDATED OVERDUE CHECK ---
-    // This will only block the user if they have an overdue AND they are NOT Faculty
+    // 1. GLOBAL OVERDUE CHECK (BLOCKS STUDENTS ONLY)
     if (hasOverdue(name)) {
         if (!userType.equalsIgnoreCase("Faculty")) {
             JOptionPane.showMessageDialog(this, 
@@ -679,8 +678,8 @@ DefaultTableModel model = (DefaultTableModel) jTableBooks.getModel();
             return;
         }
     }
-    // ------------------------------
 
+    // 2. EMPTY FIELD VALIDATION
     if (name.isEmpty() || contact.isEmpty() || acqNo.isEmpty() || iDate.isEmpty() || dDate.isEmpty()) {
         JOptionPane.showMessageDialog(this, "Please select a member, a book, and fill in the dates!");
         return;
@@ -691,7 +690,7 @@ DefaultTableModel model = (DefaultTableModel) jTableBooks.getModel();
         conn = MySQLConnect.getConnection();
         conn.setAutoCommit(false);
 
-        // Student Borrowing Limit Check
+        // 3. STUDENT BORROWING LIMIT CHECK (3 BOOKS TOTAL)
         if (userType.equalsIgnoreCase("Student")) {
             String countSql = "SELECT COUNT(*) FROM issued_books WHERE fullname = ? AND status = 'Issued'"; 
             PreparedStatement countPst = conn.prepareStatement(countSql);
@@ -703,23 +702,30 @@ DefaultTableModel model = (DefaultTableModel) jTableBooks.getModel();
             }
         }
 
-        // Duplicate Book Check
-        String duplicateSql = "SELECT COUNT(*) FROM issued_books WHERE fullname = ? AND book_title = ? AND status = 'Issued'";
+        // 4. DUPLICATE TITLE & OVERDUE TITLE CHECK (APPLIES TO EVERYONE, INCLUDING FACULTY)
+        // This query specifically prevents borrowing the same title if it is currently 'Issued' OR 'Overdue'
+        String duplicateSql = "SELECT status FROM issued_books WHERE fullname = ? AND book_title = ? AND (status = 'Issued' OR status = 'Overdue')";
         PreparedStatement duplicatePst = conn.prepareStatement(duplicateSql);
         duplicatePst.setString(1, name);
         duplicatePst.setString(2, title);
         ResultSet rsDuplicate = duplicatePst.executeQuery();
-        if (rsDuplicate.next() && rsDuplicate.getInt(1) > 0) {
-            JOptionPane.showMessageDialog(this, "DUPLICATE DETECTED: " + name + " already has an active copy of '" + title + "'.", "Borrowing Denied", JOptionPane.ERROR_MESSAGE);
+        
+        if (rsDuplicate.next()) {
+            String currentStatus = rsDuplicate.getString("status");
+            String message = (currentStatus.equalsIgnoreCase("Overdue"))
+                ? "RESTRICTED: " + name + " has an OVERDUE copy of '" + title + "'. It must be returned before borrowing this title again."
+                : "DUPLICATE: " + name + " already has an active copy of '" + title + "' issued.";
+            
+            JOptionPane.showMessageDialog(this, message, "Borrowing Denied", JOptionPane.ERROR_MESSAGE);
             return; 
         }
 
-        // Date Parsing
+        // 5. DATE PARSING
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm");
         java.sql.Timestamp issueTS = java.sql.Timestamp.valueOf(LocalDateTime.parse(iDate, formatter));
         java.sql.Timestamp dueTS = java.sql.Timestamp.valueOf(LocalDateTime.parse(dDate, formatter));
 
-        // Insert Record
+        // 6. INSERT RECORD
         String issueSql = "INSERT INTO issued_books (fullname, contact_no, usertype, book_acq_no, book_title, issue_date, due_date, penalty_paid, status) "
                         + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Issued')";
 
@@ -736,6 +742,7 @@ DefaultTableModel model = (DefaultTableModel) jTableBooks.getModel();
         int result = issuePst.executeUpdate();
 
         if (result > 0) {
+            // Update Book Availability to prevent others from borrowing the same copy
             String updateBookSql = "UPDATE books SET status = 'Unavailable' WHERE acquisition_no = ?";
             PreparedStatement updatePst = conn.prepareStatement(updateBookSql);
             updatePst.setString(1, acqNo);

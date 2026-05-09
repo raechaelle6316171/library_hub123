@@ -1,4 +1,4 @@
-package library_hub;
+        package library_hub;
 
 import java.sql.*;
 import java.sql.Connection;
@@ -35,11 +35,17 @@ public class issuereport_management extends javax.swing.JFrame {
 
     public issuereport_management() {
         initComponents();
-        populateIssuedTable(""); 
-        updateTotalPaid();
-        updateTotalUnpaid();
+        
+        txtSearch.putClientProperty("JTextField.placeholderText", "Search (ID, Name, or Book)");
+        
+        showAllReports();
+        populateIssuedTable("");      // Or whatever you named your "show data" method
+        calculateTotalPaid();  // This makes the total show up immediately on open
+        calculateTotalUnpaid();
+        
+       //updateTotalUnpaid();
+        //updateTotalPaid();
     }
-    
     
     public void populateIssuedTable(String query) {
     DefaultTableModel model = (DefaultTableModel) jTableIssueReport.getModel();
@@ -47,8 +53,7 @@ public class issuereport_management extends javax.swing.JFrame {
     java.text.SimpleDateFormat displayFormat = new java.text.SimpleDateFormat("MM/dd/yyyy HH:mm");
     try {
         Connection conn = MySQLConnect.getConnection();
-
-       String sql = "SELECT * FROM issue_report WHERE fullname LIKE ? OR book_title LIKE ? ORDER BY id DESC";
+        String sql = "SELECT * FROM issue_report WHERE fullname LIKE ? OR book_title LIKE ? ORDER BY id DESC";
 
         PreparedStatement pst = conn.prepareStatement(sql);
         String search = "%" + query + "%";
@@ -65,17 +70,21 @@ public class issuereport_management extends javax.swing.JFrame {
             String issueStr = (issueTs != null) ? displayFormat.format(issueTs) : "N/A";
             String dueStr = (dueTs != null) ? displayFormat.format(dueTs) : "N/A";
             String returnStr = (returnTs != null) ? displayFormat.format(returnTs) : "N/A";
+
+            // Map columns to match your jTable headers
             Object[] row = {
                 rs.getInt("id"),               
-                rs.getString("fullname"),
-                rs.getString("usertype"),
-                rs.getString("course"),
+                rs.getString("school_id"),   // New: Fetching numeric ID
+                rs.getString("fullname"),    
+                rs.getString("usertype"),    
+                rs.getString("contact_no"),  // New: Fetching 11-digit number
+                rs.getString("course"),      
                 rs.getString("year"),                         
                 rs.getString("book_acq_no"),
                 rs.getString("book_title"),
                 rs.getString("author"),
-                issueStr,    // Formatted
-                dueStr,      // Formatted
+                issueStr,    
+                dueStr,      
                 returnStr, 
                 rs.getString("penalty_paid"),            
                 rs.getString("status")
@@ -85,49 +94,57 @@ public class issuereport_management extends javax.swing.JFrame {
     } catch (SQLException e) {
         JOptionPane.showMessageDialog(null, "Report Error: " + e.getMessage());
     }
-    //calculateTotalUnpaid();
     calculateTotalPaid();
-
 }
     
     public void calculateTotalUnpaid() {
-    double totalUnpaid = 0.0;
-    for (int i = 0; i < jTableIssueReport.getRowCount(); i++) {
-        try {
+    try {
+        Connection conn = MySQLConnect.getConnection();
+        
+        // THE BULLETPROOF QUERY:
+        // 1. IFNULL: Prevents crashes if any penalty is completely blank (NULL)
+        // 2. CAST: Forces the database to treat penalty_paid as a decimal number, not text
+        // 3. UPPER: Makes sure 'Overdue', 'overdue', and 'OVERDUE' all get counted
+        String sql = "SELECT SUM(CAST(IFNULL(penalty_paid, 0) AS DECIMAL(10,2))) AS balance " +
+                     "FROM issued_books " +
+                     "WHERE TRIM(UPPER(status)) = 'OVERDUE' " +
+                     "AND TRIM(UPPER(usertype)) != 'FACULTY'";
+        
+        PreparedStatement pst = conn.prepareStatement(sql);
+        ResultSet rs = pst.executeQuery();
 
-            Object statusObj = jTableIssueReport.getValueAt(i, 12);
-            Object penaltyObj = jTableIssueReport.getValueAt(i, 11);
-            
-            if (statusObj != null && penaltyObj != null) {
-                String status = statusObj.toString();
-
-                if (status.equalsIgnoreCase("Overdue")) {
-                    double amount = Double.parseDouble(penaltyObj.toString());
-                    totalUnpaid += amount;
-                }
-            }
-        } catch (Exception e) {
-
+        if (rs.next()) {
+            double unpaidTotal = rs.getDouble("balance");
+            txtTotalUnpaid.setText(String.format("%.2f", unpaidTotal));
+        } else {
+            txtTotalUnpaid.setText("0.00");
         }
+    } catch (Exception e) {
+        javax.swing.JOptionPane.showMessageDialog(null, "Unpaid Box Error: " + e.getMessage());
+        txtTotalUnpaid.setText("0.00");
     }
-    txtTotalUnpaid.setText(String.format("%.2f", totalUnpaid));
 }
-
+    
     public void calculateTotalPaid() {
     double total = 0;
-    for (int i = 0; i < jTableIssueReport.getRowCount(); i++) {
+    DefaultTableModel model = (DefaultTableModel) jTableIssueReport.getModel();
+    
+    for (int i = 0; i < model.getRowCount(); i++) {
         try {
-            // Penalty Paid is at Index 11
-            Object value = jTableIssueReport.getValueAt(i, 11);
-            String status = jTableIssueReport.getValueAt(i, 12).toString();
+            // Index 13 is "Penalty Paid" based on your table structure
+            Object value = model.getValueAt(i, 13);
             
-            if (status.equalsIgnoreCase("Returned") && value != null) {
-                total += Double.parseDouble(value.toString());
+            if (value != null && !value.toString().isEmpty()) {
+                double penaltyValue = Double.parseDouble(value.toString());
+                total += penaltyValue;
             }
-        } catch (Exception e) { /* Skip errors */ }
+        } catch (NumberFormatException e) {
+            // Skips invalid numbers
+        }
     }
+    // Updates the text field
     txtTotalPaid.setText(String.format("%.2f", total));
-    }
+}
    
     
     public void updateTotalUnpaid() {
@@ -173,63 +190,217 @@ public class issuereport_management extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jPanel3 = new javax.swing.JPanel();
+        jPanel9 = new javax.swing.JPanel();
+        jPanel2 = new javax.swing.JPanel();
+        txtTotalPaid = new javax.swing.JTextField();
+        jLabel3 = new javax.swing.JLabel();
+        jPanel1 = new javax.swing.JPanel();
+        jLabel2 = new javax.swing.JLabel();
+        txtTotalUnpaid = new javax.swing.JTextField();
+        jPanel4 = new javax.swing.JPanel();
+        jLabel21 = new javax.swing.JLabel();
+        jButton10 = new javax.swing.JButton();
+        txtSearch = new javax.swing.JTextField();
+        jLabel4 = new javax.swing.JLabel();
+        cmbMonth = new javax.swing.JComboBox<>();
+        generateReportBtn = new javax.swing.JButton();
+        cmbWeek = new javax.swing.JComboBox<>();
+        cmbYear = new javax.swing.JComboBox<>();
+        close1 = new javax.swing.JButton();
+        jLabel8 = new javax.swing.JLabel();
+        jLabel10 = new javax.swing.JLabel();
+        jLabel11 = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
         jTableIssueReport = new javax.swing.JTable();
         printBtn = new javax.swing.JButton();
-        jLabel1 = new javax.swing.JLabel();
-        txtSearch = new javax.swing.JTextField();
-        jPanel5 = new javax.swing.JPanel();
-        jPanel6 = new javax.swing.JPanel();
-        txtTotalUnpaid = new javax.swing.JTextField();
-        jLabel2 = new javax.swing.JLabel();
-        jPanel7 = new javax.swing.JPanel();
-        jPanel8 = new javax.swing.JPanel();
-        txtTotalPaid = new javax.swing.JTextField();
-        jLabel3 = new javax.swing.JLabel();
-        close1 = new javax.swing.JButton();
-        jPanel4 = new javax.swing.JPanel();
-        jLabel9 = new javax.swing.JLabel();
-        jButton6 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        jPanel3.setBackground(new java.awt.Color(102, 51, 0));
-        jPanel3.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 5));
-        jPanel3.setPreferredSize(new java.awt.Dimension(285, 53));
+        jPanel9.setBackground(new java.awt.Color(255, 255, 255));
 
+        jPanel2.setBackground(new java.awt.Color(255, 177, 177));
+        jPanel2.setPreferredSize(new java.awt.Dimension(718, 99));
+
+        txtTotalPaid.setEditable(false);
+        txtTotalPaid.setBackground(new java.awt.Color(255, 177, 177));
+        txtTotalPaid.setFont(new java.awt.Font("Segoe UI", 1, 36)); // NOI18N
+        txtTotalPaid.setBorder(null);
+
+        jLabel3.setFont(new java.awt.Font("Segoe UI", 1, 20)); // NOI18N
+        jLabel3.setText("TOTAL PAID");
+
+        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
+        jPanel2.setLayout(jPanel2Layout);
+        jPanel2Layout.setHorizontalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addGap(195, 195, 195)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(txtTotalPaid, javax.swing.GroupLayout.PREFERRED_SIZE, 294, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel3))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+        jPanel2Layout.setVerticalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jLabel3)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(txtTotalPaid, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
+        );
+
+        jPanel1.setBackground(new java.awt.Color(255, 210, 135));
+
+        jLabel2.setFont(new java.awt.Font("Segoe UI", 1, 20)); // NOI18N
+        jLabel2.setText("TOTAL UNPAID");
+
+        txtTotalUnpaid.setBackground(new java.awt.Color(255, 210, 135));
+        txtTotalUnpaid.setFont(new java.awt.Font("Segoe UI", 1, 36)); // NOI18N
+        txtTotalUnpaid.setBorder(null);
+        txtTotalUnpaid.addActionListener(this::txtTotalUnpaidActionPerformed);
+
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                .addContainerGap(401, Short.MAX_VALUE)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(txtTotalUnpaid, javax.swing.GroupLayout.PREFERRED_SIZE, 294, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel2))
+                .addGap(49, 49, 49))
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jLabel2)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(txtTotalUnpaid, javax.swing.GroupLayout.PREFERRED_SIZE, 54, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
+        );
+
+        jPanel4.setBackground(new java.awt.Color(177, 241, 255));
+        jPanel4.setForeground(new java.awt.Color(0, 102, 0));
+        jPanel4.setPreferredSize(new java.awt.Dimension(285, 53));
+
+        jLabel21.setFont(new java.awt.Font("Lucida Fax", 1, 36)); // NOI18N
+        jLabel21.setForeground(new java.awt.Color(0, 0, 0));
+        jLabel21.setText("ISSUE REPORT");
+
+        jButton10.setIcon(new javax.swing.ImageIcon(getClass().getResource("/library_hub/cancel.png"))); // NOI18N
+        jButton10.addActionListener(this::jButton10ActionPerformed);
+
+        javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
+        jPanel4.setLayout(jPanel4Layout);
+        jPanel4Layout.setHorizontalGroup(
+            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel4Layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jLabel21)
+                .addGap(577, 577, 577)
+                .addComponent(jButton10, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
+        );
+        jPanel4Layout.setVerticalGroup(
+            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jButton10, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel21))
+                .addContainerGap())
+        );
+
+        txtSearch.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
+        txtSearch.setForeground(new java.awt.Color(204, 204, 204));
+        txtSearch.setText("Search (ID, Name, or Book)");
+        txtSearch.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 102, 0), 2));
+        txtSearch.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                txtSearchFocusGained(evt);
+            }
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                txtSearchFocusLost(evt);
+            }
+        });
+        txtSearch.addActionListener(this::txtSearchActionPerformed);
+        txtSearch.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                txtSearchKeyReleased(evt);
+            }
+        });
+
+        jLabel4.setFont(new java.awt.Font("Trebuchet MS", 1, 24)); // NOI18N
+        jLabel4.setText("REPORTS CONTROL");
+
+        cmbMonth.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
+        cmbMonth.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "January", "February", "March ", "April", "May ", "June", "July ", "August", "September", "October", "November", "December" }));
+        cmbMonth.setBorder(null);
+        cmbMonth.addActionListener(this::cmbMonthActionPerformed);
+
+        generateReportBtn.setBackground(new java.awt.Color(0, 153, 153));
+        generateReportBtn.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
+        generateReportBtn.setForeground(new java.awt.Color(255, 255, 255));
+        generateReportBtn.setText("GENERATE REPORT");
+        generateReportBtn.addActionListener(this::generateReportBtnActionPerformed);
+
+        cmbWeek.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
+        cmbWeek.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Today", "1st Week", "2nd Week", "3rd Week", "4th Week" }));
+        cmbWeek.setBorder(null);
+
+        cmbYear.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
+        cmbYear.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "2026", "2025", "2024" }));
+        cmbYear.setBorder(null);
+
+        close1.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
+        close1.setForeground(new java.awt.Color(0, 102, 0));
+        close1.setText("X");
+        close1.addActionListener(this::close1ActionPerformed);
+
+        jLabel8.setFont(new java.awt.Font("Trebuchet MS", 1, 24)); // NOI18N
+        jLabel8.setText("MONTH");
+
+        jLabel10.setFont(new java.awt.Font("Trebuchet MS", 1, 24)); // NOI18N
+        jLabel10.setText("YEAR");
+
+        jLabel11.setFont(new java.awt.Font("Trebuchet MS", 1, 24)); // NOI18N
+        jLabel11.setText("WEEK");
+
+        jTableIssueReport.setForeground(new java.awt.Color(0, 0, 0));
         jTableIssueReport.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null, null, null}
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null}
             },
             new String [] {
-                "Id", "Member Name", "User Type", "Course", "Year", "Acq No", "Book Title", "Author", "Issued Date", "Due Date", "Actual Return Date", "Penalty Paid", "Status", "  Select"
+                "Id", "School Id", "Member Name", "User Type", "Contact No", "Course", "Year", "Acq No", "Book Title", "Author", "Issued Date", "Due Date", "Actual Return Date", "Penalty Paid", "Status", "  Select"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Boolean.class
+                java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Boolean.class
             };
             boolean[] canEdit = new boolean [] {
-                false, false, false, false, false, false, false, false, false, false, false, false, false, true
+                false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, true
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -242,208 +413,100 @@ public class issuereport_management extends javax.swing.JFrame {
         });
         jScrollPane1.setViewportView(jTableIssueReport);
 
-        printBtn.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        printBtn.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
+        printBtn.setIcon(new javax.swing.ImageIcon(getClass().getResource("/library_hub/print.png"))); // NOI18N
         printBtn.setText("PRINT TO PDF");
         printBtn.addActionListener(this::printBtnActionPerformed);
 
-        jLabel1.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-        jLabel1.setForeground(new java.awt.Color(255, 255, 255));
-        jLabel1.setText("Search");
-
-        txtSearch.addActionListener(this::txtSearchActionPerformed);
-        txtSearch.addKeyListener(new java.awt.event.KeyAdapter() {
-            public void keyReleased(java.awt.event.KeyEvent evt) {
-                txtSearchKeyReleased(evt);
-            }
-        });
-
-        jPanel5.setBackground(new java.awt.Color(255, 255, 255));
-
-        jPanel6.setBackground(new java.awt.Color(255, 102, 102));
-
-        javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
-        jPanel6.setLayout(jPanel6Layout);
-        jPanel6Layout.setHorizontalGroup(
-            jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 14, Short.MAX_VALUE)
-        );
-        jPanel6Layout.setVerticalGroup(
-            jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 100, Short.MAX_VALUE)
-        );
-
-        txtTotalUnpaid.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
-
-        jLabel2.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
-        jLabel2.setText("TOTAL UNPAID");
-
-        javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
-        jPanel5.setLayout(jPanel5Layout);
-        jPanel5Layout.setHorizontalGroup(
-            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel5Layout.createSequentialGroup()
-                .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(txtTotalUnpaid, javax.swing.GroupLayout.PREFERRED_SIZE, 139, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel2))
-                .addGap(0, 8, Short.MAX_VALUE))
-        );
-        jPanel5Layout.setVerticalGroup(
-            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel5Layout.createSequentialGroup()
-                .addGap(0, 0, Short.MAX_VALUE)
-                .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel5Layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jLabel2)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(txtTotalUnpaid, javax.swing.GroupLayout.PREFERRED_SIZE, 54, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap())
-        );
-
-        jPanel7.setBackground(new java.awt.Color(255, 255, 255));
-
-        jPanel8.setBackground(new java.awt.Color(153, 153, 255));
-
-        javax.swing.GroupLayout jPanel8Layout = new javax.swing.GroupLayout(jPanel8);
-        jPanel8.setLayout(jPanel8Layout);
-        jPanel8Layout.setHorizontalGroup(
-            jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 15, Short.MAX_VALUE)
-        );
-        jPanel8Layout.setVerticalGroup(
-            jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 100, Short.MAX_VALUE)
-        );
-
-        txtTotalPaid.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
-
-        jLabel3.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
-        jLabel3.setText("TOTAL PAID");
-
-        javax.swing.GroupLayout jPanel7Layout = new javax.swing.GroupLayout(jPanel7);
-        jPanel7.setLayout(jPanel7Layout);
-        jPanel7Layout.setHorizontalGroup(
-            jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel7Layout.createSequentialGroup()
-                .addComponent(jPanel8, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(txtTotalPaid, javax.swing.GroupLayout.PREFERRED_SIZE, 139, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 113, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(0, 7, Short.MAX_VALUE))
-        );
-        jPanel7Layout.setVerticalGroup(
-            jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel7Layout.createSequentialGroup()
-                .addGap(0, 0, Short.MAX_VALUE)
-                .addComponent(jPanel8, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel7Layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jLabel3)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(txtTotalPaid, javax.swing.GroupLayout.PREFERRED_SIZE, 54, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap())
-        );
-
-        close1.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
-        close1.setText("x");
-        close1.addActionListener(this::close1ActionPerformed);
-
-        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
-        jPanel3.setLayout(jPanel3Layout);
-        jPanel3Layout.setHorizontalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel3Layout.createSequentialGroup()
+        javax.swing.GroupLayout jPanel9Layout = new javax.swing.GroupLayout(jPanel9);
+        jPanel9.setLayout(jPanel9Layout);
+        jPanel9Layout.setHorizontalGroup(
+            jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+            .addGroup(jPanel9Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1)
-                    .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addComponent(jLabel1)
+                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel9Layout.createSequentialGroup()
+                        .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addGroup(jPanel9Layout.createSequentialGroup()
+                                .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 228, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(close1))
+                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel9Layout.createSequentialGroup()
+                                .addComponent(jLabel4)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 63, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jLabel8)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 164, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(cmbMonth, javax.swing.GroupLayout.PREFERRED_SIZE, 233, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(close1)
-                        .addGap(194, 194, 194)
-                        .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(120, 120, 120)
-                        .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 472, Short.MAX_VALUE)))
+                        .addComponent(jLabel10)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(cmbYear, javax.swing.GroupLayout.PREFERRED_SIZE, 233, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel11)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(cmbWeek, javax.swing.GroupLayout.PREFERRED_SIZE, 233, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(generateReportBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 228, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(19, 19, 19))
+                    .addGroup(jPanel9Layout.createSequentialGroup()
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 1494, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(jPanel9Layout.createSequentialGroup()
+                        .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, 744, Short.MAX_VALUE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel9Layout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(printBtn)))
                 .addContainerGap())
-            .addGroup(jPanel3Layout.createSequentialGroup()
-                .addGap(638, 638, 638)
-                .addComponent(printBtn)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addComponent(jPanel4, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 1506, Short.MAX_VALUE)
         );
-        jPanel3Layout.setVerticalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel3Layout.createSequentialGroup()
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addGap(15, 15, 15)
-                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jPanel7, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jPanel5, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 29, Short.MAX_VALUE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel1)
-                            .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(close1))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)))
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 319, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(30, 30, 30)
-                .addComponent(printBtn)
-                .addGap(42, 42, 42))
-        );
-
-        jPanel4.setBackground(new java.awt.Color(102, 51, 0));
-        jPanel4.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 5));
-        jPanel4.setPreferredSize(new java.awt.Dimension(285, 53));
-
-        jLabel9.setFont(new java.awt.Font("Century Gothic", 1, 24)); // NOI18N
-        jLabel9.setForeground(new java.awt.Color(255, 255, 255));
-        jLabel9.setText("ISSUE REPORT");
-
-        jButton6.setText("x");
-        jButton6.addActionListener(this::jButton6ActionPerformed);
-
-        javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
-        jPanel4.setLayout(jPanel4Layout);
-        jPanel4Layout.setHorizontalGroup(
-            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel4Layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jLabel9)
-                .addGap(603, 603, 603)
-                .addComponent(jButton6)
-                .addContainerGap())
-        );
-        jPanel4Layout.setVerticalGroup(
-            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel4Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel9)
-                    .addComponent(jButton6))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        jPanel9Layout.setVerticalGroup(
+            jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel9Layout.createSequentialGroup()
+                .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, 52, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(10, 10, 10)
+                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(jLabel11)
+                        .addComponent(cmbWeek, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(generateReportBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(cmbYear, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jLabel10)
+                        .addComponent(cmbMonth, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jLabel8))
+                    .addGroup(jPanel9Layout.createSequentialGroup()
+                        .addComponent(jLabel4)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(close1)
+                            .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                .addGap(18, 18, 18)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(20, 20, 20)
+                .addComponent(printBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(15, 15, 15))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, 1403, Short.MAX_VALUE)
-            .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, 1403, Short.MAX_VALUE)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jPanel9, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, 572, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addGap(0, 0, Short.MAX_VALUE)
+                .addComponent(jPanel9, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
         pack();
@@ -460,28 +523,38 @@ public class issuereport_management extends javax.swing.JFrame {
         TableRowSorter<DefaultTableModel> trs = new TableRowSorter<>(model);
         jTableIssueReport.setRowSorter(trs);
 
-        trs.setRowFilter(RowFilter.regexFilter("(?i)" + searchStr, 0, 1, 5, 6));
+        trs.setRowFilter(RowFilter.regexFilter("(?i)" + searchStr, 0, 2, 7, 8));
 
     }//GEN-LAST:event_txtSearchKeyReleased
 
-    private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
-        this.dispose();
-        frontpage w = new frontpage();
-        w.setVisible(true);
-    }//GEN-LAST:event_jButton6ActionPerformed
-
     private void printBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_printBtnActionPerformed
-        try {
+    try {
+        // 1. Force the table to save the checkbox state
+        if (jTableIssueReport.isEditing()) {
+            jTableIssueReport.getCellEditor().stopCellEditing();
+        }
+
         int rowCount = jTableIssueReport.getRowCount();
-        int selectColumnIndex = 13; 
-        
+        int selectColumnIndex = 15; // The 'Select' checkbox is the last column
+
         java.util.Map<String, java.util.List<Object[]>> groupedMembers = new java.util.LinkedHashMap<>();
+        
         for (int i = 0; i < rowCount; i++) {
-            Object isChecked = jTableIssueReport.getValueAt(i, selectColumnIndex);
-            if (isChecked != null && (boolean) isChecked) {
-                String memberName = jTableIssueReport.getValueAt(i, 1).toString();
+            Object value = jTableIssueReport.getValueAt(i, selectColumnIndex);
+            boolean isChecked = false;
+            
+            // Safe conversion for checkboxes
+            if (value instanceof Boolean) {
+                isChecked = (Boolean) value;
+            } else if (value != null) {
+                isChecked = Boolean.parseBoolean(value.toString());
+            }
+
+            if (isChecked) {
+                // Index 2 is Member Name
+                String memberName = jTableIssueReport.getValueAt(i, 2).toString(); 
                 Object[] rowData = new Object[jTableIssueReport.getColumnCount()];
-                for(int col = 0; col < jTableIssueReport.getColumnCount(); col++){
+                for (int col = 0; col < jTableIssueReport.getColumnCount(); col++) {
                     rowData[col] = jTableIssueReport.getValueAt(i, col);
                 }
                 groupedMembers.computeIfAbsent(memberName, k -> new java.util.ArrayList<>()).add(rowData);
@@ -493,14 +566,15 @@ public class issuereport_management extends javax.swing.JFrame {
             return;
         }
 
+        // 2. Setup PDF Document (Receipt Size)
         String path = System.getProperty("user.home") + "/Desktop/Library_Receipt.pdf";
         com.itextpdf.text.Rectangle envelope = new com.itextpdf.text.Rectangle(226, 850); 
-        com.itextpdf.text.Document doc = new com.itextpdf.text.Document(envelope, 10, 10, 10, 10); 
+        com.itextpdf.text.Document doc = new com.itextpdf.text.Document(envelope, 15, 15, 10, 10); 
         com.itextpdf.text.pdf.PdfWriter.getInstance(doc, new java.io.FileOutputStream(path));
         doc.open();
 
-        // Fonts to match your edit
-        com.itextpdf.text.Font boldTitle = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12);
+        // Fonts
+        com.itextpdf.text.Font boldTitle = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11);
         com.itextpdf.text.Font boldLabel = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9);
         com.itextpdf.text.Font normal = FontFactory.getFont(FontFactory.HELVETICA, 9);
         com.itextpdf.text.Font tiny = FontFactory.getFont(FontFactory.HELVETICA, 8);
@@ -518,61 +592,50 @@ public class issuereport_management extends javax.swing.JFrame {
             Paragraph subHeader = new Paragraph("\nTransaction Receipt", normal);
             subHeader.setAlignment(Element.ALIGN_CENTER);
             doc.add(subHeader);
-            doc.add(new Paragraph("-----------------------------------------------------------------------------", tiny));
+            doc.add(new Paragraph("-------------------------------------------------------------------------", tiny));
 
             // --- MEMBER DETAILS ---
             doc.add(new Paragraph("NAME: " + name, boldLabel));
-            doc.add(new Paragraph("TYPE: " + info[2].toString().toUpperCase() + " | COURSE " + info[3] + " " + info[4], normal));
+            doc.add(new Paragraph("TYPE: " + info[3].toString().toUpperCase() + " | COURSE " + info[5] + " " + info[6], normal));
+            doc.add(new Paragraph("SCHOOL ID: " + info[1].toString(), normal));
+            doc.add(new Paragraph("CONTACT No. " + info[4].toString(), normal));
             doc.add(new Paragraph("PRINTED: " + java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("MM/dd/yyyy")), normal));
-            doc.add(new Paragraph(" "));
+            doc.add(new Paragraph("-------------------------------------------------------------------------", tiny));
 
             double totalPaid = 0;
             for (Object[] row : books) {
-                // Book Info Table (3 Columns: Acq, Title, Penalty)
-                com.itextpdf.text.pdf.PdfPTable bookTable = new com.itextpdf.text.pdf.PdfPTable(new float[]{30, 40, 30});
+                // Table for Acq, Title, Penalty layout
+                com.itextpdf.text.pdf.PdfPTable bookTable = new com.itextpdf.text.pdf.PdfPTable(new float[]{60, 40});
                 bookTable.setWidthPercentage(100);
 
-                // Column 1: Acq No
-                PdfPCell c1 = new PdfPCell();
-                c1.addElement(new Phrase("Acq No:", normal));
-                c1.addElement(new Phrase(row[5].toString(), normal));
-                c1.setBorder(Rectangle.NO_BORDER);
-                
-                // Column 2: Book Title
-                PdfPCell c2 = new PdfPCell();
-                c2.addElement(new Phrase("Book Title:", normal));
-                c2.addElement(new Phrase(row[6].toString().toUpperCase(), boldLabel));
-                c2.setBorder(Rectangle.NO_BORDER);
-                
-                // Column 3: Penalty
-                PdfPCell c3 = new PdfPCell();
-                c3.addElement(new Phrase("Penalty", normal));
-                c3.addElement(new Phrase("P" + row[11].toString(), normal));
-                c3.setBorder(Rectangle.NO_BORDER);
-                c3.setHorizontalAlignment(Element.ALIGN_RIGHT);
+                bookTable.addCell(createCell("Acq No:", normal, Element.ALIGN_LEFT));
+                bookTable.addCell(createCell(row[7].toString(), normal, Element.ALIGN_RIGHT));
 
-                bookTable.addCell(c1);
-                bookTable.addCell(c2);
-                bookTable.addCell(c3);
+                bookTable.addCell(createCell("Book Title:", normal, Element.ALIGN_LEFT));
+                bookTable.addCell(createCell(row[8].toString().toUpperCase(), boldLabel, Element.ALIGN_RIGHT));
+
+                bookTable.addCell(createCell("Penalty:", normal, Element.ALIGN_LEFT));
+                bookTable.addCell(createCell("P" + row[13].toString(), normal, Element.ALIGN_RIGHT));
+
                 doc.add(bookTable);
 
-                // Date Details
-                Paragraph dateDetails = new Paragraph(
-                    "Issued: " + row[8].toString() + "\n" +
-                    "Due: " + row[9].toString() + "\n" +
-                    "Returned: " + row[10].toString() + " | Status: " + row[12].toString(), 
+                // Dates & Status
+                Paragraph details = new Paragraph(
+                    "Issued: " + row[10].toString() + "\n" +
+                    "Due: " + row[11].toString() + "\n" +
+                    "Returned: " + row[12].toString() + " | Status: " + row[14].toString(), 
                     tiny
                 );
-                doc.add(dateDetails);
-                doc.add(new Paragraph("-----------------------------------------------------------------------------", tiny));
+                doc.add(details);
+                doc.add(new Paragraph("-------------------------------------------------------------------------", tiny));
 
-                try { totalPaid += Double.parseDouble(row[11].toString()); } catch (Exception e) {}
+                try { totalPaid += Double.parseDouble(row[13].toString()); } catch (Exception e) {}
             }
 
             // --- FOOTER ---
-            Paragraph total = new Paragraph("TOTAL PAID: P" + String.format("%.2f", totalPaid), boldTitle);
-            total.setAlignment(Element.ALIGN_RIGHT);
-            doc.add(total);
+            Paragraph totalPara = new Paragraph("TOTAL PAID: P" + String.format("%.2f", totalPaid), boldTitle);
+            totalPara.setAlignment(Element.ALIGN_RIGHT);
+            doc.add(totalPara);
             
             doc.add(new Paragraph("\n\n"));
             Paragraph ty = new Paragraph("Thank you for returning\n: )", normal);
@@ -586,7 +649,56 @@ public class issuereport_management extends javax.swing.JFrame {
     } catch (Exception e) {
         javax.swing.JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
     }
+}
+
+// Keep the helper method from the previous response
+private PdfPCell createCell(String text, com.itextpdf.text.Font font, int alignment) {
+    PdfPCell cell = new PdfPCell(new Phrase(text, font));
+    cell.setBorder(com.itextpdf.text.Rectangle.NO_BORDER);
+    cell.setHorizontalAlignment(alignment);
+    cell.setPaddingBottom(2f);
+    return cell;
+
     }//GEN-LAST:event_printBtnActionPerformed
+
+
+
+public void showAllReports() {
+    DefaultTableModel model = (DefaultTableModel) jTableIssueReport.getModel();
+    model.setRowCount(0); // Clear the table first
+
+    try {
+        Connection conn = MySQLConnect.getConnection();
+        String sql = "SELECT * FROM issue_report"; // No filters, shows everything
+        PreparedStatement pst = conn.prepareStatement(sql);
+        ResultSet rs = pst.executeQuery();
+
+        while (rs.next()) {
+            model.addRow(new Object[]{
+                rs.getString("id"),
+                rs.getString("school_id"),
+                rs.getString("fullname"),
+                rs.getString("usertype"),
+                rs.getString("contact_no"),
+                rs.getString("course"),
+                rs.getString("year"),
+                rs.getString("book_acq_no"),
+                rs.getString("book_title"),
+                rs.getString("author"),
+                rs.getString("issue_date"),
+                rs.getString("due_date"),
+                rs.getString("actual_return_date"),
+                rs.getString("penalty_paid"),
+                rs.getString("status"),
+                false 
+            });
+        }
+    } catch (Exception e) {
+        JOptionPane.showMessageDialog(null, e);
+    }
+}
+
+
 
     private void close1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_close1ActionPerformed
         txtSearch.setText("");
@@ -595,11 +707,123 @@ public class issuereport_management extends javax.swing.JFrame {
         TableRowSorter<DefaultTableModel> trs = new TableRowSorter<>(model);
         jTableIssueReport.setRowSorter(trs);
         trs.setRowFilter(null); 
+        
+        showAllReports();
 
         updateTotalPaid();
+        calculateTotalPaid();
 
         txtSearch.requestFocus();
     }//GEN-LAST:event_close1ActionPerformed
+
+    private void generateReportBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_generateReportBtnActionPerformed
+        String selectedMonth = cmbMonth.getSelectedItem().toString(); 
+    String selectedYear = cmbYear.getSelectedItem().toString();   
+    String selectedWeek = cmbWeek.getSelectedItem().toString();   
+
+    DefaultTableModel model = (DefaultTableModel) jTableIssueReport.getModel();
+    model.setRowCount(0); 
+
+    try {
+        Connection conn = MySQLConnect.getConnection();
+        String sql;
+        PreparedStatement pst;
+
+        // 1. Strict "Today" Logic
+        if (selectedWeek.equalsIgnoreCase("today")) {
+            // This query only returns rows if CURDATE matches the selected Month and Year
+            sql = "SELECT * FROM issue_report WHERE DATE(actual_return_date) = CURDATE() " +
+                  "AND MONTHNAME(actual_return_date) = ? " +
+                  "AND YEAR(actual_return_date) = ?";
+            
+            pst = conn.prepareStatement(sql);
+            pst.setString(1, selectedMonth);
+            pst.setString(2, selectedYear);
+            
+        } else {
+            // 2. Week Filtering Logic
+            if (selectedWeek.contains("Select Week")) {
+                JOptionPane.showMessageDialog(this, "Please select a week or 'Today'");
+                return;
+            }
+
+            String weekOnlyNumbers = selectedWeek.replaceAll("[^0-9]", "");
+            int weekNum = Integer.parseInt(weekOnlyNumbers);
+
+            sql = "SELECT * FROM issue_report WHERE " +
+                  "MONTHNAME(actual_return_date) = ? AND " +
+                  "YEAR(actual_return_date) = ? AND " +
+                  "FLOOR((DAY(actual_return_date) - 1) / 7) + 1 = ?";
+            
+            pst = conn.prepareStatement(sql);
+            pst.setString(1, selectedMonth);
+            pst.setString(2, selectedYear);
+            pst.setInt(3, weekNum);
+        }
+        
+        ResultSet rs = pst.executeQuery();
+
+        while (rs.next()) {
+            model.addRow(new Object[]{
+                rs.getString("id"),
+                rs.getString("school_id"),
+                rs.getString("fullname"),
+                rs.getString("usertype"),
+                rs.getString("contact_no"),
+                rs.getString("course"),
+                rs.getString("year"),
+                rs.getString("book_acq_no"),
+                rs.getString("book_title"),
+                rs.getString("author"),
+                rs.getString("issue_date"),
+                rs.getString("due_date"),
+                rs.getString("actual_return_date"),
+                rs.getString("penalty_paid"),
+                rs.getString("status"),
+                false 
+            });
+        }
+        
+        // Refresh dashboard totals
+        calculateTotalPaid();
+        calculateTotalUnpaid();
+        
+        if (model.getRowCount() == 0) {
+            JOptionPane.showMessageDialog(this, "No records found for " + selectedMonth + " " + selectedYear + " (" + selectedWeek + ")");
+        }
+
+    } catch (Exception e) {
+        JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
+    }
+    }//GEN-LAST:event_generateReportBtnActionPerformed
+
+    private void txtSearchFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtSearchFocusGained
+        if (txtSearch.getText().equals("Search (ID, Name, or Book)")) {
+        txtSearch.setText("");
+        txtSearch.setForeground(java.awt.Color.BLACK);
+}
+    }//GEN-LAST:event_txtSearchFocusGained
+
+    private void txtSearchFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtSearchFocusLost
+        if (txtSearch.getText().isEmpty()) {
+        txtSearch.setForeground(java.awt.Color.GRAY);
+        txtSearch.setText("Search (ID, Name, or Book)");
+}
+    }//GEN-LAST:event_txtSearchFocusLost
+
+    private void cmbMonthActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbMonthActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_cmbMonthActionPerformed
+
+    private void txtTotalUnpaidActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtTotalUnpaidActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtTotalUnpaidActionPerformed
+
+    private void jButton10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton10ActionPerformed
+        this.dispose();
+        dashboard w = new dashboard();
+        w.setVisible(true);
+    }//GEN-LAST:event_jButton10ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -628,17 +852,22 @@ public class issuereport_management extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton close1;
-    private javax.swing.JButton jButton6;
-    private javax.swing.JLabel jLabel1;
+    private javax.swing.JComboBox<String> cmbMonth;
+    private javax.swing.JComboBox<String> cmbWeek;
+    private javax.swing.JComboBox<String> cmbYear;
+    private javax.swing.JButton generateReportBtn;
+    private javax.swing.JButton jButton10;
+    private javax.swing.JLabel jLabel10;
+    private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel21;
     private javax.swing.JLabel jLabel3;
-    private javax.swing.JLabel jLabel9;
-    private javax.swing.JPanel jPanel3;
+    private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel8;
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel4;
-    private javax.swing.JPanel jPanel5;
-    private javax.swing.JPanel jPanel6;
-    private javax.swing.JPanel jPanel7;
-    private javax.swing.JPanel jPanel8;
+    private javax.swing.JPanel jPanel9;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable jTableIssueReport;
     private javax.swing.JButton printBtn;

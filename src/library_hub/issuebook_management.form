@@ -182,7 +182,7 @@
             <Component class="javax.swing.JTable" name="jTableIssuedBooks">
               <Properties>
                 <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
-                  <Table columnCount="10" rowCount="15">
+                  <Table columnCount="9" rowCount="15">
                     <Column editable="false" title="Id" type="java.lang.Object"/>
                     <Column editable="false" title="Member Name" type="java.lang.Object"/>
                     <Column editable="false" title="Contact No" type="java.lang.Object"/>
@@ -192,7 +192,6 @@
                     <Column editable="false" title="Due Date" type="java.lang.Object"/>
                     <Column editable="false" title="Penalty" type="java.lang.Object"/>
                     <Column editable="false" title="Status" type="java.lang.Object"/>
-                    <Column editable="true" title="Select" type="java.lang.Boolean"/>
                   </Table>
                 </Property>
               </Properties>
@@ -244,12 +243,14 @@
         <Component class="javax.swing.JComboBox" name="cmbStatus">
           <Properties>
             <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
-              <StringArray count="5">
+              <StringArray count="7">
                 <StringItem index="0" value="All"/>
                 <StringItem index="1" value="Issued"/>
                 <StringItem index="2" value="Overdue"/>
                 <StringItem index="3" value="Returned"/>
-                <StringItem index="4" value="Unreturned"/>
+                <StringItem index="4" value="Damaged"/>
+                <StringItem index="5" value="Lost"/>
+                <StringItem index="6" value="Unreturned"/>
               </StringArray>
             </Property>
           </Properties>

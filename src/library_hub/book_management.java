@@ -930,7 +930,7 @@ public class book_management extends javax.swing.JFrame {
     
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
         this.dispose();
-        frontpage w = new frontpage();
+        dashboard w = new dashboard();
         w.setVisible(true);
     }//GEN-LAST:event_jButton5ActionPerformed
 

@@ -15,6 +15,7 @@ public class penalty extends javax.swing.JFrame {
     public penalty() {
         initComponents();
         populatePenaltyTable();
+        
     }
     
     public void populatePenaltyTable() {
@@ -24,32 +25,35 @@ public class penalty extends javax.swing.JFrame {
     try {
         Connection conn = MySQLConnect.getConnection();
         
-        // UPDATED SQL: We added a condition to exclude 'Overdue' and 'Issued' statuses
-        // This ensures they only show up once you mark them as 'Returned', 'Damage', or 'Lost'
-        String sql = "SELECT m.school_id, i.fullname, i.book_title, i.book_acq_no, i.penalty_paid, i.status " +
-                     "FROM issued_books i " +
-                     "JOIN member_records m ON i.fullname = m.fullname " +
-                     "WHERE CAST(NULLIF(i.penalty_paid, '') AS DECIMAL(10,2)) > 0 " +
-                     "AND i.status NOT IN ('Overdue', 'Issued')";
+        // Pulling from issue_report gives you the 'actual_return_date'
+        
+        
+        String sql = "SELECT m.school_id, i.fullname, i.book_title, i.book_acq_no, i.penalty_paid, i.status, i.actual_return_date " +
+             "FROM issue_report i " +
+             "JOIN member_records m ON i.fullname = m.fullname " +
+             "WHERE i.penalty_paid > 0 " + 
+             "ORDER BY i.actual_return_date DESC";
 
         PreparedStatement pst = conn.prepareStatement(sql);
         ResultSet rs = pst.executeQuery();
 
-        boolean hasData = false;
+        // Format for the Date column
+        java.text.SimpleDateFormat dateFormat = new java.text.SimpleDateFormat("MM/dd/yyyy HH:mm");
+
         while (rs.next()) {
-            hasData = true;
             String id = rs.getString("school_id");
             String name = rs.getString("fullname");
             String title = rs.getString("book_title");
             String acqNo = rs.getString("book_acq_no");
             String amount = rs.getString("penalty_paid");
             String reason = rs.getString("status"); 
+            
+            // Fetch the date from issue_report
+            java.sql.Timestamp ts = rs.getTimestamp("actual_return_date");
+            String formattedDate = (ts != null) ? dateFormat.format(ts) : "N/A";
 
-            model.addRow(new Object[]{id, name, title, acqNo, amount, reason});
-        }
-        
-        if (!hasData) {
-            System.out.println("No finalized records found with a penalty.");
+            // Add all 7 columns including the Date
+            model.addRow(new Object[]{id, name, title, acqNo, amount, reason, formattedDate});
         }
         
     } catch (Exception e) {
@@ -196,7 +200,7 @@ public class penalty extends javax.swing.JFrame {
 
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
         this.dispose();
-        frontpage w = new frontpage();
+        dashboard w = new dashboard();
         w.setVisible(true);
     }//GEN-LAST:event_jButton5ActionPerformed
 

@@ -258,7 +258,7 @@
                       <Component id="jLabel6" alignment="0" min="-2" pref="179" max="-2" attributes="0"/>
                       <Component id="txtFullName" alignment="1" max="32767" attributes="0"/>
                       <Component id="jLabel3" alignment="1" max="32767" attributes="0"/>
-                      <Component id="txtSchoolFacultyID" alignment="0" min="-2" pref="178" max="-2" attributes="0"/>
+                      <Component id="txtSchoolId" alignment="0" min="-2" pref="178" max="-2" attributes="0"/>
                       <Component id="cmbCourse" alignment="0" max="32767" attributes="0"/>
                       <Component id="cmbUserType" alignment="0" max="32767" attributes="0"/>
                       <Component id="jLabel10" alignment="0" max="32767" attributes="0"/>
@@ -277,7 +277,7 @@
                   <EmptySpace pref="12" max="32767" attributes="0"/>
                   <Component id="jLabel2" min="-2" max="-2" attributes="0"/>
                   <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                  <Component id="txtSchoolFacultyID" min="-2" max="-2" attributes="0"/>
+                  <Component id="txtSchoolId" min="-2" max="-2" attributes="0"/>
                   <EmptySpace max="-2" attributes="0"/>
                   <Component id="jLabel3" min="-2" max="-2" attributes="0"/>
                   <EmptySpace max="-2" attributes="0"/>
@@ -478,7 +478,7 @@
             <Property name="text" type="java.lang.String" value="FULL NAME"/>
           </Properties>
         </Component>
-        <Component class="javax.swing.JTextField" name="txtSchoolFacultyID">
+        <Component class="javax.swing.JTextField" name="txtSchoolId">
         </Component>
         <Component class="javax.swing.JTextField" name="txtContactNumber">
         </Component>

@@ -215,7 +215,7 @@ public class librarystaff_login extends javax.swing.JFrame {
             String userType = rs.getString("category"); 
             
             JOptionPane.showMessageDialog(this, "Staff Login Successful! Welcome, " + rs.getString("fullname") + ("!"));
-            frontpage main = new frontpage();
+            dashboard main = new dashboard();
 
             // This is the most important part—it tells the Dashboard to hide the management buttons
             main.handleRoleAndPermissions(userType); 
@@ -233,7 +233,7 @@ public class librarystaff_login extends javax.swing.JFrame {
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         this.dispose();
-        librarianOradministrator w = new librarianOradministrator();
+        libraryOrStaff w = new libraryOrStaff();
         w.setVisible(true);
     }//GEN-LAST:event_jButton1ActionPerformed
 

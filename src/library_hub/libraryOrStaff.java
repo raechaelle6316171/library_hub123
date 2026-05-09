@@ -2,11 +2,11 @@ package library_hub;
 
 //import javax.swing.JFrame;
 
-public class librarianOradministrator extends javax.swing.JFrame {
+public class libraryOrStaff extends javax.swing.JFrame {
     
-    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(librarianOradministrator.class.getName());
+    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(libraryOrStaff.class.getName());
 
-    public librarianOradministrator() {
+    public libraryOrStaff() {
         initComponents();
        // setExtendedState(JFrame.MAXIMIZED_BOTH);
     }
@@ -95,13 +95,13 @@ public class librarianOradministrator extends javax.swing.JFrame {
 
     private void adminBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_adminBtnActionPerformed
         this.dispose();
-        librarian_login w = new librarian_login();
+        librarianlogin w = new librarianlogin();
         w.setVisible(true);
     }//GEN-LAST:event_adminBtnActionPerformed
 
     private void librarianBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_librarianBtnActionPerformed
         this.dispose();
-        librarystaff_login w = new librarystaff_login();
+        stafflogin w = new stafflogin();
         w.setVisible(true);
     }//GEN-LAST:event_librarianBtnActionPerformed
 
@@ -124,7 +124,7 @@ public class librarianOradministrator extends javax.swing.JFrame {
         //</editor-fold>
 
         /* Create and display the form */
-        java.awt.EventQueue.invokeLater(() -> new librarianOradministrator().setVisible(true));
+        java.awt.EventQueue.invokeLater(() -> new libraryOrStaff().setVisible(true));
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

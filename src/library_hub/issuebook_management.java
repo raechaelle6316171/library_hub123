@@ -63,24 +63,28 @@ public class issuebook_management extends javax.swing.JFrame {
 
     try {
         Connection conn = MySQLConnect.getConnection();
-        // Updated SQL to include contact_no
-        StringBuilder sql = new StringBuilder("SELECT * FROM issued_books WHERE (fullname LIKE ? OR book_title LIKE ?) ");
+        // JOIN is required to check the 'usertype' from member_records while loading the issued books
+        StringBuilder sql = new StringBuilder(
+            "SELECT i.*, m.usertype FROM issued_books i " +
+            "LEFT JOIN member_records m ON LOWER(TRIM(i.fullname)) = LOWER(TRIM(m.fullname)) " +
+            "WHERE (i.fullname LIKE ? OR i.book_title LIKE ?) "
+        );
         
         if (selectedStatusFilter.equalsIgnoreCase("Unreturned")) {
-            sql.append(" AND (status = 'Issued' OR status = 'Overdue') ");
+            sql.append(" AND (i.status = 'Issued' OR i.status = 'Overdue') ");
         } else if (selectedStatusFilter.equalsIgnoreCase("Returned")) {
-            sql.append(" AND status = 'Returned' ");
+            sql.append(" AND i.status = 'Returned' ");
         } else if (selectedStatusFilter.equalsIgnoreCase("Lost")) {
-            sql.append(" AND status = 'Lost' ");
-        } else if (selectedStatusFilter.equalsIgnoreCase("Damage") || selectedStatusFilter.equalsIgnoreCase("Damaged")) {
-            sql.append(" AND (status = 'Damage' OR status = 'Damaged') ");
+            sql.append(" AND i.status = 'Lost' ");
+        } else if (selectedStatusFilter.equalsIgnoreCase("Damaged") || selectedStatusFilter.equalsIgnoreCase("Damaged")) {
+            sql.append(" AND (i.status = 'Damaged' OR i.status = 'Damaged') ");
         } else if (selectedStatusFilter.equalsIgnoreCase("Issued")) {
-            sql.append(" AND status = 'Issued' AND due_date > NOW() ");
+            sql.append(" AND i.status = 'Issued' AND i.due_date > NOW() ");
         } else if (selectedStatusFilter.equalsIgnoreCase("Overdue")) {
-            sql.append(" AND (status = 'Overdue' OR (status = 'Issued' AND due_date < NOW())) ");
+            sql.append(" AND (i.status = 'Overdue' OR (i.status = 'Issued' AND i.due_date < NOW())) ");
         }
         
-        sql.append(" ORDER BY issue_date DESC");
+        sql.append(" ORDER BY i.issue_date DESC");
 
         PreparedStatement pst = conn.prepareStatement(sql.toString());
         pst.setString(1, "%" + query + "%");
@@ -91,61 +95,69 @@ public class issuebook_management extends javax.swing.JFrame {
         while (rs.next()) {
             int issueId = rs.getInt("issue_id");
             String dbStatus = rs.getString("status");
-            String contactNo = rs.getString("contact_no"); // NEW: Get contact number from DB
+            String contactNo = rs.getString("contact_no");
+            String usertype = rs.getString("usertype"); 
             java.sql.Timestamp issueTs = rs.getTimestamp("issue_date");
             java.sql.Timestamp dueTs = rs.getTimestamp("due_date");
-            String penaltyDisplay = rs.getString("penalty_paid");
+            
+            double storedPenalty = rs.getDouble("penalty_paid");
             String displayStatus = dbStatus;
             
             String issueDateStr = (issueTs != null) ? displayFormat.format(issueTs) : "";
             String dueDateStr = (dueTs != null) ? displayFormat.format(dueTs) : "";
 
-            // AUTO-OVERDUE CALCULATION LOGIC
+            // AUTO-OVERDUE CALCULATION
             if (dbStatus.equalsIgnoreCase("Issued") && dueTs != null) {
                 java.time.LocalDateTime dueDate = dueTs.toLocalDateTime();
                 
                 if (now.isAfter(dueDate)) {
                     displayStatus = "Overdue";
-                    
                     long businessDaysLate = 0;
                     java.time.LocalDateTime tempDate = dueDate;
 
                     while (tempDate.isBefore(now)) {
                         tempDate = tempDate.plusDays(1);
-                        java.time.DayOfWeek day = tempDate.getDayOfWeek();
-                        if (day != java.time.DayOfWeek.SATURDAY && day != java.time.DayOfWeek.SUNDAY) {
+                        if (tempDate.getDayOfWeek() != java.time.DayOfWeek.SATURDAY && 
+                            tempDate.getDayOfWeek() != java.time.DayOfWeek.SUNDAY) {
                             businessDaysLate++;
                         }
                     }
                     
-                    long calculatedPenalty = businessDaysLate * 100; 
-                    penaltyDisplay = String.valueOf(calculatedPenalty);
+                    storedPenalty = businessDaysLate * 100.0;
                     
+                    // Update Database for non-faculty or general records
                     String updateSql = "UPDATE issued_books SET penalty_paid = ?, status = 'Overdue' WHERE issue_id = ? AND status = 'Issued'";
                     PreparedStatement pstUpdate = conn.prepareStatement(updateSql);
-                    pstUpdate.setString(1, penaltyDisplay);
+                    pstUpdate.setDouble(1, storedPenalty);
                     pstUpdate.setInt(2, issueId);
                     pstUpdate.executeUpdate();
                 }
             }
+
+            // CRITICAL FIX: FORCE 0.00 FOR FACULTY OVERDUE
+            // This ensures that even if the database says 200.00, the UI shows 0.00
+            double finalPenaltyValue = storedPenalty;
+            if ("Faculty".equalsIgnoreCase(usertype) && 
+               (displayStatus.equalsIgnoreCase("Overdue") || displayStatus.equalsIgnoreCase("Issued"))) {
+                finalPenaltyValue = 0.00;
+            }
             
-            // Added contactNo to the row array at Index 2
             Object[] row = {
                 issueId,
                 rs.getString("fullname"),
-                contactNo,           // NEW: This fills the 'Contact No' column
+                contactNo,
                 rs.getString("book_title"),
                 rs.getString("book_acq_no"),
                 issueDateStr, 
                 dueDateStr,
-                penaltyDisplay,
+                finalPenaltyValue, // This variable now carries the forced 0.00 rule
                 displayStatus 
             };
             model.addRow(row);
         }
         
     } catch (SQLException e) {
-        JOptionPane.showMessageDialog(null, "Error populating table: " + e.getMessage());
+        JOptionPane.showMessageDialog(null, "Error: " + e.getMessage());
     }
 }
     @SuppressWarnings("unchecked")
@@ -207,36 +219,29 @@ public class issuebook_management extends javax.swing.JFrame {
 
         jTableIssuedBooks.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null}
+                {null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null}
             },
             new String [] {
-                "Id", "Member Name", "Contact No", "Book Title", "Acq No", "Issued Date", "Due Date", "Penalty", "Status", "Select"
+                "Id", "Member Name", "Contact No", "Book Title", "Acq No", "Issued Date", "Due Date", "Penalty", "Status"
             }
         ) {
-            Class[] types = new Class [] {
-                java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Boolean.class
-            };
             boolean[] canEdit = new boolean [] {
-                false, false, false, false, false, false, false, false, false, true
+                false, false, false, false, false, false, false, false, false
             };
-
-            public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
-            }
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
@@ -264,7 +269,7 @@ public class issuebook_management extends javax.swing.JFrame {
         jLabel2.setForeground(new java.awt.Color(255, 255, 255));
         jLabel2.setText("STATUS");
 
-        cmbStatus.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "All", "Issued", "Overdue", "Returned", "Unreturned" }));
+        cmbStatus.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "All", "Issued", "Overdue", "Returned", "Damaged", "Lost", "Unreturned" }));
         cmbStatus.addActionListener(this::cmbStatusActionPerformed);
 
         close.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
@@ -350,12 +355,14 @@ public class issuebook_management extends javax.swing.JFrame {
 
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
         this.dispose();
-        frontpage w = new frontpage();
+        dashboard w = new dashboard();
         w.setVisible(true);
     }//GEN-LAST:event_jButton5ActionPerformed
 
     private void btnMarkAsReturnedActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMarkAsReturnedActionPerformed
-        int row = jTableIssuedBooks.getSelectedRow();
+                                                                 
+                                                                        
+    int row = jTableIssuedBooks.getSelectedRow();
 
     if (row == -1) {
         JOptionPane.showMessageDialog(this, "Please select a record from the table first!");
@@ -374,9 +381,13 @@ public class issuebook_management extends javax.swing.JFrame {
         return;
     }
     
-    if (currentStatus.equalsIgnoreCase("Lost") || currentStatus.equalsIgnoreCase("Damage")) {
-        JOptionPane.showMessageDialog(this, "This book is marked as " + currentStatus + ". Please settle in Penalty Management.");
-        return;
+    // Note: We allow "Lost" or "Damage" to proceed if they are clicking "Mark as Returned" 
+    // to finalize the record, but the penalty logic below ensures Faculty don't pay for "Overdue".
+    if (currentStatus.equalsIgnoreCase("Lost") || currentStatus.equalsIgnoreCase("Damaged")) {
+        int settleConfirm = JOptionPane.showConfirmDialog(this, 
+            "This book is marked as " + currentStatus + ". Finalizing return will record the penalty. Proceed?", 
+            "Settle Penalty", JOptionPane.YES_NO_OPTION);
+        if (settleConfirm != JOptionPane.YES_OPTION) return;
     }
 
     // 2. DATA INITIALIZATION
@@ -401,14 +412,16 @@ public class issuebook_management extends javax.swing.JFrame {
         if (confirm == JOptionPane.YES_OPTION) {
             Connection conn = MySQLConnect.getConnection();
 
-            // Fetch Member Details for the report
-            String memberSql = "SELECT course, year, usertype FROM member_records WHERE LOWER(TRIM(fullname)) = LOWER(TRIM(?))";
+            // Fetch Member Details
+            String memberSql = "SELECT school_id, contact_number, course, year, usertype FROM member_records WHERE LOWER(TRIM(fullname)) = LOWER(TRIM(?))";
             PreparedStatement pstMem = conn.prepareStatement(memberSql);
             pstMem.setString(1, memberName); 
             ResultSet rsMem = pstMem.executeQuery();
             
-            String course = "N/A", year = "N/A", utype = "Member"; 
+            String schoolId = "N/A", contactNo = "N/A", course = "N/A", year = "N/A", utype = "Member"; 
             if (rsMem.next()) {
+                schoolId = rsMem.getString("school_id");
+                contactNo = rsMem.getString("contact_number");
                 course = rsMem.getString("course");
                 year = rsMem.getString("year");
                 utype = rsMem.getString("usertype");
@@ -416,17 +429,17 @@ public class issuebook_management extends javax.swing.JFrame {
 
             // 3. PENALTY CALCULATION
             LocalDateTime dueDate = LocalDateTime.parse(dueDateStr, formatter);
-            LocalDateTime issueDate = LocalDateTime.parse(issueDateStr, formatter);
             double calculatedPenalty = 0;
 
+            // OVERDUE CHECK: Only for non-faculty members
             if (!utype.equalsIgnoreCase("Faculty")) {
                 if (now.isAfter(dueDate)) {
                     long businessDaysLate = 0;
                     LocalDateTime tempDate = dueDate;
                     while (tempDate.isBefore(now)) {
                         tempDate = tempDate.plusDays(1);
-                        // Only count Monday-Friday
-                        if (tempDate.getDayOfWeek() != java.time.DayOfWeek.SATURDAY && tempDate.getDayOfWeek() != java.time.DayOfWeek.SUNDAY) {
+                        if (tempDate.getDayOfWeek() != java.time.DayOfWeek.SATURDAY && 
+                            tempDate.getDayOfWeek() != java.time.DayOfWeek.SUNDAY) {
                             businessDaysLate++;
                         }
                     }
@@ -434,10 +447,19 @@ public class issuebook_management extends javax.swing.JFrame {
                 }
             }
 
-            // Compare with existing penalty in the table (Index 7)
+            // Get existing penalty (from Mark as Lost/Damage) from column index 7
             Object penObj = model.getValueAt(row, 7);
             double existingPenalty = (penObj == null) ? 0.0 : Double.parseDouble(penObj.toString());
-            double finalPenalty = Math.max(existingPenalty, calculatedPenalty);
+            
+            // FINAL PENALTY LOGIC:
+            // Faculty only pay existing (Lost/Damage) penalties. 
+            // Students pay the higher between existing and overdue fines.
+            double finalPenalty;
+            if (utype.equalsIgnoreCase("Faculty")) {
+                finalPenalty = existingPenalty; 
+            } else {
+                finalPenalty = Math.max(existingPenalty, calculatedPenalty);
+            }
 
             // Fetch Author
             String getAuthorSql = "SELECT author FROM books WHERE acquisition_no = ?";
@@ -448,30 +470,32 @@ public class issuebook_management extends javax.swing.JFrame {
 
             // 4. DATABASE UPDATES
             
-            // A. Add to issue_report (This makes it appear in History of Payment)
-            String insertReportSql = "INSERT INTO issue_report (fullname, usertype, course, year, book_acq_no, book_title, author, issue_date, due_date, actual_return_date, penalty_paid, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Returned')";
+            // A. Add to issue_report
+            String insertReportSql = "INSERT INTO issue_report (school_id, fullname, usertype, contact_no, course, year, book_acq_no, book_title, author, issue_date, due_date, actual_return_date, penalty_paid, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Returned')";
             PreparedStatement pstReport = conn.prepareStatement(insertReportSql);
-            pstReport.setString(1, memberName); 
-            pstReport.setString(2, utype);   
-            pstReport.setString(3, course);  
-            pstReport.setString(4, year);    
-            pstReport.setString(5, acqNo);
-            pstReport.setString(6, bookTitle);
-            pstReport.setString(7, authorName); 
-            pstReport.setTimestamp(8, java.sql.Timestamp.valueOf(issueDate)); 
-            pstReport.setTimestamp(9, java.sql.Timestamp.valueOf(dueDate));
-            pstReport.setTimestamp(10, java.sql.Timestamp.valueOf(now)); 
-            pstReport.setDouble(11, finalPenalty); 
+            pstReport.setString(1, schoolId); 
+            pstReport.setString(2, memberName); 
+            pstReport.setString(3, utype);   
+            pstReport.setString(4, contactNo);  
+            pstReport.setString(5, course);  
+            pstReport.setString(6, year);    
+            pstReport.setString(7, acqNo);
+            pstReport.setString(8, bookTitle);
+            pstReport.setString(9, authorName); 
+            pstReport.setTimestamp(10, java.sql.Timestamp.valueOf(LocalDateTime.parse(issueDateStr, formatter))); 
+            pstReport.setTimestamp(11, java.sql.Timestamp.valueOf(dueDate));
+            pstReport.setTimestamp(12, java.sql.Timestamp.valueOf(now)); 
+            pstReport.setDouble(13, finalPenalty); 
             pstReport.executeUpdate();
 
-            // B. Update the original issued record status to 'Returned'
+            // B. Update the original issued record status
             String updateIssuedSql = "UPDATE issued_books SET status = 'Returned', penalty_paid = ? WHERE issue_id = ?";
             PreparedStatement pstUpdateIssued = conn.prepareStatement(updateIssuedSql);
             pstUpdateIssued.setDouble(1, finalPenalty);
             pstUpdateIssued.setInt(2, issueId);
             pstUpdateIssued.executeUpdate();
 
-            // C. Make the book 'Available' in the inventory again
+            // C. Make the book 'Available' again
             String updateBookSql = "UPDATE books SET status = 'Available' WHERE acquisition_no = ?";
             PreparedStatement pstUpdateBook = conn.prepareStatement(updateBookSql);
             pstUpdateBook.setString(1, acqNo);
@@ -479,7 +503,7 @@ public class issuebook_management extends javax.swing.JFrame {
 
             JOptionPane.showMessageDialog(this, "Book successfully returned!\nStatus updated to Returned.\nPenalty Settle: ₱" + finalPenalty);
             
-            // Refresh the table
+            // Refresh table
             populateIssuedTable(""); 
             
         }
@@ -487,6 +511,7 @@ public class issuebook_management extends javax.swing.JFrame {
         JOptionPane.showMessageDialog(this, "Error processing return: " + e.getMessage());
         e.printStackTrace();
     }
+
     }//GEN-LAST:event_btnMarkAsReturnedActionPerformed
 
     private void txtSearchMemberActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtSearchMemberActionPerformed
@@ -517,7 +542,7 @@ public class issuebook_management extends javax.swing.JFrame {
 
     DefaultTableModel model = (DefaultTableModel) jTableIssuedBooks.getModel();
     
-    // Safety check for Status (Index 8)
+    // Check if already returned
     Object statusObj = model.getValueAt(row, 8);
     String currentStatus = (statusObj == null) ? "" : statusObj.toString();
 
@@ -526,51 +551,97 @@ public class issuebook_management extends javax.swing.JFrame {
         return;
     }
 
-    // Get Acq No (Index 4) to find the book in the 'books' table
-    String acqNo = model.getValueAt(row, 4).toString();
+    // 1. GET ALL NECESSARY DATA FROM THE SELECTED ROW
+    int issueId = Integer.parseInt(model.getValueAt(row, 0).toString());
+    String fullName = model.getValueAt(row, 1).toString();
+    String contactNo = model.getValueAt(row, 2).toString();
     String bookTitle = model.getValueAt(row, 3).toString();
+    String acqNo = model.getValueAt(row, 4).toString();
+    String issueDateStr = model.getValueAt(row, 5).toString();
+    String dueDateStr = model.getValueAt(row, 6).toString();
+    
     double bookPrice = 0.0;
+    String schoolId = "";
+    String userType = "";
+    String course = "N/A";
+    String year = "N/A";
+    String author = "";
 
     try {
         Connection conn = MySQLConnect.getConnection();
         
-        // 1. FETCH THE PRICE FROM THE BOOKS TABLE
-        String priceSql = "SELECT price FROM books WHERE acquisition_no = ?";
-        PreparedStatement pstPrice = conn.prepareStatement(priceSql);
-        pstPrice.setString(1, acqNo);
-        ResultSet rsPrice = pstPrice.executeQuery();
-
-        if (rsPrice.next()) {
-            bookPrice = rsPrice.getDouble("price");
+        // 2. FETCH MISSING DATA (School ID, UserType, Author, Price) FROM DB
+        // Fetch User Info
+        String userSql = "SELECT school_id, usertype, course, year FROM member_records WHERE fullname = ?";
+        PreparedStatement pstUser = conn.prepareStatement(userSql);
+        pstUser.setString(1, fullName);
+        ResultSet rsUser = pstUser.executeQuery();
+        if (rsUser.next()) {
+            schoolId = rsUser.getString("school_id");
+            userType = rsUser.getString("usertype");
+            course = rsUser.getString("course");
+            year = rsUser.getString("year");
         }
 
-        // 2. FALLBACK LOGIC: If price is 0 or null in DB, set a standard fee
-        if (bookPrice <= 0) {
-            bookPrice = 500.00; // Standard damage fee if price is missing
+        // Fetch Book Info
+        String bookSql = "SELECT author, price FROM books WHERE acquisition_no = ?";
+        PreparedStatement pstBookInfo = conn.prepareStatement(bookSql);
+        pstBookInfo.setString(1, acqNo);
+        ResultSet rsBook = pstBookInfo.executeQuery();
+        if (rsBook.next()) {
+            author = rsBook.getString("author");
+            bookPrice = rsBook.getDouble("price");
         }
 
-        // 3. CONFIRMATION DIALOG
+        if (bookPrice <= 0) bookPrice = 500.00; // Fallback fee
+
+        // 3. CONFIRMATION
         int confirm = JOptionPane.showConfirmDialog(this, 
-            "Mark Book '" + bookTitle + "' as DAMAGED?\nDamage Fee (Book Price): ₱" + bookPrice, 
+            "Mark '" + bookTitle + "' as DAMAGED?\nFee: ₱" + bookPrice, 
             "Confirm Damage Report", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 
         if (confirm == JOptionPane.YES_OPTION) {
-            // Update issued_books status and set penalty
-            int issueId = Integer.parseInt(model.getValueAt(row, 0).toString());
-            String updateIssuedSql = "UPDATE issued_books SET status = 'Damage', penalty_paid = ? WHERE issue_id = ?";
+            // 4. UPDATE ACTIVE TRANSACTION
+            String updateIssuedSql = "UPDATE issued_books SET status = 'Damaged', penalty_paid = ? WHERE issue_id = ?";
             PreparedStatement pstUpdate = conn.prepareStatement(updateIssuedSql);
             pstUpdate.setDouble(1, bookPrice);
             pstUpdate.setInt(2, issueId);
             pstUpdate.executeUpdate();
 
-            // Update books inventory status
-            String updateBookSql = "UPDATE books SET status = 'Damaged' WHERE acquisition_no = ?";
-            PreparedStatement pstBook = conn.prepareStatement(updateBookSql);
-            pstBook.setString(1, acqNo);
-            pstBook.executeUpdate();
+            // 5. UPDATE INVENTORY
+            String updateInvSql = "UPDATE books SET status = 'Damaged' WHERE acquisition_no = ?";
+            PreparedStatement pstInv = conn.prepareStatement(updateInvSql);
+            pstInv.setString(1, acqNo);
+            pstInv.executeUpdate();
 
-            JOptionPane.showMessageDialog(this, "Book marked as Damaged. Fee of ₱" + bookPrice + " recorded.");
-            populateIssuedTable(""); // Refresh your table
+            // 6. LOG TO ISSUE REPORT (MATCHING YOUR 15 COLUMNS)
+            // Note: actual_return_date is set to NOW()
+            String reportSql = "INSERT INTO issue_report (school_id, fullname, usertype, contact_no, course, year, " +
+                               "book_acq_no, book_title, author, issue_date, due_date, actual_return_date, penalty_paid, status) " +
+                               "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, 'Damaged')";
+            
+            PreparedStatement pstReport = conn.prepareStatement(reportSql);
+            pstReport.setString(1, schoolId);
+            pstReport.setString(2, fullName);
+            pstReport.setString(3, userType);
+            pstReport.setString(4, contactNo);
+            pstReport.setString(5, course);
+            pstReport.setString(6, year);
+            pstReport.setString(7, acqNo);
+            pstReport.setString(8, bookTitle);
+            pstReport.setString(9, author);
+            
+            // Convert date strings back to Timestamps for the DB
+            java.text.SimpleDateFormat format = new java.text.SimpleDateFormat("MM/dd/yyyy HH:mm");
+            pstReport.setTimestamp(10, new java.sql.Timestamp(format.parse(issueDateStr).getTime()));
+            pstReport.setTimestamp(11, new java.sql.Timestamp(format.parse(dueDateStr).getTime()));
+            
+            pstReport.setDouble(12, bookPrice);
+            
+            pstReport.executeUpdate();
+
+            JOptionPane.showMessageDialog(this, "Book marked as Damaged and record saved to Issue Report.");
+            populateIssuedTable(""); 
         }
 
     } catch (Exception e) {
@@ -589,7 +660,7 @@ public class issuebook_management extends javax.swing.JFrame {
 
     DefaultTableModel model = (DefaultTableModel) jTableIssuedBooks.getModel();
     
-    // Status Check (Index 8)
+    // Check current status before proceeding
     Object statusObj = model.getValueAt(row, 8);
     String currentStatus = (statusObj == null) ? "" : statusObj.toString();
 
@@ -603,51 +674,97 @@ public class issuebook_management extends javax.swing.JFrame {
         return;
     }
 
-    // Get Data for DB update
+    // 1. GET DATA FROM THE SELECTED TABLE ROW
     int issueId = Integer.parseInt(model.getValueAt(row, 0).toString());
-    String acqNo = model.getValueAt(row, 4).toString(); // Index 4 for Acq No
-    String bookTitle = model.getValueAt(row, 3).toString(); // Index 3 for Title
+    String fullName = model.getValueAt(row, 1).toString();
+    String contactNo = model.getValueAt(row, 2).toString();
+    String bookTitle = model.getValueAt(row, 3).toString();
+    String acqNo = model.getValueAt(row, 4).toString();
+    String issueDateStr = model.getValueAt(row, 5).toString();
+    String dueDateStr = model.getValueAt(row, 6).toString();
+    
+    // Variables for database lookups
     double lostFee = 0.0;
+    String schoolId = "";
+    String userType = "";
+    String course = "N/A";
+    String year = "N/A";
+    String author = "";
 
     try {
         Connection conn = MySQLConnect.getConnection();
         
-        // 1. FETCH THE BOOK PRICE
-        String priceSql = "SELECT price FROM books WHERE acquisition_no = ?";
-        PreparedStatement pstPrice = conn.prepareStatement(priceSql);
-        pstPrice.setString(1, acqNo);
-        ResultSet rsPrice = pstPrice.executeQuery();
-
-        if (rsPrice.next()) {
-            lostFee = rsPrice.getDouble("price");
+        // 2. FETCH MEMBER DETAILS (Matches your user summary for school_id)
+        String userSql = "SELECT school_id, usertype, course, year FROM member_records WHERE fullname = ?";
+        PreparedStatement pstUser = conn.prepareStatement(userSql);
+        pstUser.setString(1, fullName);
+        ResultSet rsUser = pstUser.executeQuery();
+        if (rsUser.next()) {
+            schoolId = rsUser.getString("school_id");
+            userType = rsUser.getString("usertype");
+            course = rsUser.getString("course");
+            year = rsUser.getString("year");
         }
 
-        // 2. FALLBACK: If price is 0, set a standard replacement fee (e.g., ₱1000)
-        if (lostFee <= 0) {
-            lostFee = 1000.00; 
+        // 3. FETCH BOOK PRICE AND AUTHOR
+        String bookSql = "SELECT author, price FROM books WHERE acquisition_no = ?";
+        PreparedStatement pstBookInfo = conn.prepareStatement(bookSql);
+        pstBookInfo.setString(1, acqNo);
+        ResultSet rsBook = pstBookInfo.executeQuery();
+        if (rsBook.next()) {
+            author = rsBook.getString("author");
+            lostFee = rsBook.getDouble("price");
         }
 
-        // 3. CONFIRMATION
+        if (lostFee <= 0) lostFee = 1000.00; // Default replacement fee
+
+        // 4. CONFIRMATION DIALOG
         int confirm = JOptionPane.showConfirmDialog(this, 
-            "Mark Book '" + bookTitle + "' as LOST?\nReplacement Fee (Book Price): ₱" + lostFee, 
+            "Mark Book '" + bookTitle + "' as LOST?\nMember: " + fullName + "\nReplacement Fee: ₱" + lostFee, 
             "Confirm Lost Report", JOptionPane.YES_NO_OPTION, JOptionPane.ERROR_MESSAGE);
 
         if (confirm == JOptionPane.YES_OPTION) {
-            // Update issued_books status to 'Lost'
+            // 5. UPDATE ACTIVE TRANSACTION IN issued_books
             String updateIssuedSql = "UPDATE issued_books SET status = 'Lost', penalty_paid = ? WHERE issue_id = ?";
             PreparedStatement pstUpdate = conn.prepareStatement(updateIssuedSql);
             pstUpdate.setDouble(1, lostFee);
             pstUpdate.setInt(2, issueId);
             pstUpdate.executeUpdate();
 
-            // Update books inventory status to 'Lost'
-            String updateBookSql = "UPDATE books SET status = 'Lost' WHERE acquisition_no = ?";
-            PreparedStatement pstBook = conn.prepareStatement(updateBookSql);
-            pstBook.setString(1, acqNo);
-            pstBook.executeUpdate();
+            // 6. UPDATE BOOK STATUS IN INVENTORY
+            String updateInvSql = "UPDATE books SET status = 'Lost' WHERE acquisition_no = ?";
+            PreparedStatement pstInv = conn.prepareStatement(updateInvSql);
+            pstInv.setString(1, acqNo);
+            pstInv.executeUpdate();
 
-            JOptionPane.showMessageDialog(this, "Book marked as LOST. Penalty of ₱" + lostFee + " applied.");
-            populateIssuedTable(""); // Refresh table
+            // 7. LOG TO ISSUE REPORT (15-column matching image_1a6a39.png)
+            String reportSql = "INSERT INTO issue_report (school_id, fullname, usertype, contact_no, course, year, " +
+                               "book_acq_no, book_title, author, issue_date, due_date, actual_return_date, penalty_paid, status) " +
+                               "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, 'Lost')";
+            
+            PreparedStatement pstReport = conn.prepareStatement(reportSql);
+            pstReport.setString(1, schoolId);
+            pstReport.setString(2, fullName);
+            pstReport.setString(3, userType);
+            pstReport.setString(4, contactNo);
+            pstReport.setString(5, course);
+            pstReport.setString(6, year);
+            pstReport.setString(7, acqNo);
+            pstReport.setString(8, bookTitle);
+            pstReport.setString(9, author);
+            
+            // Format dates for SQL Timestamp
+            java.text.SimpleDateFormat format = new java.text.SimpleDateFormat("MM/dd/yyyy HH:mm");
+            pstReport.setTimestamp(10, new java.sql.Timestamp(format.parse(issueDateStr).getTime()));
+            pstReport.setTimestamp(11, new java.sql.Timestamp(format.parse(dueDateStr).getTime()));
+            
+            pstReport.setDouble(12, lostFee);
+            
+            // EXECUTE MUST BE ON A SEPARATE LINE TO PREVENT 'VOID' ERROR
+            pstReport.executeUpdate(); 
+
+            JOptionPane.showMessageDialog(this, "Book marked as LOST. Record saved to Issue Report.");
+            populateIssuedTable(""); 
         }
 
     } catch (Exception e) {
